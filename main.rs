@@ -15,8 +15,13 @@ async fn main() -> std::io::Result<()> {
                     .route("", web::get().to(handlers::greet::greet))
                     .service(
                         web::scope("/two")
-                            .route("", web::get().to(handlers::two::greet_two))
+                            .route("", web::get().to(handlers::greet::greet_two))
                     )
+            )
+            .service(
+                web::scope("/goodbye")
+                    .route("", web::get().to(handlers::goodbye::goodbye))
+                    .route("/two", web::get().to(handlers::goodbye::goodbye_two))
             )
     })
     .bind("127.0.0.1:8080")?
