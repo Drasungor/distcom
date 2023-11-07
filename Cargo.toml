@@ -9,4 +9,5 @@ path = "main.rs"
 
 [dependencies]
 actix = "0.13"
+actix-multipart = "0.6.1"
 actix-web = "4"
