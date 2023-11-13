@@ -51,11 +51,7 @@ async fn upload_file(mut payload: Multipart) -> Result<String, actix_web::error:
         // Create a new file and write the field data to it
         let mut f = web::block(|| File::create(file_path_clone)).await??;
         while let Some(chunk) = field.try_next().await? {
-            // let aaaa = web::block(|| f.expect("REASON").write_all(&chunk).map(|_| f)).await?;
-            let aaaa = web::block(|| f.write_all(&chunk).map(|_| f)).await?;
-            let bbbb = aaaa.expect("ekisd");
-            // f = web::block(move || f.expect("REASON").write_all(&chunk).map(|_| f)).await?;
-            f = bbbb;
+            web::block(|| f.write_all(&chunk)).await??;
         }
 
         // You can return the file path or any other response as needed
