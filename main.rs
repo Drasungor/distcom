@@ -49,9 +49,12 @@ async fn upload_file(mut payload: Multipart) -> Result<String, actix_web::error:
         let file_path = format!("./uploads/{}", filename);
         let file_path_clone = file_path.clone();
         // Create a new file and write the field data to it
-        let mut f = web::block(|| File::create(file_path_clone)).await??;
+        let f = web::block(|| File::create(file_path_clone)).await??;
         while let Some(chunk) = field.try_next().await? {
-            web::block(|| f.write_all(&chunk)).await??;
+            let mut file_pointer_clone = f.try_clone()?;
+            // let chunk_clone = chunk.clone();
+            // web::block(|| f.write_all(&chunk)).await??;
+            web::block(move || file_pointer_clone.write_all(&chunk)).await??;
         }
 
         // You can return the file path or any other response as needed
