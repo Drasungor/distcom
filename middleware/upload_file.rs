@@ -1,6 +1,6 @@
 use std::fs; // Add import for File
 // use actix_web::{web, App, HttpServer};
-use actix_web::{web};
+use actix_web::{web, HttpResponse};
 use std::fs::File; // Add import for File
 use actix_multipart::Multipart;
 use futures_util::stream::TryStreamExt;
@@ -16,7 +16,7 @@ fn create_folder(path: &str) -> () {
     }
 }
 
-pub async fn upload_file(mut payload: Multipart) -> Result<String, actix_web::error::Error> {
+pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
@@ -39,8 +39,10 @@ pub async fn upload_file(mut payload: Multipart) -> Result<String, actix_web::er
         file_paths.push(file_path);
     }
     if file_paths.is_empty() {
-        Ok("No file uploaded".to_string())
+        Ok(HttpResponse::Ok().body("No file uploaded"))
+        // Ok("No file uploaded".to_string())
     } else {
-        Ok(format!("Files saved at: {:?}", file_paths))
+        Ok(HttpResponse::Ok().body(format!("Files saved at: {:?}", file_paths)))
+        // Ok(format!("Files saved at: {:?}", file_paths))
     }
 }
