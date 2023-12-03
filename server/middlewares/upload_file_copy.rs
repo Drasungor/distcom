@@ -5,6 +5,11 @@ use std::fs::File; // Add import for File
 use actix_multipart::Multipart;
 use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
+// use actix_web::dev::ServiceRequest;
+use actix_web::dev::ServiceRequest;
+use actix_web::dev;
+// use actix_web::scope;
+use actix_web::{dev::Service, dev::ServiceResponse, Error};
 
 fn folder_exists(path: &str) -> bool {
     fs::metadata(path).is_ok()
@@ -16,7 +21,18 @@ fn create_folder(path: &str) -> () {
     }
 }
 
-pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(mut payload: Multipart, &srv: web::types::ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(mut payload: Multipart, srv: &web::types::ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(mut payload: Multipart, srv: &ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: ServiceRequest, _app: &actix_web::App<AppEntry>) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: ServiceRequest, payload: &actix_web::scope::ScopeService) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: ServiceRequest, payload: &actix_web::scope::ScopeService) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: actix_web::dev::ServiceRequest, payload: web::Payload) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: actix_web::dev::ServiceRequest, _: &actix_web::web::Data<()>) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &dyn actix_web::dev::Service<Request = ServiceRequest, Response = ServiceResponse, Error = Error, Future = impl std::future::Future>) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
+pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &actix_web::scope::ScopeService) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
+
+
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
