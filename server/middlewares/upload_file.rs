@@ -65,15 +65,16 @@ where
         // Do something before handling the request
         println!("Middleware executed before handling the request");
 
-        let fut = self.service.call(req);
 
+        let fut = self.service.call(req);
         
-        // Box::pin(ready(Ok(ServiceResponse::new(req, HttpResponse::NotFound())))) // Change the response as needed
-        // Box::pin(ready(Ok(HttpResponse::Ok().body("Goodbye, world! two")))) // Change the response as needed
-        // Box::pin(ready(Ok(ServiceResponse::new(req, HttpResponse::Ok().body("Goodbye, world! two").into()))))
-        // Box::pin(ready(Ok(ServiceResponse::new(req, HttpResponse::NotFound())))) // Change the response as needed
         Box::pin(async move {
             let res = fut.await?;
+            // let payload = req.take_payload();
+            let payload = req.parts().1.into_stream();
+            // let multipart = actix_multipart::Multipart::new(req.clone(), payload).await?;
+            let multipart = actix_multipart::Multipart::new(req.headers(), payload);
+            upload_file(multipart);
 
             println!("Hi from response");
             Ok(res)
@@ -92,6 +93,7 @@ fn create_folder(path: &str) -> () {
     }
 }
 
+pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
 // pub async fn upload_file(mut payload: Multipart, &srv: web::types::ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
 // pub async fn upload_file(mut payload: Multipart, srv: &web::types::ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
 // pub async fn upload_file(mut payload: Multipart, srv: &ServiceRequest) -> Result<HttpResponse, actix_web::error::Error> {
@@ -101,7 +103,7 @@ fn create_folder(path: &str) -> () {
 // pub async fn upload_file(req: actix_web::dev::ServiceRequest, payload: web::Payload) -> Result<HttpResponse, actix_web::error::Error> {
 // pub async fn upload_file(req: actix_web::dev::ServiceRequest, _: &actix_web::web::Data<()>) -> Result<HttpResponse, actix_web::error::Error> {
 // pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &dyn actix_web::dev::Service<Request = ServiceRequest, Response = ServiceResponse, Error = Error, Future = impl std::future::Future>) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
-pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &actix_web::scope::ScopeService) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
+// pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &actix_web::scope::ScopeService) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
 
 
     let mut file_paths: Vec<String> = Vec::new();

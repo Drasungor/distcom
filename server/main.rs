@@ -30,14 +30,14 @@ async fn main() -> std::io::Result<()> {
                     .route("", web::get().to(handlers::goodbye::goodbye))
                     .route("/two", web::get().to(handlers::goodbye::goodbye_two))
             ).service(
-                web::scope("/upload").
-                wrap_fn(|req, srv| {
-                    println!("Hi from start. You requested: {}", req.path());
-                    srv.call(req).map(|res| {
-                        println!("Hi from response");
-                        res
-                    })
-                })
+                web::scope("/upload")
+                // .wrap_fn(|req, srv| {
+                //     println!("Hi from start. You requested: {}", req.path());
+                //     srv.call(req).map(|res| {
+                //         println!("Hi from response");
+                //         res
+                //     })
+                // })
                 // wrap(middleware::Logger::default())
                 // wrap_fn(middleware::upload_file::upload_file)
                     .route("", web::post().to(handlers::greet::greet_two))
