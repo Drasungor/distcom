@@ -1,6 +1,7 @@
 use std::fs; // Add import for File
 // use actix_web::{web, App, HttpServer};
-use actix_web::{web, HttpResponse, middleware};
+use actix_web::{web, HttpResponse, middleware, HttpMessage};
+use futures_util::future::LocalBoxFuture;
 use std::fs::File; // Add import for File
 use actix_multipart::Multipart;
 use futures_util::stream::TryStreamExt;
@@ -20,6 +21,7 @@ impl<S, B> Transform<S, ServiceRequest> for CustomMiddleware
 where
     // S: 'static,
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
     B: 'static,
 {
     // type Request = ServiceRequest;
@@ -49,12 +51,16 @@ struct CustomMiddlewareMiddleware<S> {
 impl<S, B> Service<ServiceRequest> for CustomMiddlewareMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
     B: 'static,
 {
     // type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>>>>;
+    // type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + 'static>>;
+    // type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+
 
     // fn poll_ready(&self, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
     //     self.service.poll_ready(cx)
@@ -65,15 +71,23 @@ where
         // Do something before handling the request
         println!("Middleware executed before handling the request");
 
+        let aaa = req.parts().1.clone();
+        // let bbb = req.take_payload();
+        // let bbb = aaa.into_stream();
+
+        let headers = req.headers().clone();
 
         let fut = self.service.call(req);
         
         Box::pin(async move {
             let res = fut.await?;
             // let payload = req.take_payload();
-            let payload = req.parts().1.into_stream();
+            // let payload = req.parts().1.into_stream();
+            // let payload = req.parts().1;
             // let multipart = actix_multipart::Multipart::new(req.clone(), payload).await?;
-            let multipart = actix_multipart::Multipart::new(req.headers(), payload);
+            // let multipart = actix_multipart::Multipart::new(req.headers(), payload);
+            // let multipart = actix_multipart::Multipart::new(req.headers(), bbb);
+            let multipart = actix_multipart::Multipart::new(&headers, bbb);
             upload_file(multipart);
 
             println!("Hi from response");
