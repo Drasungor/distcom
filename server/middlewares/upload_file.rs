@@ -15,7 +15,7 @@ use std::future::{ready, Ready};
 use std::pin::Pin;
 
 
-struct CustomMiddleware;
+pub struct CustomMiddleware;
 
 impl<S, B> Transform<S, ServiceRequest> for CustomMiddleware
 where
@@ -43,7 +43,7 @@ where
 
 
 // struct CustomMiddlewareMiddleware<S, B> {
-struct CustomMiddlewareMiddleware<S> {
+pub struct CustomMiddlewareMiddleware<S> {
     service: S,
 }
 
@@ -67,18 +67,23 @@ where
     // }
     forward_ready!(service);
 
-    fn call(&self, req: ServiceRequest) -> Self::Future {
+    // fn call(&self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         // Do something before handling the request
         println!("Middleware executed before handling the request");
 
-        let aaa = req.parts().1.clone();
+        // let aaa = req.parts().1.clone();
+        // let ccc = aaa.take();
         // let bbb = req.take_payload();
-        // let bbb = aaa.into_stream();
+        // let bbb = ccc.into_stream();
 
         let headers = req.headers().clone();
 
+        let my_payload = req.take_payload();
+
         let fut = self.service.call(req);
         
+
         Box::pin(async move {
             let res = fut.await?;
             // let payload = req.take_payload();
@@ -87,8 +92,11 @@ where
             // let multipart = actix_multipart::Multipart::new(req.clone(), payload).await?;
             // let multipart = actix_multipart::Multipart::new(req.headers(), payload);
             // let multipart = actix_multipart::Multipart::new(req.headers(), bbb);
-            let multipart = actix_multipart::Multipart::new(&headers, bbb);
-            upload_file(multipart);
+            // let multipart = actix_multipart::Multipart::new(&headers, bbb);
+            let multipart = actix_multipart::Multipart::new(&headers, my_payload);
+            upload_file(multipart).await?;
+            
+            // web::block(move || upload_file(multipart)).await??;
 
             println!("Hi from response");
             Ok(res)
