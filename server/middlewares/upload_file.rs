@@ -1,14 +1,15 @@
 use std::fs; // Add import for File
 // use actix_web::{web, App, HttpServer};
-use actix_web::{web, HttpResponse, middleware, HttpMessage};
-use futures_util::future::LocalBoxFuture;
+// use actix_web::{web, HttpResponse, middleware, HttpMessage};
+use actix_web::{web, HttpResponse, HttpMessage};
+// use futures_util::future::LocalBoxFuture;
 use std::fs::File; // Add import for File
 use actix_multipart::Multipart;
 use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
 // use actix_web::dev::ServiceRequest;
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
-use actix_web::dev;
+// use actix_web::dev;
 // use actix_web::scope;
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
 use std::future::{ready, Ready};
@@ -78,8 +79,8 @@ where
         // let bbb = ccc.into_stream();
 
         let headers = req.headers().clone();
-
         let my_payload = req.take_payload();
+        // let my_payload_2 = req.take_payload();
 
         let fut = self.service.call(req);
         
@@ -94,6 +95,7 @@ where
             // let multipart = actix_multipart::Multipart::new(req.headers(), bbb);
             // let multipart = actix_multipart::Multipart::new(&headers, bbb);
             let multipart = actix_multipart::Multipart::new(&headers, my_payload);
+            // let multipart = actix_multipart::Multipart::new(&headers, my_payload_2);
             upload_file(multipart).await?;
             
             // web::block(move || upload_file(multipart)).await??;
@@ -127,11 +129,12 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_w
 // pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &dyn actix_web::dev::Service<Request = ServiceRequest, Response = ServiceResponse, Error = Error, Future = impl std::future::Future>) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
 // pub async fn upload_file(req: actix_web::dev::ServiceRequest, srv: &actix_web::scope::ScopeService) -> Result<actix_web::dev::ServiceResponse, actix_web::Error> {
 
-
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
+    println!("bbbbbbbbbbbbbbbbbbbbb");
     while let Ok(Some(field_result)) = payload.try_next().await {
+        println!("aaaaaaaaaaaaaaaaaaa");
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
