@@ -1,12 +1,4 @@
-// use actix_web::{web, App, HttpServer, middleware};
 use actix_web::{web, App, HttpServer};
-// use actix_multipart::Multipart;
-// use std::fs; // Add import for File
-// use std::fs::File; // Add import for File
-// use std::io::Write; // Add import for Write
-// use futures_util::stream::TryStreamExt;
-// use actix_web::dev::ServiceRequest;
-
 mod handlers;
 mod middlewares;
 
@@ -32,18 +24,8 @@ async fn main() -> std::io::Result<()> {
                     .route("/two", web::get().to(handlers::goodbye::goodbye_two))
             ).service(
                 web::scope("/upload")
-                // .wrap_fn(|req, srv| {
-                //     println!("Hi from start. You requested: {}", req.path());
-                //     srv.call(req).map(|res| {
-                //         println!("Hi from response");
-                //         res
-                //     })
-                // })
-                // wrap(middleware::Logger::default())
-                // wrap(middleware::Logger::default())
                 .wrap(middlewares::upload_file::CustomMiddleware)
-                // wrap_fn(middlewares::upload_file::upload_file)
-                    .route("", web::post().to(handlers::greet::greet_two))
+                .route("", web::post().to(handlers::greet::greet_two))
             )
     })
     .bind("127.0.0.1:8080")?
