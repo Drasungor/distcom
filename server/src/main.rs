@@ -1,9 +1,12 @@
 use actix_web::{web, App, HttpServer};
 mod handlers;
 mod middlewares;
+mod common;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // println!("{:?}", common::config::configObject);
+    // common::config::configObject
     HttpServer::new(|| {
         App::new()
             .service(
