@@ -6,7 +6,9 @@ mod common;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // println!("{:?}", common::config::configObject);
+    println!("{:?}", common::config::CONFIG_OBJECT.x);
     // common::config::configObject
+    // (&common::config::CONFIG_OBJECT).clone();
     HttpServer::new(|| {
         App::new()
             .service(
