@@ -36,3 +36,7 @@ machine and prover implemented by Lambdaclass1.
 usage based on system resource utilization to avoid consuming resources needed by the client and hindering the operating 
 system's functionality. The option to solely generate an execution of a program for uploading to the program server, 
 allowing another client to generate the program proof, will also be provided.
+
+
+![System diagram](imgs/system_diagram.jpg)
+
