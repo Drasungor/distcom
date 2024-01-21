@@ -38,5 +38,5 @@ system's functionality. The option to solely generate an execution of a program 
 allowing another client to generate the program proof, will also be provided.
 
 
-![System diagram](imgs/system_diagram.jpg)
+![System diagram](imgs/translated_system_diagram.jpg)
 
