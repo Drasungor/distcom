@@ -1,4 +1,4 @@
-&nbsp;&nbsp;&nbsp;&nbsp;There are networks like IBM World Community Grid where various institutions upload projects for which 
+&nbsp;&nbsp;&nbsp;&nbsp;There are networks like [IBM World Community Grid](https://www.worldcommunitygrid.org/) where various institutions upload projects for which 
 they need to perform simulations or tests on a large scale, requiring substantial computing power. 
 Generally, these projects that distribute their calculations contribute to scientific work, so it is 
 crucial that the results are verifiable, or one must trust in the results. Because of this, the types 
@@ -28,8 +28,8 @@ relevant to the obtained data based on the problem to be solved.
 &nbsp;&nbsp;&nbsp;&nbsp;The project will have a server where programs to be distributed are uploaded, a Command Line Interface 
 (CLI) for organizations to interact with the server and process received proofs, and a CLI for those donating their computing 
 power to choose which project to contribute to and start doing so. A small example of a project to be distributed, implemented 
-in Cairo, will also be included. The system will be developed using the Rust programming language and will utilize the virtual 
-machine and prover implemented by Lambdaclass1.
+in Cairo, will also be included. The system will be developed using the Rust programming language and will utilize the [virtual 
+machine and prover](https://github.com/lambdaclass/lambdaworks) implemented by Lambdaclass.
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;As a computing donation system, consideration must be given to the computer's resources, adjusting 
