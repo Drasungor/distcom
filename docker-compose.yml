@@ -5,9 +5,15 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: my_database
       POSTGRES_USER: postgres_user
       POSTGRES_PASSWORD: postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "my_database"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s  
     # ports:
     #   - "5432:5432"
 
@@ -18,7 +24,10 @@ services:
       - "8080:8080"
     volumes:
       - ./server:/app
+    # depends_on:
+    #   - postgres
     depends_on:
-      - postgres
+      postgres:
+          condition: service_healthy
     environment:
       DATABASE_URL: "postgres://postgres_user:postgres_password@postgres:5432/mydatabase"
