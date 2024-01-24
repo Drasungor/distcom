@@ -8,7 +8,7 @@ actix = "0.13"
 actix-multipart = "0.6.1"
 actix-web = "4"
 config = "0.13.4"
-diesel = "2.1.4"
+diesel =  { version = "2.1.4", features = ["postgres"] }
 futures-util = "0.3.29"
 lazy_static = "1.4.0"
 serde = "1.0.192"
