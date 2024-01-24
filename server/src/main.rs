@@ -2,11 +2,12 @@ use actix_web::{web, App, HttpServer};
 mod handlers;
 mod middlewares;
 mod common;
+mod services;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // println!("{:?}", common::config::CONFIG_OBJECT.x);
-    println!("{:?}", common::lazy_initialize::CONFIG_OBJECT.x);
+    println!("{:?}", common::config::CONFIG_OBJECT.x);
+    // println!("{:?}", common::lazy_initialize::CONFIG_OBJECT.x);
     // println!("{:?}", common::config::CONFIG_OBJECT.database_url);
     HttpServer::new(|| {
         App::new()

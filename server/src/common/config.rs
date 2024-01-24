@@ -10,12 +10,12 @@ pub struct Config {
    pub database_url: String,
 }
 
-// lazy_static! {
-//     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
-// }
+lazy_static! {
+    pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
+}
 
 
-pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
+fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
     let mut file = File::open(path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
