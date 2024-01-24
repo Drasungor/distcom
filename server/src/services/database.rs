@@ -8,7 +8,7 @@ use crate::common::config;
 lazy_static! {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     // let connection = PgConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-    pub static ref connection = PgConnection::establish(config::CONFIG_OBJECT.).unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+    pub static ref connection = PgConnection::establish(config::CONFIG_OBJECT).unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
     println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
 }
