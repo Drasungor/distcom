@@ -1,5 +1,6 @@
 {
     "x": 50,
     "y": 51,
-    "database_url": "postgres://postgres_user@postgres_password:5432/mydatabase"
+    "database_url": "postgres://postgres_user:postgres_password@postgres:5432/my_database"
+    
 }
