@@ -1,53 +1,15 @@
 version: '3.4'
 
 services:
-
-  # postgres:
-  #   image: postgres:latest
-  #   environment:
-  #     POSTGRES_DB: my_database
-  #     POSTGRES_USER: postgres_user
-  #     # POSTGRES_USER: root
-  #     POSTGRES_PASSWORD: postgres_password
-
-  #     # POSTGRES_PASSWORD: root
-  #     # POSTGRES_DB: my_database
-  #   volumes:
-  #     - ./db.sql:/docker-entrypoint-initdb.d/db.sql
-  #     - ./postgres-data:/var/lib/postgresql/data
-  #   healthcheck:
-  #     # test: ["CMD-SHELL", "pg_isready", "-d my_database"]
-  #     # test: ["CMD-SHELL", "pg_isready", "-d my_database", "-U postgres_user", "-W postgres_password"]
-  #     # test: ["CMD-SHELL", "pg_isready", "-d", "my_database", "-U", "postgres_user", "-W", "postgres_password"]
-  #     test: ["CMD-SHELL", "pg_isready"]
-  #     # test: ["CMD-SHELL", "pg_isready", "-d", "my_database", "-U", "root", "-W", "postgres_password"]
-  #     # test: "CMD-SHELL pg_isready -d my_database -U postgres_user -W postgres_password"
-  #     interval: 30s
-  #     timeout: 60s
-  #     retries: 5
-  #     start_period: 20s  
-  #   # ports:
-  #   #   - "5432:5432"
-
-  # pgadmin:
-  #   container_name: pgadmin4_container
-  #   image: dpage/pgadmin4
-  #   restart: always
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
-  #     PGADMIN_DEFAULT_PASSWORD: root
-  #   ports:
-  #     - "5050:80"
-
-
-
-
   db:
     image: mysql:8.0
     restart: always
     environment:
         MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
         MYSQL_DATABASE: ${MYSQL_DATABASE}
+    # ports:
+    #   - "3306:8080"
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       # interval: 10s
@@ -59,7 +21,6 @@ services:
       retries: 5
       start_period: 20s
     volumes:
-        # - ${VOLUME_DIR}/db_data:/var/lib/mysql:z  # Add this line for the volume
         - ${VOLUME_DIR}/db_data:/var/lib/mysql  # Add this line for the volume
 
   phpmyadmin:
@@ -83,11 +44,7 @@ services:
       - "${SERVER_EXTERNAL_PORT}:8080"
     volumes:
       - ./server:/app
-    # depends_on:
-    #   - postgres
     depends_on:
       - db
       # db:
       #   condition: service_healthy
-
-      # postgres:

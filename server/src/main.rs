@@ -1,14 +1,17 @@
 use actix_web::{web, App, HttpServer};
-mod handlers;
-mod middlewares;
-mod common;
-mod services;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::Pool;
 use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::R2D2Connection;
 
+mod handlers;
+mod middlewares;
+mod common;
+mod services;
+mod component;
+
+#[derive(Clone)]
 struct AppState {
     db_connection_pool: Pool<ConnectionManager<MysqlConnection>>
 }
