@@ -7,6 +7,7 @@ use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::Pool;
 use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::R2D2Connection;
 
 struct AppState {
     db_connection_pool: Pool<ConnectionManager<MysqlConnection>>
@@ -20,9 +21,16 @@ async fn main() -> std::io::Result<()> {
 
     let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Could not build connection pool");
 
+    let connection_pool_copy = connection_pool.clone();
+
     let state = web::Data::new(AppState { db_connection_pool: connection_pool });
 
     println!("ekisdddddddddddddddddddddddddddddddddddd");
+
+    let query_result = connection_pool_copy.get().expect("exploto el get de conexion").ping();
+    query_result.expect("Error in database ping");
+
+    println!("pase el ping");
 
     HttpServer::new(move || {
         App::new()
