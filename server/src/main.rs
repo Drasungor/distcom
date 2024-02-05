@@ -9,7 +9,7 @@ mod handlers;
 mod middlewares;
 mod common;
 mod services;
-mod component;
+mod components;
 
 #[derive(Clone)]
 struct AppState {
