@@ -2,3 +2,4 @@ target
 uploads
 db_data
 db.sql
+migrations

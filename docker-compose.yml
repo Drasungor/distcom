@@ -37,14 +37,14 @@ services:
       # db:
       #   condition: service_healthy
 
-  rust-app:
-    build:
-      context: ./server
-    ports:
-      - "${SERVER_EXTERNAL_PORT}:8080"
-    volumes:
-      - ./server:/app
-    depends_on:
-      - db
-      # db:
-      #   condition: service_healthy
+  # rust-app:
+  #   build:
+  #     context: ./server
+  #   ports:
+  #     - "${SERVER_EXTERNAL_PORT}:8080"
+  #   volumes:
+  #     - ./server:/app
+  #   depends_on:
+  #     - db
+  #     # db:
+  #     #   condition: service_healthy
