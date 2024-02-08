@@ -16,7 +16,9 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 // embed_migrations!();
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations/2024-02-07-021834_create_posts");
+// Copied implementation from
+// https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 mod handlers;
 mod middlewares;
@@ -45,7 +47,11 @@ async fn main() -> std::io::Result<()> {
 
     let aux_connection = connection_pool.get();
     let mut asdasdas = aux_connection.expect("wenas");
+
+    // println!("Migrations: {:?}", MIGRATIONS);
+
     let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
+    // let maybe_connection = asdasdas.run_migrations(MIGRATIONS);
     // connection_pool.run_pending_migrations(MIGRATIONS)?;
     // MIGRATIONS.migrations().
     // connection_pool.run_pending_migrations()?;
@@ -53,6 +59,7 @@ async fn main() -> std::io::Result<()> {
     // embedded_migrations::run(&connection);
 
     println!("Passed maybe_connection");
+    println!("{:?}", maybe_connection);
     
 
     let connection_pool_copy = connection_pool.clone();

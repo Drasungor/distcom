@@ -1,17 +1,12 @@
+// @generated automatically by Diesel CLI.
+
 diesel::table! {
     account (organization_id) {
-        organization_id -> BigInt,
+        organization_id -> Bigint,
+        #[max_length = 255]
         name -> Varchar,
+        #[max_length = 255]
         description -> Varchar,
         published -> Bool,
     }
 }
-
-// diesel::table! {
-//     posts (id) {
-//         id -> Int4,
-//         title -> Varchar,
-//         body -> Text,
-//         published -> Bool,
-//     }
-// }
