@@ -7,6 +7,7 @@ use lazy_static::lazy_static;
 pub struct Config {
    pub x: i32,
    pub y: i32,
+   pub database_url: String,
 }
 
 lazy_static! {
