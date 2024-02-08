@@ -7,6 +7,6 @@ diesel::table! {
         name -> Varchar,
         #[max_length = 255]
         description -> Varchar,
-        published -> Bool,
+        account_was_verified -> Bool,
     }
 }
