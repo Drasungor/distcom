@@ -25,6 +25,7 @@ mod middlewares;
 mod common;
 mod services;
 mod components;
+mod schema;
 
 // pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
