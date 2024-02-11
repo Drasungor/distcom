@@ -3,4 +3,4 @@ pub mod db_models;
 pub mod controller;
 pub mod service;
 pub mod dal;
-pub mod accountMysqlDal;
+pub mod account_mysql_dal;
