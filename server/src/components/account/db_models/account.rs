@@ -9,7 +9,7 @@ pub struct CompleteAccount {
     pub description: String,
     pub account_was_verified: bool,
     pub username: String,
-    pub password: String,
+    pub password_hash: String,
 }
 
 #[derive(Insertable)]
@@ -20,5 +20,5 @@ pub struct NewAccount {
     pub description: String,
     pub account_was_verified: bool,
     pub username: String,
-    pub password: String,
+    pub password_hash: String,
 }

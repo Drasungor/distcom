@@ -1,4 +1,6 @@
+use super::db_models::account::NewAccount;
+
 pub trait AccountDal {
-    // This method will be implemented by types that implement the Printable trait
-    // fn print(&self);
+    async fn register_account(new_account_data: NewAccount);
+
 }

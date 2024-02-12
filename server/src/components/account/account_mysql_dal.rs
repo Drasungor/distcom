@@ -1,4 +1,4 @@
-use super::dal::AccountDal;
+use super::{dal::AccountDal, db_models::account::NewAccount};
 
 // Define a struct that will implement the Printable trait
 struct AccountMysqlDal {
@@ -9,4 +9,9 @@ impl AccountDal for AccountMysqlDal {
     // fn print(&self) {
     //     println!("Point coordinates: ({}, {})", self.x, self.y);
     // }
+
+    async fn register_account(new_account_data: NewAccount) {
+
+    }
+
 }

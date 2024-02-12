@@ -14,7 +14,7 @@ impl<'a> AccountController<'a> {
         AccountController { dependencies }
     }
 
-    async fn register(&self, body: web::Json<Credentials>) -> impl Responder {
+    async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
         HttpResponse::Ok()
     }
     
@@ -30,6 +30,15 @@ impl<'a> AccountController<'a> {
 struct Credentials {
     username: String,
     password: String,
+}
+
+#[derive(Deserialize)]
+pub struct ReceivedNewAccount {
+    pub username: String,
+    pub password: String,
+    pub name: String,
+    pub description: String,
+    pub account_was_verified: bool,
 }
 
 
