@@ -7,6 +7,9 @@ use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::R2D2Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
+use diesel_async::{RunQueryDsl, AsyncConnection, AsyncMysqlConnection};
+
+
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -20,33 +23,37 @@ mod schema;
 
 #[derive(Clone)]
 struct AppState {
-    db_connection_pool: Pool<ConnectionManager<MysqlConnection>>
+    // db_connection_pool: Pool<ConnectionManager<MysqlConnection>>
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("{:?}", common::config::CONFIG_OBJECT.x);
     let database_url = common::config::CONFIG_OBJECT.database_url.as_str();
-    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+    
+    // let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+    // let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Could not build connection pool");
+    // let aux_connection = connection_pool.get();
+    // let mut asdasdas = aux_connection.expect("wenas");
 
-    let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Could not build connection pool");
+    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL")?).await?;
 
-    let aux_connection = connection_pool.get();
-    let mut asdasdas = aux_connection.expect("wenas");
-    let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
+    // let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
+    let maybe_connection = connection.run_pending_migrations(MIGRATIONS);
 
     println!("Passed maybe_connection");
     println!("{:?}", maybe_connection);
     
 
-    let connection_pool_copy = connection_pool.clone();
+    // let connection_pool_copy = connection_pool.clone();
 
-    let state = web::Data::new(AppState { db_connection_pool: connection_pool });
+    // let state = web::Data::new(AppState { db_connection_pool: connection_pool });
+    let state = web::Data::new(AppState { });
 
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    let query_result = connection_pool_copy.get().expect("exploto el get de conexion").ping();
-    query_result.expect("Error in database ping");
+    // let query_result = connection_pool_copy.get().expect("exploto el get de conexion").ping();
+    // query_result.expect("Error in database ping");
 
     println!("pase el ping");
 
