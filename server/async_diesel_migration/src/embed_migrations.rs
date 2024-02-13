@@ -1,9 +1,11 @@
 use crate::migrations::migration_directory_from_given_path;
-// use migrations_internals::{migrations_directories, version_from_string, TomlMetadata};
+use crate::migrations_directories;
 use quote::quote;
 use std::error::Error;
 use std::fs::DirEntry;
 use std::path::Path;
+use proc_macro2;
+
 
 pub fn expand(path: String) -> proc_macro2::TokenStream {
     let migrations_path_opt = if path.is_empty() {
@@ -26,7 +28,7 @@ pub fn expand(path: String) -> proc_macro2::TokenStream {
 fn migration_literals_from_path(
     path: &Path,
 ) -> Result<Vec<proc_macro2::TokenStream>, Box<dyn Error>> {
-    let mut migrations = crate::migrations_directories(path)?.collect::<Result<Vec<_>, _>>()?;
+    let mut migrations = migrations_directories(path)?.collect::<Result<Vec<_>, _>>()?;
 
     migrations.sort_by_key(DirEntry::path);
 
