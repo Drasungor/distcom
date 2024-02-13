@@ -1,18 +1,25 @@
 use actix_web::{web, App, HttpServer};
 use diesel::migration::MigrationSource;
 use diesel::mysql::MysqlConnection;
+// use diesel::mysql::Mysql;
 use diesel::prelude::*;
 use diesel::r2d2::Pool;
 use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::R2D2Connection;
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+// use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 use diesel_async::{RunQueryDsl, AsyncConnection, AsyncMysqlConnection};
+// use diesel_async::{RunQueryDsl, AsyncConnection, AsyncPgConnection};
+// use diesel_async_migrations::{EmbeddedMigrations, embed_migrations};
 
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
+// pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
+// pub const MIGRATIONS: diesel_async_migrations::EmbeddedMigrations = diesel_async_migrations::embed_migrations!();
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
 
 mod handlers;
 mod middlewares;
@@ -20,6 +27,7 @@ mod common;
 mod services;
 mod components;
 mod schema;
+mod utils;
 
 #[derive(Clone)]
 struct AppState {
@@ -36,10 +44,12 @@ async fn main() -> std::io::Result<()> {
     // let aux_connection = connection_pool.get();
     // let mut asdasdas = aux_connection.expect("wenas");
 
-    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL")?).await?;
+    // let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL")?).await?;
+    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
+    // let mut connection = AsyncPgConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
 
     // let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
-    let maybe_connection = connection.run_pending_migrations(MIGRATIONS);
+    let maybe_connection = connection.run_pending_migrations(MIGRATIONS).await;
 
     println!("Passed maybe_connection");
     println!("{:?}", maybe_connection);
