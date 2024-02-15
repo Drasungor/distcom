@@ -50,10 +50,15 @@ async fn main() -> std::io::Result<()> {
     // let mut connection = AsyncPgConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
 
     // let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
-    let maybe_connection = connection.run_pending_migrations(MIGRATIONS).await;
 
-    println!("Passed maybe_connection");
-    println!("{:?}", maybe_connection);
+    // // Previous working version
+    // let maybe_connection = connection.run_pending_migrations(MIGRATIONS).await;
+
+    MIGRATIONS.run_pending_migrations(&mut connection).await.expect("The migration failed");
+
+
+    // println!("Passed maybe_connection");
+    // println!("{:?}", connection);
     
 
     // let connection_pool_copy = connection_pool.clone();
