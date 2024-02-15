@@ -139,10 +139,14 @@ where
             async move {
                 conn.batch_execute(&qry).await?;
 
-                let version = diesel::insert_into(__diesel_schema_migrations::table)
-                    .values(__diesel_schema_migrations::version.eq(version))
-                    .returning(__diesel_schema_migrations::version)
-                    .get_result::<String>(conn)
+                // let version = diesel::insert_into(__diesel_schema_migrations::table)
+                //     .values(__diesel_schema_migrations::version.eq(version))
+                //     .returning(__diesel_schema_migrations::version)
+                //     .get_result::<String>(conn)
+                //     .await?;
+                diesel::insert_into(__diesel_schema_migrations::table)
+                    .values(__diesel_schema_migrations::version.eq(version.clone()))
+                    .execute(conn)
                     .await?;
 
                 Ok(Version { version })
