@@ -46,8 +46,13 @@ async fn main() -> std::io::Result<()> {
     // let mut asdasdas = aux_connection.expect("wenas");
 
     // let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL")?).await?;
-    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
     // let mut connection = AsyncPgConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
+
+
+    // Original working line
+    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
+    // let mut connection = AsyncMysqlConnection::establish("mysql://root:example@127.0.0.1:3306/my_database").await.expect("text2");
+    
 
     // let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
 
