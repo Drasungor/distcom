@@ -3,7 +3,14 @@ name = "distcom"
 version = "0.1.0"
 edition = "2021"
 
+# [lib]
+# proc-macro = true
+# path = "src/main.rs"
+
 [dependencies]
+mysql_diesel_async_migration = { path = "./mysql_diesel_async_migration", version = "0.1.0" }
+embed_migrations_macro_function = { path = "./mysql_diesel_async_migration/embed_migrations_macro_function", version = "0.1.0" }
+
 actix = "0.13"
 actix-multipart = "0.6.1"
 actix-web = "4"
@@ -11,7 +18,7 @@ argon2 = "0.5.3"
 config = "0.13.4"
 diesel =  { version = "2.1.4", features = ["mysql", "r2d2"] }
 diesel-async = { version = "0.4.1", features = ["mysql"] }
-diesel_migrations = "2.1.0"
+# diesel_migrations = "2.1.0"
 futures-util = "0.3.29"
 lazy_static = "1.4.0"
 serde = "1.0.192"
@@ -19,3 +26,9 @@ serde_derive = "1.0.192"
 serde_json = "1.0.108"
 tar = "0.4.40"
 toml = "0.8.8"
+
+
+
+[workspace]
+# members = [ "./mysql_diesel_async_migration" ]
+members = [ "./mysql_diesel_async_migration", "./mysql_diesel_async_migration/embed_migrations_macro_function" ]
