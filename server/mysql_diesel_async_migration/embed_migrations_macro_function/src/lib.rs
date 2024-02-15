@@ -57,7 +57,7 @@ use proc_macro::TokenStream;
 /// }
 /// ```
 #[proc_macro]
-pub fn embed_migrations(input: TokenStream) -> TokenStream {
+pub fn mysql_embed_migrations(input: TokenStream) -> TokenStream {
     embed_migrations::expand(input.to_string())
         .to_string()
         .parse()

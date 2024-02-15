@@ -5,7 +5,7 @@ use std::{
 
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
-pub use embed_migrations_macro_function::embed_migrations;
+pub use embed_migrations_macro_function::mysql_embed_migrations;
 use scoped_futures::ScopedFutureExt;
 use tracing::info;
 

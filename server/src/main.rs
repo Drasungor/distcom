@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer};
-use diesel::migration::MigrationSource;
+// use diesel::migration::MigrationSource;
 use diesel::mysql::MysqlConnection;
 // use diesel::mysql::Mysql;
 use diesel::prelude::*;
@@ -11,14 +11,15 @@ use diesel::r2d2::R2D2Connection;
 use diesel_async::{RunQueryDsl, AsyncConnection, AsyncMysqlConnection};
 // use diesel_async::{RunQueryDsl, AsyncConnection, AsyncPgConnection};
 // use diesel_async_migrations::{EmbeddedMigrations, embed_migrations};
-
+use mysql_diesel_async_migration::EmbeddedMigrations;
+use embed_migrations_macro_function::mysql_embed_migrations;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
 // pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 // pub const MIGRATIONS: diesel_async_migrations::EmbeddedMigrations = diesel_async_migrations::embed_migrations!();
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+pub const MIGRATIONS: EmbeddedMigrations = mysql_embed_migrations!();
 
 
 mod handlers;
