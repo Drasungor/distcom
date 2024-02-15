@@ -877,8 +877,10 @@ dependencies = [
  "diesel",
  "diesel-async",
  "diesel_migrations",
+ "embed_migrations_macro_function",
  "futures-util",
  "lazy_static",
+ "mysql_diesel_async_migration",
  "serde",
  "serde_derive",
  "serde_json",
@@ -897,6 +899,14 @@ name = "either"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11157ac094ffbdde99aa67b23417ebdd801842852b500e395a45a9c0aac03e4a"
+
+[[package]]
+name = "embed_migrations_macro_function"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "encoding_rs"
@@ -1589,6 +1599,18 @@ dependencies = [
  "thiserror",
  "time",
  "uuid",
+]
+
+[[package]]
+name = "mysql_diesel_async_migration"
+version = "0.1.0"
+dependencies = [
+ "diesel",
+ "diesel-async",
+ "embed_migrations_macro_function",
+ "lazy_static",
+ "scoped-futures",
+ "tracing",
 ]
 
 [[package]]
@@ -2685,7 +2707,19 @@ checksum = "c3523ab5a71916ccf420eebdf5521fcef02141234bbc0b8a49f2fdc4544364ef"
 dependencies = [
  "log",
  "pin-project-lite",
+ "tracing-attributes",
  "tracing-core",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]

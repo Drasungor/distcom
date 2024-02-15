@@ -1,0 +1,16 @@
+[package]
+name = "embed_migrations_macro_function"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "migrations for diesel_async"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
