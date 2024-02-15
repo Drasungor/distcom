@@ -47,7 +47,7 @@ pub struct EmbeddedMigrations {
 impl EmbeddedMigrations {
     async fn setup_db<C>(&self, conn: &mut C) -> Result<()>
     where
-        C: AsyncConnection<Backend = diesel::pg::Pg>,
+        C: AsyncConnection<Backend = diesel::mysql::Mysql>,
     {
         if self.setup_attempted.fetch_add(1, Ordering::SeqCst) != 0 {
             return Ok(());
@@ -60,7 +60,7 @@ impl EmbeddedMigrations {
 
     pub async fn run_pending_migrations<C>(&self, conn: &mut C) -> Result<()>
     where
-        C: AsyncConnection<Backend = diesel::pg::Pg> + 'static + Send,
+        C: AsyncConnection<Backend = diesel::mysql::Mysql> + 'static + Send,
     {
         self.setup_db(conn).await?;
 
@@ -82,7 +82,7 @@ impl EmbeddedMigrations {
 
     pub async fn revert_last_migration<C>(&self, conn: &mut C) -> Result<()>
     where
-        C: AsyncConnection<Backend = diesel::pg::Pg> + 'static + Send,
+        C: AsyncConnection<Backend = diesel::mysql::Mysql> + 'static + Send,
     {
         if let Some(last_migration_version) = get_applied_migrations(conn).await?.into_iter().next()
         {
@@ -100,7 +100,7 @@ impl EmbeddedMigrations {
 
     pub async fn pending_migrations<C>(&self, conn: &mut C) -> Result<Vec<EmbeddedMigration>>
     where
-        C: AsyncConnection<Backend = diesel::pg::Pg>,
+        C: AsyncConnection<Backend = diesel::mysql::Mysql>,
     {
         self.setup_db(conn).await?;
         let applied_versions = get_applied_migrations(conn).await?;
@@ -130,7 +130,7 @@ struct Version {
 
 async fn run_migration<'a, C>(conn: &mut C, migration: &'a EmbeddedMigration) -> Result<Version>
 where
-    C: AsyncConnection<Backend = diesel::pg::Pg> + 'static + Send,
+    C: AsyncConnection<Backend = diesel::mysql::Mysql> + 'static + Send,
 {
     let qry = migration.up.to_string();
     let version = migration.version();
@@ -153,10 +153,10 @@ where
 
     Ok(res)
 }
-
+ 
 async fn revert_migration<'a, C>(conn: &mut C, migration: &'a EmbeddedMigration) -> Result<Version>
 where
-    C: AsyncConnection<Backend = diesel::pg::Pg> + 'static + Send,
+    C: AsyncConnection<Backend = diesel::mysql::Mysql> + 'static + Send,
 {
     conn.transaction::<_, diesel::result::Error, _>(|conn| {
         async move {
@@ -178,7 +178,7 @@ where
 
 async fn get_applied_migrations<C>(conn: &mut C) -> Result<Vec<Version>>
 where
-    C: AsyncConnection<Backend = diesel::pg::Pg>,
+    C: AsyncConnection<Backend = diesel::mysql::Mysql>,
 {
     let res = __diesel_schema_migrations::table
         .select(__diesel_schema_migrations::version)
