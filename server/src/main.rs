@@ -39,35 +39,8 @@ struct AppState {
 async fn main() -> std::io::Result<()> {
     println!("{:?}", common::config::CONFIG_OBJECT.x);
     let database_url = common::config::CONFIG_OBJECT.database_url.as_str();
-    
-    // let manager = ConnectionManager::<MysqlConnection>::new(database_url);
-    // let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Could not build connection pool");
-    // let aux_connection = connection_pool.get();
-    // let mut asdasdas = aux_connection.expect("wenas");
-
-    // let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL")?).await?;
-    // let mut connection = AsyncPgConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
-
-
-    // Original working line
-    let mut connection = AsyncMysqlConnection::establish(&std::env::var("DATABASE_URL").expect("text")).await.expect("text2");
-    // let mut connection = AsyncMysqlConnection::establish("mysql://root:example@127.0.0.1:3306/my_database").await.expect("text2");
-    
-
-    // let maybe_connection = asdasdas.run_pending_migrations(MIGRATIONS);
-
-    // // Previous working version
-    // let maybe_connection = connection.run_pending_migrations(MIGRATIONS).await;
-
+    let mut connection = AsyncMysqlConnection::establish(database_url).await.expect("text2");
     MIGRATIONS.run_pending_migrations(&mut connection).await.expect("The migration failed");
-
-
-    // println!("Passed maybe_connection");
-    // println!("{:?}", connection);
-    
-
-    // let connection_pool_copy = connection_pool.clone();
-
     // let state = web::Data::new(AppState { db_connection_pool: connection_pool });
     let state = web::Data::new(AppState { });
 
