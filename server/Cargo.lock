@@ -869,6 +869,7 @@ dependencies = [
  "futures-util",
  "lazy_static",
  "mysql_diesel_async_migration",
+ "rand",
  "serde",
  "serde_derive",
  "serde_json",

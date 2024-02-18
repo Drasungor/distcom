@@ -1,6 +1,6 @@
 use crate::common::server_dependencies::ServerDependencies;
 
-use super::utils::generate_password_hashes;
+use super::utils::generate_password_hash;
 
 pub struct AccountService<'a> {
     dependencies: &'a ServerDependencies,
@@ -13,9 +13,9 @@ impl<'a> AccountService<'a> {
     }
     
     async fn register(username: String, password: String) {
-        let password_hash = generate_password_hashes(password);
+        let password_hash = generate_password_hash(password);
 
-
+        
 
 
     }
