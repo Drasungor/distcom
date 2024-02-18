@@ -1,5 +1,7 @@
-pub struct ServiceDependencies {
+use crate::components::account::dal::AccountDal;
 
+pub struct ServiceDependencies {
+    account_dal: Box<dyn AccountDal>,
 }
 
 pub struct DatabaseDependencies {
