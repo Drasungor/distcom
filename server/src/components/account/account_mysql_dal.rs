@@ -2,12 +2,16 @@
 // use diesel_async::RunQueryDsl;
 
 // use super::{dal::AccountDal, db_models::account::NewAccount};
+use diesel::mysql::MysqlConnection;
+use diesel::RunQueryDsl;
+use diesel::r2d2::{ ConnectionManager, Pool };
 use super::{dal::AccountDal, db_models::account::{CompleteAccount}};
 
 // Define a struct that will implement the Printable trait
 struct AccountMysqlDal {
 // struct AccountMysqlDal<'a> {
     // database_connection: &'a mut AsyncMysqlConnection,
+    database_connection: Pool<ConnectionManager<MysqlConnection>>,
 }
 
 impl AccountMysqlDal {
@@ -27,6 +31,12 @@ impl AccountDal for AccountMysqlDal {
         //     .execute(self.database_connection)
         //     .await
         //     .expect("Error saving new post");
+        let mut connection = self.database_connection.get().expect("get connection failure");
+
+        diesel::insert_into(crate::schema::account::table)
+            .values(new_account_data)
+            .execute(&mut connection)
+            .expect("Error saving new post");
     }
 
 }
