@@ -1,9 +1,10 @@
 use crate::common::server_dependencies::ServerDependencies;
 
-use super::utils::generate_password_hash;
+use super::{dal::AccountDal, utils::generate_password_hash};
 
 pub struct AccountService<'a> {
     dependencies: &'a ServerDependencies,
+    accountDal: Box<dyn AccountDal>,
 }
 
 impl<'a> AccountService<'a> {
@@ -12,7 +13,7 @@ impl<'a> AccountService<'a> {
         AccountService { dependencies }
     }
     
-    async fn register(username: String, password: String) {
+    async fn register(&self, username: String, password: String) {
         let password_hash = generate_password_hash(password);
 
         

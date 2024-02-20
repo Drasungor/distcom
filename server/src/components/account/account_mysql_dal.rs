@@ -12,33 +12,23 @@ use super::{dal::AccountDal, db_models::account::{CompleteAccount}};
 struct AccountMysqlDal {
 // struct AccountMysqlDal<'a> {
     // database_connection: &'a mut AsyncMysqlConnection,
-    database_connection: Pool<ConnectionManager<MysqlConnection>>,
+    database_connection_pool: Pool<ConnectionManager<MysqlConnection>>,
 }
 
 impl AccountMysqlDal {
-// impl<'a> AccountMysqlDal<'a> {
-    // fn new(database_connection: &'a mut AsyncMysqlConnection) -> AccountMysqlDal<'a> {
-    //     return AccountMysqlDal{ database_connection };
-    // }
+    fn new(database_connection_pool: Pool<ConnectionManager<MysqlConnection>>) -> AccountMysqlDal {
+        return AccountMysqlDal{ database_connection_pool };
+    }
 }
 
 
 impl AccountDal for AccountMysqlDal {
-// impl<'a> AccountDal for AccountMysqlDal<'a> {
-    // async fn register_account(&self, new_account_data: &NewAccount) {
     async fn register_account(&mut self, new_account_data: CompleteAccount) {
-        // diesel::insert_into(crate::schema::account::table)
-        //     .values(new_account_data)
-        //     .execute(self.database_connection)
-        //     .await
-        //     .expect("Error saving new post");
-        let mut connection = self.database_connection.get().expect("get connection failure");
-
+        let mut connection = self.database_connection_pool.get().expect("get connection failure");
         web::block(move || diesel::insert_into(crate::schema::account::table)
         .values(&new_account_data)
         .execute(&mut connection)
         .expect("Error saving new post")).await.expect("Error in future await");
-        
     }
 
 }
