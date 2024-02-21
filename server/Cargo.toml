@@ -27,6 +27,7 @@ tar = "0.4.40"
 toml = "0.8.8"
 rand = "0.8.5"
 deadpool = "0.10.0"
+uuid = { version = "1.7.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
 
 
 

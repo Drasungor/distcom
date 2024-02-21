@@ -15,6 +15,7 @@ impl<'a> AccountController<'a> {
     }
 
     async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
+        self.dependencies.service_dependencies
         HttpResponse::Ok()
     }
     

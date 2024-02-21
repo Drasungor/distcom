@@ -5,7 +5,8 @@ use diesel::prelude::*;
 #[diesel(table_name = crate::schema::account)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct CompleteAccount {
-    pub organization_id: i64,
+    // pub organization_id: i64,
+    pub organization_id: String,
     pub name: String,
     pub description: String,
     pub account_was_verified: bool,
