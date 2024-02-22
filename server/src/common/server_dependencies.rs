@@ -30,10 +30,13 @@ impl<'a> ServerDependencies<'a> {
             account_service: None,
         };
 
-        let account_service: AccountService = AccountService::new(&server_dependencies, database_connection_pool.clone());
+        // let account_service: AccountService = AccountService::new(&server_dependencies, database_connection_pool.clone());
+        let mut account_service: AccountService = AccountService::new(database_connection_pool.clone());
 
 
         server_dependencies.account_service = Some(account_service);
+
+        server_dependencies.account_service.as_mut().unwrap().assign_server_dependencies(&server_dependencies);
 
         return server_dependencies;
     }

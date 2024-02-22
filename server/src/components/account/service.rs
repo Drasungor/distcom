@@ -12,19 +12,29 @@ use super::utils::generate_password_hash;
 // use super::{dal::AccountDal, utils::generate_password_hash};
 
 pub struct AccountService<'a> {
-    dependencies: &'a ServerDependencies<'a>,
+    // dependencies: &'a ServerDependencies<'a>,
+    dependencies: Option<&'a ServerDependencies<'a>>,
     account_dal: AccountMysqlDal,
 }
 
 impl<'a> AccountService<'a> {
 
-    pub fn new(dependencies: &'a ServerDependencies, database_connection_pool: Pool<ConnectionManager<MysqlConnection>>) -> AccountService<'a> {
+    // pub fn new(dependencies: &'a ServerDependencies, database_connection_pool: Pool<ConnectionManager<MysqlConnection>>) -> AccountService<'a> {
+    pub fn new(database_connection_pool: Pool<ConnectionManager<MysqlConnection>>) -> AccountService<'a> {
         AccountService { 
-            dependencies,
+            dependencies: None,
             account_dal: AccountMysqlDal::new(database_connection_pool),
         }
     }
     
+    pub fn assign_server_dependencies(&mut self, dependencies: &'a ServerDependencies) {
+        self.dependencies = Some(dependencies);
+        // AccountService { 
+        //     dependencies: None,
+        //     account_dal: AccountMysqlDal::new(database_connection_pool),
+        // }
+    }
+
     pub async fn register(&self, new_account_data: ReceivedNewAccount) {
         let id = Uuid::new_v4();
         let password_hash = generate_password_hash(new_account_data.password);
