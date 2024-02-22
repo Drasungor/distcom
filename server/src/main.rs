@@ -24,23 +24,25 @@ mod components;
 mod schema;
 mod utils;
 
-#[derive(Clone)]
-struct AppState {
-    db_connection_pool: Pool<ConnectionManager<MysqlConnection>>,
-    // db_connection_pool: Pool<AsyncDieselConnectionManager<AsyncMysqlConnection>>,
-}
+// #[derive(Clone)]
+// struct AppState {
+//     db_connection_pool: Pool<ConnectionManager<MysqlConnection>>,
+//     // db_connection_pool: Pool<AsyncDieselConnectionManager<AsyncMysqlConnection>>,
+// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("{:?}", common::config::CONFIG_OBJECT.x);
-    let database_url = common::config::CONFIG_OBJECT.database_url.as_str();
-
-
+    
+    
     // let connection_manager = AsyncDieselConnectionManager::<diesel_async::AsyncMysqlConnection>::new(database_url);
     // let pool = Pool::builder(connection_manager).build()?;
+    
+    // let database_url = common::config::CONFIG_OBJECT.database_url.as_str();
+    // let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+    // let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
 
-    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
-    let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
+    let connection_pool = &common::config::CONNECTION_POOL;
 
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
 
@@ -55,14 +57,14 @@ async fn main() -> std::io::Result<()> {
 
 
     // let state = web::Data::new(AppState { db_connection_pool: connection_pool });
-    let state = web::Data::new(AppState { db_connection_pool: connection_pool });
+    // let state = web::Data::new(AppState { db_connection_pool: connection_pool });
 
     println!("ekisdddddddddddddddddddddddddddddddddddd");
     println!("pase el ping");
 
     HttpServer::new(move || {
         App::new()
-            .app_data(state.clone())
+            // .app_data(state.clone())
             .service(
                 web::scope("/")
                     .route("", web::get().to(handlers::index::index))

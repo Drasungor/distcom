@@ -1,23 +1,30 @@
 use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
 use serde_derive::{Serialize, Deserialize};
 
-use crate::common::server_dependencies::ServerDependencies;
+use super::service::AccountService;
+
+// use crate::common::server_dependencies::ServerDependencies;
 
 
-pub struct AccountController<'a> {
-    dependencies: &'a ServerDependencies<'a>,
-}
+// pub struct AccountController<'a> {
+//     dependencies: &'a ServerDependencies<'a>,
+// }
 
-impl<'a> AccountController<'a> {
+pub struct AccountController;
 
-    fn new(dependencies: &'a ServerDependencies) -> AccountController<'a> {
-        AccountController { dependencies }
-    }
+// impl<'a> AccountController<'a> {
+impl AccountController {
 
-    async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
+    // fn new(dependencies: &'a ServerDependencies) -> AccountController<'a> {
+    //     AccountController { dependencies }
+    // }
+
+    // async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
+    async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
         // self.dependencies.service_dependencies.account_service.unwrap("asdasd")
         // self.dependencies.account_service.unwrap().register(body.into_inner()).await;
-        self.dependencies.account_service.as_ref().unwrap().register(body.into_inner()).await;
+        // self.dependencies.account_service.as_ref().unwrap().register(body.into_inner()).await;
+        AccountService::register(body.into_inner()).await;
         HttpResponse::Ok()
     }
     
