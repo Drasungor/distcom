@@ -52,8 +52,9 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/upload")
                 .wrap(middlewares::upload_file::CustomMiddleware)
                 .route("", web::post().to(handlers::greet::greet_two))
+            ).service(
+                account_router("/account")
             )
-            .service(account_router("/account"))
     })
     .bind("127.0.0.1:8080")?
     .run()

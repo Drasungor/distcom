@@ -31,5 +31,4 @@ pub struct ReceivedNewAccount {
     pub password: String,
     pub name: String,
     pub description: String,
-    pub account_was_verified: bool,
 }
