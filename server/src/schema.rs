@@ -2,7 +2,9 @@
 
 diesel::table! {
     account (organization_id) {
-        organization_id -> Bigint,
+        // organization_id -> Bigint,
+        #[max_length = 255]
+        organization_id -> Varchar,
         
         #[max_length = 255]
         name -> Varchar,
@@ -16,7 +18,7 @@ diesel::table! {
         username -> Varchar,
 
         #[max_length = 255]
-        password -> Varchar,
+        password_hash -> Varchar,
     }
 }
 
