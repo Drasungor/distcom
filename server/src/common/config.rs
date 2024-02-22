@@ -15,9 +15,6 @@ pub struct Config {
 
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
-    // let database_url = CONFIG_OBJECT.database_url.as_str();
-    // let manager = ConnectionManager::<MysqlConnection>::new(database_url);
-    // let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&CONFIG_OBJECT.database_url);
 }
 

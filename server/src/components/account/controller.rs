@@ -3,27 +3,11 @@ use serde_derive::{Serialize, Deserialize};
 
 use super::service::AccountService;
 
-// use crate::common::server_dependencies::ServerDependencies;
-
-
-// pub struct AccountController<'a> {
-//     dependencies: &'a ServerDependencies<'a>,
-// }
-
 pub struct AccountController;
 
-// impl<'a> AccountController<'a> {
 impl AccountController {
 
-    // fn new(dependencies: &'a ServerDependencies) -> AccountController<'a> {
-    //     AccountController { dependencies }
-    // }
-
-    // async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
     async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
-        // self.dependencies.service_dependencies.account_service.unwrap("asdasd")
-        // self.dependencies.account_service.unwrap().register(body.into_inner()).await;
-        // self.dependencies.account_service.as_ref().unwrap().register(body.into_inner()).await;
         AccountService::register(body.into_inner()).await;
         HttpResponse::Ok()
     }
@@ -49,10 +33,3 @@ pub struct ReceivedNewAccount {
     pub description: String,
     pub account_was_verified: bool,
 }
-
-
-// pub fn account_controller() -> AccountController {
-//     AccountController {
-//         register,
-//     }
-// }
