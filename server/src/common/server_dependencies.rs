@@ -1,10 +1,13 @@
 // use crate::components::account::dal::AccountDal;
+use diesel::mysql::MysqlConnection;
+use diesel::r2d2::{ ConnectionManager, Pool };
+
 
 use crate::components::account::{account_mysql_dal::AccountMysqlDal, service::AccountService};
 
-pub struct ServiceDependencies {
-    accountService: Option<AccountService>,
-}
+// pub struct ServiceDependencies<'a> {
+//     pub account_service: Option<AccountService<'a>>,
+// }
 
 // pub struct DatabaseDependencies {
 //     // Cannot use traits with async methods
@@ -14,11 +17,24 @@ pub struct ServiceDependencies {
     
 // }
 
-pub struct ServerDependencies {
-    pub service_dependencies: ServiceDependencies,
+pub struct ServerDependencies<'a> {
+    // pub service_dependencies: ServiceDependencies<'a>,
     // pub database_dependencies: DatabaseDependencies,
+
+    pub account_service: Option<AccountService<'a>>,
 }
 
-// impl ServerDependencies {
+impl<'a> ServerDependencies<'a> {
+    pub fn new(database_connection_pool: Pool<ConnectionManager<MysqlConnection>>) -> ServerDependencies<'a> {
+        let mut server_dependencies = ServerDependencies {
+            account_service: None,
+        };
 
-// }
+        let account_service: AccountService = AccountService::new(&server_dependencies, database_connection_pool.clone());
+
+
+        server_dependencies.account_service = Some(account_service);
+
+        return server_dependencies;
+    }
+}

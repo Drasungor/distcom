@@ -5,24 +5,25 @@ use crate::common::server_dependencies::ServerDependencies;
 
 
 pub struct AccountController<'a> {
-    dependencies: &'a ServerDependencies,
+    dependencies: &'a ServerDependencies<'a>,
 }
 
 impl<'a> AccountController<'a> {
 
-    fn new(dependencies: &ServerDependencies) -> AccountController {
+    fn new(dependencies: &'a ServerDependencies) -> AccountController<'a> {
         AccountController { dependencies }
     }
 
     async fn register(&self, body: web::Json<ReceivedNewAccount>) -> impl Responder {
-        self.dependencies.service_dependencies
+        // self.dependencies.service_dependencies.account_service.unwrap("asdasd")
+        // self.dependencies.account_service.unwrap().register(body.into_inner()).await;
+        self.dependencies.account_service.as_ref().unwrap().register(body.into_inner()).await;
         HttpResponse::Ok()
     }
     
     async fn goodbye_two(&self) -> impl Responder {
         HttpResponse::Ok().body("Goodbye, world! two")
     }
-    
     
 }
 
