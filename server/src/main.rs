@@ -5,6 +5,8 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use diesel::r2d2::R2D2Connection;
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 
+use crate::components::account::route::account_router;
+
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -51,6 +53,7 @@ async fn main() -> std::io::Result<()> {
                 .wrap(middlewares::upload_file::CustomMiddleware)
                 .route("", web::post().to(handlers::greet::greet_two))
             )
+            .service(account_router("/account"))
     })
     .bind("127.0.0.1:8080")?
     .run()

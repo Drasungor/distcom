@@ -7,7 +7,7 @@ pub struct AccountController;
 
 impl AccountController {
 
-    async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
+    pub async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
         AccountService::register(body.into_inner()).await;
         HttpResponse::Ok()
     }
