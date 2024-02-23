@@ -5,7 +5,7 @@ use uuid::Uuid;
 use super::account_mysql_dal::AccountMysqlDal;
 use super::controller::ReceivedNewAccount;
 use super::db_models::account::CompleteAccount;
-use super::utils::generate_password_hash;
+use super::utils::{generate_password_hash, is_password_valid};
 
 pub struct AccountService;
 
@@ -27,5 +27,13 @@ impl AccountService {
         AccountMysqlDal::register_account(new_account).await;
 
     }
-    
+
+    pub async fn login(username: String, password: String) {
+        let account_data = AccountMysqlDal::get_account_data_by_username(username).await;
+        if (!is_password_valid(password, account_data.password_hash)) {
+            panic!("Wrong password (refactor this)")
+        }
+
+    }
+
 }
