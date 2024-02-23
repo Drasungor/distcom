@@ -3,7 +3,7 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
 use super::account_mysql_dal::AccountMysqlDal;
-use super::controller::ReceivedNewAccount;
+use super::model::ReceivedNewAccount;
 use super::db_models::account::CompleteAccount;
 use super::utils::{generate_password_hash, is_password_valid};
 
