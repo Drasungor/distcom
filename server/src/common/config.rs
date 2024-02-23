@@ -11,6 +11,9 @@ pub struct Config {
    pub x: i32,
    pub y: i32,
    pub database_url: String,
+   pub basic_token_secret: String,
+   pub refresh_token_secret: String,
+
 }
 
 lazy_static! {
