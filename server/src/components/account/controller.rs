@@ -11,6 +11,11 @@ impl AccountController {
         AccountService::register(body.into_inner()).await;
         HttpResponse::Ok()
     }
+
+    pub async fn login(body: web::Json<Credentials>) -> impl Responder {
+        AccountService::login(body.username.clone(), body.password.clone()).await;
+        HttpResponse::Ok()
+    }
     
     async fn goodbye_two(&self) -> impl Responder {
         HttpResponse::Ok().body("Goodbye, world! two")
@@ -20,7 +25,7 @@ impl AccountController {
 
 
 #[derive(Deserialize)]
-struct Credentials {
+pub struct Credentials {
     username: String,
     password: String,
 }
