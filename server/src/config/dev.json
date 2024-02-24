@@ -2,6 +2,9 @@
     "x": 50,
     "y": 51,
     "database_url": "mysql://root:example@127.0.0.1:3306/my_database",
-    "basic_token_secret": "d4s77D6asd87s6ddD7dghf76kS6D7SDjhk87d6fjsdf7s6df7s",
-    "refresh_token_secret": "464Q6SXasdDAAjbxzaB6AfuNwemskDSDA47dasAdSpokDas4j6k4h"
+    "token": {
+        "basic_token_secret": "d4s77D6asd87s6ddD7dghf76kS6D7SDjhk87d6fjsdf7s6df7s",
+        "basic_token_minutes_duration": 60,
+        "refresh_token_secret": "464Q6SXasdDAAjbxzaB6AfuNwemskDSDA47dasAdSpokDas4j6k4h"
+    }
 }

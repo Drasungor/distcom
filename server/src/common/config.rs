@@ -11,9 +11,15 @@ pub struct Config {
    pub x: i32,
    pub y: i32,
    pub database_url: String,
-   pub basic_token_secret: String,
-   pub refresh_token_secret: String,
+   pub token: Token,
+}
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Token {
+    pub basic_token_secret: String,
+    pub basic_token_minutes_duration: u64,
+    pub refresh_token_secret: String,
+    pub refresh_token_days_duration: u64,
 }
 
 lazy_static! {

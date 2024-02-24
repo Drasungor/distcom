@@ -33,4 +33,3 @@ impl AccountMysqlDal {
         return found_account;
     }
 }
-

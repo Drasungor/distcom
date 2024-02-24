@@ -1,5 +1,7 @@
 use serde_derive::{Serialize, Deserialize};
 
+use crate::utils::jwt_helpers::GeneratedToken;
+
 // Controller input models
 
 #[derive(Deserialize)]
@@ -16,11 +18,12 @@ pub struct ReceivedNewAccount {
     pub description: String,
 }
 
-
-
 // Useful models
 
-
+pub struct LoginTokens {
+    pub basic_token: GeneratedToken,
+    pub refresh_token: GeneratedToken,
+}
 
 // Controller output models
 
