@@ -25,7 +25,7 @@ pub fn generate_jwt(secret: &str, organization_id: &str, expiration_secs: u64) -
     let claims = Claims {
         organization_id: organization_id.to_owned(),
         exp,
-        token_id,
+        token_id: token_id.clone(),
     };
 
     let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
