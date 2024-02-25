@@ -3,6 +3,7 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
 use super::account_mysql_dal::AccountMysqlDal;
+use super::db_models::refresh_token::RefreshToken;
 use super::model::{LoginTokens, ReceivedNewAccount};
 use super::db_models::account::CompleteAccount;
 use super::utils::{generate_basic_token, generate_login_tokens, generate_password_hash, is_password_valid};
@@ -34,6 +35,11 @@ impl AccountService {
             panic!("Wrong password (refactor this)")
         }
         let login_tokens = generate_login_tokens(&account_data.organization_id);
+        let refresh_token_data = RefreshToken {
+            token_id: login_tokens.refresh_token.token_id.clone(),
+            user_id: account_data.organization_id,
+        };
+        AccountMysqlDal::add_refresh_token(refresh_token_data).await;
         return login_tokens;
     }
 
