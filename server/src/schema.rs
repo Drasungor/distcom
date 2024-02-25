@@ -2,7 +2,7 @@
 
 diesel::table! {
     account (organization_id) {
-        // organization_id -> Bigint,
+        
         #[max_length = 255]
         organization_id -> Varchar,
         
@@ -19,14 +19,19 @@ diesel::table! {
 
         #[max_length = 255]
         password_hash -> Varchar,
+
     }
 }
 
 diesel::table! {
     refresh_token (token_id) {
-        token_id -> Bigint,
 
-        user_id -> Bigint,
+        #[max_length = 255]
+        token_id -> Varchar,
+
+        #[max_length = 255]
+        user_id -> Varchar,
+
     }
 }
 

@@ -10,7 +10,8 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use actix_web::web;
 
 use super::db_models::account::CompleteAccount;
-use crate::schema::account;
+use super::db_models::refresh_token::RefreshToken;
+use crate::schema::{account, refresh_token};
 // use crate::schema::account::dsl::*;
 
 pub struct AccountMysqlDal;
@@ -43,6 +44,22 @@ impl AccountMysqlDal {
                 .first::<CompleteAccount>(connection)
                 .expect("Error loading posts");
             return Ok(found_account);
+
+        }).expect("asdasdasd")
+        }).await.expect("Failed wait for get_account_data");
+        return found_account_result;
+    }
+
+    pub async fn add_refresh_token(refresh_token_data: RefreshToken) {
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            diesel::insert_into(refresh_token::table)
+                    .values(&refresh_token_data)
+                    .execute(connection)
+                    .expect("Error saving new post");
+            return Ok(());
 
         }).expect("asdasdasd")
         }).await.expect("Failed wait for get_account_data");
