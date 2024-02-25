@@ -35,10 +35,19 @@ impl AccountMysqlDal {
 
     pub async fn get_account_data_by_username(username: String) -> CompleteAccount {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
-        let found_account = web::block(move || account::table
-            .filter(account::username.eq(username))
-            .first::<CompleteAccount>(&mut connection)
-            .expect("Error loading posts")).await.expect("Failed wait for get_account_data");
-        return found_account;
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let found_account = account::table
+                .filter(account::username.eq(username))
+                .first::<CompleteAccount>(connection)
+                .expect("Error loading posts");
+            return Ok(found_account);
+
+        }).expect("asdasdasd")
+        }).await.expect("Failed wait for get_account_data");
+        return found_account_result;
     }
+
+    
 }
