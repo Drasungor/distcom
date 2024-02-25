@@ -1,14 +1,16 @@
 use jsonwebtoken::{encode, decode, Header, Validation, Algorithm, EncodingKey, DecodingKey};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
+use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     exp: usize,
     organization_id: String,
     token_id: String,
 }
 
+#[derive(Serialize)]
 pub struct GeneratedToken {
     pub token_id: String,
     pub token: String,

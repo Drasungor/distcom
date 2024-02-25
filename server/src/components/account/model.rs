@@ -20,6 +20,7 @@ pub struct ReceivedNewAccount {
 
 // Useful models
 
+#[derive(Serialize)]
 pub struct LoginTokens {
     pub basic_token: GeneratedToken,
     pub refresh_token: GeneratedToken,

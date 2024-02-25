@@ -14,8 +14,8 @@ impl AccountController {
     }
 
     pub async fn login(body: web::Json<Credentials>) -> impl Responder {
-        AccountService::login(body.username.clone(), body.password.clone()).await;
-        HttpResponse::Ok()
+        let login_result = AccountService::login(body.username.clone(), body.password.clone()).await;
+        HttpResponse::Ok().json(login_result)
     }
     
 }
