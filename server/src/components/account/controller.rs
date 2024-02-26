@@ -12,12 +12,11 @@ impl AccountController {
 
     pub async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
         AccountService::register(body.into_inner()).await;
-        HttpResponse::Ok()
+        return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
     pub async fn login(body: web::Json<Credentials>) -> impl Responder {
         let login_result = AccountService::login(body.username.clone(), body.password.clone()).await;
-        // HttpResponse::Ok().json(login_result)
         return AppHttpResponseBuilder::get_http_response(login_result);
     }
     

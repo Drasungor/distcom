@@ -19,29 +19,47 @@ impl AppErrorType {
 
 #[derive(Debug)]
 pub struct AppError {
-    message_text: Option<String>,
     error_type: AppErrorType,
+    message_text: String,
+    status_code: StatusCode,
 }
 
 impl AppError {
-    pub fn message(&self) -> String {
-        // TODO: refactor this implementation
-        match &*self {
-            AppError {
-                message_text: Some(message),
-                ..
-            } => message.clone(),
-            AppError {
-                message_text: None,
-                error_type: AppErrorType::NotFoundError,
-                ..
-            } => "The requested item was not found".to_string(),
-            _ => "An unexpected error has occurred".to_string(),
-        }
+
+    pub fn new(error_type: AppErrorType) -> AppError {
+
+        let message_text: &str;
+        let status_code: StatusCode;
+
+        match error_type {
+            AppErrorType::DbError => {
+                message_text = "asdasdsa";
+                status_code = StatusCode::IM_A_TEAPOT;
+            },
+            AppErrorType::NotFoundError => {
+                message_text = "asdasdsa";
+                status_code = StatusCode::IM_A_TEAPOT;
+            },
+        };
+
+        return AppError {
+            error_type,
+            message_text: message_text.to_string(),
+            status_code,
+        };
+
     }
 
-    pub fn error_code(&self) -> String {
+    pub fn message(&self) -> &String {
+        return &self.message_text;
+    }
+
+    pub fn error_type(&self) -> String {
         return self.error_type.to_string();
+    }
+
+    pub fn status_code(&self) -> StatusCode {
+        return self.status_code;
     }
 }
 
@@ -71,21 +89,21 @@ impl fmt::Display for AppError {
     }
 }
 
-#[derive(Serialize)]
-pub struct AppErrorResponse {
-    pub error: String,
-}
+// #[derive(Serialize)]
+// pub struct AppErrorResponse {
+//     pub error: String,
+// }
 
-impl ResponseError for AppError {
-    fn status_code(&self) -> StatusCode {
-        match self.error_type {
-            AppErrorType::DbError => StatusCode::INTERNAL_SERVER_ERROR,
-            AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
-        }
-    }
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(AppErrorResponse {
-            error: self.message(),
-        })
-    }
-}
+// impl ResponseError for AppError {
+//     fn status_code(&self) -> StatusCode {
+//         match self.error_type {
+//             AppErrorType::DbError => StatusCode::INTERNAL_SERVER_ERROR,
+//             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
+//         }
+//     }
+//     fn error_response(&self) -> HttpResponse {
+//         HttpResponse::build(self.status_code()).json(AppErrorResponse {
+//             error: self.message(),
+//         })
+//     }
+// }
