@@ -26,7 +26,6 @@ impl AccountService {
         };
 
         AccountMysqlDal::register_account(new_account).await;
-
     }
 
     pub async fn login(username: String, password: String) -> LoginTokens {
