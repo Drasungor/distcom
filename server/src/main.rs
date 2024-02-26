@@ -32,27 +32,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             // .app_data(state.clone())
+            // .service(
+            //     web::scope("/upload")
+            //     .wrap(middlewares::upload_file::CustomMiddleware)
+            //     .route("", web::post().to(handlers::greet::greet_two))
+            // )
             .service(
-                web::scope("/")
-                    .route("", web::get().to(handlers::index::index))
-            )
-            .service(
-                web::scope("/greet")
-                    .route("", web::get().to(handlers::greet::greet))
-                    .service(
-                        web::scope("/two")
-                            .route("", web::get().to(handlers::greet::greet_two))
-                    )
-            )
-            .service(
-                web::scope("/goodbye")
-                    .route("", web::get().to(handlers::goodbye::goodbye))
-                    .route("/two", web::get().to(handlers::goodbye::goodbye_two))
-            ).service(
-                web::scope("/upload")
-                .wrap(middlewares::upload_file::CustomMiddleware)
-                .route("", web::post().to(handlers::greet::greet_two))
-            ).service(
                 account_router("/account")
             )
     })

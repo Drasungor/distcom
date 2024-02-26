@@ -2,6 +2,8 @@ use diesel::mysql::MysqlConnection;
 use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
+use crate::common::app_error::AppError;
+
 use super::account_mysql_dal::AccountMysqlDal;
 use super::db_models::refresh_token::RefreshToken;
 use super::model::{LoginTokens, ReceivedNewAccount};
@@ -28,7 +30,7 @@ impl AccountService {
         AccountMysqlDal::register_account(new_account).await;
     }
 
-    pub async fn login(username: String, password: String) -> LoginTokens {
+    pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {
         let account_data = AccountMysqlDal::get_account_data_by_username(username).await;
         if (!is_password_valid(password, account_data.password_hash)) {
             panic!("Wrong password (refactor this)")
@@ -39,7 +41,9 @@ impl AccountService {
             user_id: account_data.organization_id,
         };
         AccountMysqlDal::add_refresh_token(refresh_token_data).await;
-        return login_tokens;
+
+        // TODO: fix the return values, it should not always return ok
+        return Ok(login_tokens);
     }
 
 }

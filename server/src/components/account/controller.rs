@@ -1,6 +1,8 @@
 use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
 use serde_derive::{Serialize, Deserialize};
 
+use crate::common::app_http_response_builder::AppHttpResponseBuilder;
+
 use super::service::AccountService;
 use super::model::{ReceivedNewAccount, Credentials};
 
@@ -15,7 +17,8 @@ impl AccountController {
 
     pub async fn login(body: web::Json<Credentials>) -> impl Responder {
         let login_result = AccountService::login(body.username.clone(), body.password.clone()).await;
-        HttpResponse::Ok().json(login_result)
+        // HttpResponse::Ok().json(login_result)
+        return AppHttpResponseBuilder::get_http_response(login_result);
     }
     
 }
