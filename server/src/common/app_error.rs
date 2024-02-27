@@ -6,6 +6,7 @@ use std::fmt;
 pub enum AppErrorType {
     DbError,
     NotFoundError,
+    InternalServerError,
 }
 
 impl AppErrorType {
@@ -13,6 +14,7 @@ impl AppErrorType {
         match self {
             AppErrorType::DbError => String::from("DB_ERROR"),
             AppErrorType::NotFoundError => String::from("NOT_FOUND_ERROR"),
+            AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
 }
@@ -40,6 +42,10 @@ impl AppError {
                 message_text = "asdasdsa";
                 status_code = StatusCode::IM_A_TEAPOT;
             },
+            AppErrorType::InternalServerError => {
+                message_text = "Internal server error";
+                status_code = StatusCode::INTERNAL_SERVER_ERROR;
+            },
         };
 
         return AppError {
@@ -63,47 +69,8 @@ impl AppError {
     }
 }
 
-// impl From<PoolError> for AppError {
-//     fn from(error: PoolError) -> AppError {
-//         AppError {
-//             message: None, 
-//             cause: Some(error.to_string()),
-//             error_type: AppErrorType::DbError
-//         }
-//     }
-// }
-
-// impl From<Error> for AppError {
-//     fn from(error: Error) -> AppError {
-//         AppError {
-//             message: None, 
-//             cause: Some(error.to_string()),
-//             error_type: AppErrorType::DbError
-//         }
-//     }
-// }
-
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{:?}", self)
     }
 }
-
-// #[derive(Serialize)]
-// pub struct AppErrorResponse {
-//     pub error: String,
-// }
-
-// impl ResponseError for AppError {
-//     fn status_code(&self) -> StatusCode {
-//         match self.error_type {
-//             AppErrorType::DbError => StatusCode::INTERNAL_SERVER_ERROR,
-//             AppErrorType::NotFoundError => StatusCode::NOT_FOUND,
-//         }
-//     }
-//     fn error_response(&self) -> HttpResponse {
-//         HttpResponse::build(self.status_code()).json(AppErrorResponse {
-//             error: self.message(),
-//         })
-//     }
-// }
