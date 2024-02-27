@@ -40,9 +40,7 @@ impl AccountService {
             token_id: login_tokens.refresh_token.token_id.clone(),
             user_id: account_data.organization_id,
         };
-        AccountMysqlDal::add_refresh_token(refresh_token_data).await;
-
-        // TODO: fix the return values, it should not always return ok
+        AccountMysqlDal::add_refresh_token(refresh_token_data).await?;
         return Ok(login_tokens);
     }
 

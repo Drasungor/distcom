@@ -66,20 +66,24 @@ impl AccountMysqlDal {
         }
     }
 
-    pub async fn add_refresh_token(refresh_token_data: RefreshToken) {
+    pub async fn add_refresh_token(refresh_token_data: RefreshToken) -> Result<(), AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-            diesel::insert_into(refresh_token::table)
+            let insertion_result = diesel::insert_into(refresh_token::table)
                     .values(&refresh_token_data)
-                    .execute(connection)
-                    .expect("Error saving new post");
-            return Ok(());
-
-        }).expect("asdasdasd")
-        }).await.expect("Failed wait for get_account_data");
-        return found_account_result;
+                    .execute(connection);
+            return insertion_result;
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(_)) => Ok(()),
+            
+            // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
     }
 
     
