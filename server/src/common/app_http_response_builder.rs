@@ -32,12 +32,14 @@ impl AppHttpResponseBuilder {
                     status: "success".to_string(), 
                     data: successful_response,
                 }),
-            Err(error) => HttpResponse::build(error.status_code()).
-                json(FailureResponse { 
-                    status: "error".to_string(), 
-                    error_code: error.error_type(), 
-                    error_message: error.message().clone(),
-                }),
+            Err(error) => {
+                HttpResponse::build(error.status_code()).
+                    json(FailureResponse { 
+                        status: "error".to_string(), 
+                        error_code: error.error_type(), 
+                        error_message: error.message().clone(),
+                })
+            },
         };
     }
 }

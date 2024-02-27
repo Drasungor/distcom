@@ -3,7 +3,6 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
 use crate::common::app_error::AppError;
-
 use super::account_mysql_dal::AccountMysqlDal;
 use super::db_models::refresh_token::RefreshToken;
 use super::model::{LoginTokens, ReceivedNewAccount};
@@ -14,7 +13,7 @@ pub struct AccountService;
 
 impl AccountService {
 
-    pub async fn register(new_account_data: ReceivedNewAccount) {
+    pub async fn register(new_account_data: ReceivedNewAccount) -> Result<(), AppError> {
         let id = Uuid::new_v4();
         let password_hash = generate_password_hash(new_account_data.password);
 
@@ -27,7 +26,8 @@ impl AccountService {
             account_was_verified: false,
         };
 
-        AccountMysqlDal::register_account(new_account).await;
+        AccountMysqlDal::register_account(new_account).await?;
+        return Ok(())
     }
 
     pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {

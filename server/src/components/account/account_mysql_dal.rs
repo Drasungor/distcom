@@ -1,6 +1,7 @@
 // use diesel_async::AsyncMysqlConnection;
 // use diesel_async::RunQueryDsl;
 
+use actix_web::error::BlockingError;
 use diesel::connection;
 // use super::{dal::AccountDal, db_models::account::NewAccount};
 use diesel::RunQueryDsl;
@@ -11,6 +12,8 @@ use actix_web::web;
 
 use super::db_models::account::CompleteAccount;
 use super::db_models::refresh_token::RefreshToken;
+use crate::common::app_error::AppError;
+use crate::common::app_error::AppErrorType;
 use crate::schema::{account, refresh_token};
 // use crate::schema::account::dsl::*;
 
@@ -34,20 +37,27 @@ impl AccountMysqlDal {
         }).await.expect("Error in future await")
     }
 
-    pub async fn get_account_data_by_username(username: String) -> CompleteAccount {
+    pub async fn get_account_data_by_username(username: String) -> Result<CompleteAccount, AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
             let found_account = account::table
                 .filter(account::username.eq(username))
-                .first::<CompleteAccount>(connection)
-                .expect("Error loading posts");
-            return Ok(found_account);
+                .first::<CompleteAccount>(connection);
+            return found_account;
 
-        }).expect("asdasdasd")
-        }).await.expect("Failed wait for get_account_data");
-        return found_account_result;
+        })
+        // }).await.expect("Failed wait for get_account_data");
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(diesel_error)) => match diesel_error {
+                diesel::result::Error::NotFound => Err(AppError::new(AppErrorType::NotFoundError)),
+                _ => Err(AppError::new(AppErrorType::InternalServerError)),
+            },
+            Ok(Ok(returned_account)) => Ok(returned_account),
+        }
     }
 
     pub async fn add_refresh_token(refresh_token_data: RefreshToken) {
