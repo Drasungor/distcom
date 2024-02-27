@@ -59,7 +59,7 @@ impl AccountMysqlDal {
         return match found_account_result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
             Ok(Err(diesel_error)) => match diesel_error {
-                diesel::result::Error::NotFound => Err(AppError::new(AppErrorType::NotFoundError)),
+                diesel::result::Error::NotFound => Err(AppError::new(AppErrorType::AccountNotFound)),
                 _ => Err(AppError::new(AppErrorType::InternalServerError)),
             },
             Ok(Ok(returned_account)) => Ok(returned_account),

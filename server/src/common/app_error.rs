@@ -4,16 +4,16 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum AppErrorType {
-    DbError,
-    NotFoundError,
+    AccountNotFound,
+    WrongCredentials,
     InternalServerError,
 }
 
 impl AppErrorType {
     pub fn to_string(&self) -> String {
         match self {
-            AppErrorType::DbError => String::from("DB_ERROR"),
-            AppErrorType::NotFoundError => String::from("NOT_FOUND_ERROR"),
+            AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
+            AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
@@ -34,13 +34,13 @@ impl AppError {
         let status_code: StatusCode;
 
         match error_type {
-            AppErrorType::DbError => {
-                message_text = "asdasdsa";
-                status_code = StatusCode::IM_A_TEAPOT;
+            AppErrorType::AccountNotFound => {
+                message_text = "Account not found";
+                status_code = StatusCode::NOT_FOUND;
             },
-            AppErrorType::NotFoundError => {
-                message_text = "asdasdsa";
-                status_code = StatusCode::IM_A_TEAPOT;
+            AppErrorType::WrongCredentials => {
+                message_text = "Incorrect credentials";
+                status_code = StatusCode::FORBIDDEN;
             },
             AppErrorType::InternalServerError => {
                 message_text = "Internal server error";
