@@ -21,20 +21,26 @@ pub struct AccountMysqlDal;
 
 impl AccountMysqlDal {
 
-    pub async fn register_account(new_account_data: CompleteAccount) {
+    pub async fn register_account(new_account_data: CompleteAccount) -> Result<(), AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
-        web::block(move || {
+        let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-            diesel::insert_into(account::table)
+            let insertion_result = diesel::insert_into(account::table)
+            // return diesel::insert_into(account::table)
                     .values(&new_account_data)
-                //    .execute(&mut connection)
-                    .execute(connection)
-                    .expect("Error saving new post");
-            return Ok(());
+                    .execute(connection);
+            return insertion_result;
 
-        }).expect("asdasdasd");
-        }).await.expect("Error in future await")
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(_)) => Ok(()),
+            
+            // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        }
     }
 
     pub async fn get_account_data_by_username(username: String) -> Result<CompleteAccount, AppError> {

@@ -31,7 +31,7 @@ impl AccountService {
     }
 
     pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {
-        let account_data = AccountMysqlDal::get_account_data_by_username(username).await;
+        let account_data = AccountMysqlDal::get_account_data_by_username(username).await?;
         if (!is_password_valid(password, account_data.password_hash)) {
             panic!("Wrong password (refactor this)")
         }
