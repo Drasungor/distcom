@@ -39,7 +39,10 @@ impl AccountMysqlDal {
             Ok(Ok(_)) => Ok(()),
             
             // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(aux_error)) => {
+                println!("{}", aux_error);
+                Err(AppError::new(AppErrorType::InternalServerError))
+            }
         }
     }
 
@@ -81,7 +84,17 @@ impl AccountMysqlDal {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
             Ok(Ok(_)) => Ok(()),
             
-            // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
+            // // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
+            // // Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            // Ok(Err(diesel_error)) => {
+            //     // diesel::result::Error::DatabaseError((), ())
+            //     diesel::result::Error::DatabaseError((), ())
+            // },
+
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
     }
