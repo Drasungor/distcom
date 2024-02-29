@@ -6,6 +6,7 @@ use std::fmt;
 pub enum AppErrorType {
     AccountNotFound,
     WrongCredentials,
+    UsernameAlreadyExists,
     InternalServerError,
 }
 
@@ -14,6 +15,7 @@ impl AppErrorType {
         match self {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
+            AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
@@ -41,6 +43,10 @@ impl AppError {
             AppErrorType::WrongCredentials => {
                 message_text = "Incorrect credentials";
                 status_code = StatusCode::FORBIDDEN;
+            },
+            AppErrorType::UsernameAlreadyExists => {
+                message_text = "Username already exists";
+                status_code = StatusCode::CONFLICT;
             },
             AppErrorType::InternalServerError => {
                 message_text = "Internal server error";

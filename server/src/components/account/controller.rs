@@ -11,8 +11,8 @@ pub struct AccountController;
 impl AccountController {
 
     pub async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
-        AccountService::register(body.into_inner()).await;
-        return AppHttpResponseBuilder::get_http_response(Ok(()));
+        let registration_result = AccountService::register(body.into_inner()).await;
+        return AppHttpResponseBuilder::get_http_response(registration_result);
     }
 
     pub async fn login(body: web::Json<Credentials>) -> impl Responder {

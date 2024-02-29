@@ -3,6 +3,7 @@
 
 use actix_web::error::BlockingError;
 use diesel::connection;
+use diesel::result::DatabaseErrorKind;
 // use super::{dal::AccountDal, db_models::account::NewAccount};
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
@@ -30,6 +31,7 @@ impl AccountMysqlDal {
             // return diesel::insert_into(account::table)
                     .values(&new_account_data)
                     .execute(connection);
+            // println!("{:?}", insertion_result);
             return insertion_result;
 
         })
@@ -37,12 +39,14 @@ impl AccountMysqlDal {
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
             Ok(Ok(_)) => Ok(()),
-            
-            // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
-            Ok(Err(aux_error)) => {
-                println!("{}", aux_error);
-                Err(AppError::new(AppErrorType::InternalServerError))
-            }
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+
         }
     }
 
@@ -83,14 +87,6 @@ impl AccountMysqlDal {
         return match found_account_result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
             Ok(Ok(_)) => Ok(()),
-            
-            // // Manejar mejor este error, ver que tira diesel si se repite un valor que deberia ser unique
-            // // Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-            // Ok(Err(diesel_error)) => {
-            //     // diesel::result::Error::DatabaseError((), ())
-            //     diesel::result::Error::DatabaseError((), ())
-            // },
-
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 // TODO: handle correctly
                 Err(AppError::new(AppErrorType::InternalServerError))

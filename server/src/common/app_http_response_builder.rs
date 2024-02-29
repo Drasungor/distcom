@@ -33,7 +33,6 @@ impl AppHttpResponseBuilder {
                     data: successful_response,
                 }),
             Err(error) => {
-                println!("{}", error);
                 HttpResponse::build(error.status_code()).
                     json(FailureResponse { 
                         status: "error".to_string(), 

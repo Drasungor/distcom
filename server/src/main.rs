@@ -27,6 +27,10 @@ async fn main() -> std::io::Result<()> {
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
+
+    // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
+
+
     println!("pase el ping");
 
     HttpServer::new(move || {

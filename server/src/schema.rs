@@ -1,3 +1,5 @@
+// use diesel::prelude::*;
+
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
@@ -39,3 +41,8 @@ diesel::table! {
 //     account, 
 //     papafrita,
 // );
+
+// Add a unique index to ensure username uniqueness
+
+
+// sql_query!("CREATE UNIQUE INDEX idx_username_unique ON account (username);");

@@ -27,6 +27,7 @@ impl AccountService {
         };
 
         AccountMysqlDal::register_account(new_account).await?;
+        println!("ekisdeeeee");
         return Ok(())
     }
 
