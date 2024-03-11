@@ -3,3 +3,6 @@ uploads
 db_data
 db.sql
 migrations
+*.trace
+*.memory
+*.proof

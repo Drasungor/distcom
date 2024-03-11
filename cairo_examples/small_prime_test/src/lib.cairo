@@ -17,5 +17,5 @@ fn main() -> felt252 {
     } else {
         println!("The number {} is prime", tested_number);
     }
-    5
+    0
 }
