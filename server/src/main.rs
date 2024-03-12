@@ -6,6 +6,7 @@ use diesel::r2d2::R2D2Connection;
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 
 use crate::components::account::route::account_router;
+use crate::components::program::route::program_router;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -43,6 +44,9 @@ async fn main() -> std::io::Result<()> {
             // )
             .service(
                 account_router("/account")
+            )
+            .service(
+                program_router("/program")
             )
     })
     .bind("127.0.0.1:8080")?

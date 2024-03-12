@@ -19,5 +19,9 @@ impl ProgramController {
     //     let login_result = AccountService::login(body.username.clone(), body.password.clone()).await;
     //     return AppHttpResponseBuilder::get_http_response(login_result);
     // }
-    
+
+    pub async fn upload_program(body: web::Json<()>) -> impl Responder {
+        return AppHttpResponseBuilder::get_http_response(Ok(()));
+    }
+
 }
