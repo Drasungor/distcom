@@ -34,6 +34,8 @@ fn main() {
     // Obtain the default prover.
     let prover = default_prover();
 
+    println!("Hello world, I am going to prove");
+
     // Produce a receipt by proving the specified ELF binary.
     let receipt = prover
         .prove(env, HELLO_GUEST_ELF)
@@ -43,6 +45,8 @@ fn main() {
 
     // For example:
     let _output: u32 = receipt.journal.decode().unwrap();
+
+    println!("Hello world, I am going to verify");
 
     // The receipt was verified at the end of proving, but the below code is an
     // example of how someone else could verify this receipt.
