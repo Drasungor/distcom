@@ -16,6 +16,8 @@ fn main() {
 
     // TODO: do something with the input
 
+    let next_number = input + 1;
+
     // write public output to the journal
-    env::commit(&input);
+    env::commit(&next_number);
 }
