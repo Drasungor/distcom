@@ -4,11 +4,11 @@
 
 
 use risc0_zkvm::guest::env;
-use basic_prime_test_core;
 // use crate::basic_prime_test_core;
 
 risc0_zkvm::guest::entry!(main);
 
+use basic_prime_test_core;
 
 fn main() {
     let number_to_test: u32 = env::read();
@@ -21,7 +21,7 @@ fn main() {
         divisor += 2;
     }
 
-    let ouputs: basic_prime_test_core::Outputs = Outputs {
+    let ouputs: basic_prime_test_core::Outputs = basic_prime_test_core::Outputs {
         tested_number: number_to_test,
         is_prime: may_be_prime && (divisor == number_to_test),
     }; 

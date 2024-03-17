@@ -33,9 +33,17 @@ fn main() {
 
     let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
 
+    // let ouputs: basic_prime_test_core::Outputs = basic_prime_test_core::Outputs {
+    //     tested_number: 10,
+    //     is_prime: true,
+    // }; 
+
+
+
     println!("The output of the journal is {:?}", _output);
 
     receipt
         .verify(BASIC_PRIME_TEST_GUEST_ID)
-        .unwrap();
+        .expect("Proof verification failed");
+    println!("Successful verification");
 }
