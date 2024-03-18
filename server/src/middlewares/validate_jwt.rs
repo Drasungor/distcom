@@ -1,9 +1,4 @@
-use std::fs; // Add import for File
 use actix_web::{web, HttpResponse, HttpMessage};
-use std::fs::File; // Add import for File
-use actix_multipart::Multipart;
-use futures_util::stream::TryStreamExt;
-use std::io::Write; // Add import for Write
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
 use std::future::{ready, Ready};
@@ -57,7 +52,7 @@ where
         let my_payload = req.take_payload();
         let fut = self.service.call(req);
 
-        let asdd = headers.get("token").unwrap().to_str();
+        // let asdd = headers.get("token").unwrap().to_str();
 
         // validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token);
 
@@ -65,7 +60,7 @@ where
             let res = fut.await?;
             // let multipart = actix_multipart::Multipart::new(&headers, my_payload);
             // upload_file(multipart).await?;
-            println!("Hi from response");
+            println!("Hi from jwt");
             Ok(res)
         })
     }

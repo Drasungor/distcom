@@ -21,6 +21,7 @@ impl ProgramController {
     // }
 
     pub async fn upload_program(body: web::Json<()>) -> impl Responder {
+        println!("I am upload_program in the controller");
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
