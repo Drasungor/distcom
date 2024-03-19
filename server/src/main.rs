@@ -44,7 +44,6 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            // .wrap_fn(init_data)
             .wrap_fn(|req, srv| {
                 let init_data = RequestExtension {
                     jwt_payload: None,
@@ -59,11 +58,6 @@ async fn main() -> std::io::Result<()> {
                 return_value
             })
             // .app_data(state.clone())
-            // .service(
-            //     web::scope("/upload")
-            //     .wrap(middlewares::upload_file::CustomMiddleware)
-            //     .route("", web::post().to(handlers::greet::greet_two))
-            // )
             .service(
                 account_router("/account")
             )

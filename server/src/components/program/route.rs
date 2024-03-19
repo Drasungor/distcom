@@ -10,6 +10,8 @@ pub fn program_router(path_prefix: &str) -> Scope {
                     wrap(ValidateJwtMiddleware).
                     wrap(UploadFileMiddleware).
                     wrap(TestMiddleware))
+                    
+                    // wrap(UploadFileMiddleware))
 
     
 }

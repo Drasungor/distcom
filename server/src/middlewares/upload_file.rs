@@ -56,7 +56,11 @@ where
         Box::pin(async move {
             let res = fut.await?;
             let multipart = actix_multipart::Multipart::new(&headers, my_payload);
-            upload_file(multipart).await?;
+
+
+            let upload_file_result = upload_file(multipart).await;
+            println!("upload_file_result: {:?}", upload_file_result);
+            upload_file_result.expect("File upload failed");
             println!("Hi i am upload_file middleware");
             Ok(res)
         })
@@ -78,7 +82,16 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_w
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
+
+    let aux_result = payload.try_next().await;
+    println!("PAyload next test: {:?}", aux_result);
+
+    if let Err(e) = aux_result {
+        println!("Print aux_result match {}", e);
+    }
+
     while let Ok(Some(field_result)) = payload.try_next().await {
+        println!("BORRAR inside while loop");
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
@@ -96,6 +109,7 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_w
         }
         file_paths.push(file_path);
     }
+    println!("After while loop");
     if file_paths.is_empty() {
         Ok(HttpResponse::Ok().body("No file uploaded"))
     } else {
