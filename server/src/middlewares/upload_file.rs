@@ -49,19 +49,26 @@ where
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         // Do something before handling the request
-        println!("Upload file Middleware executed before handling the request");
+        println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Upload file Middleware executed before handling the request");
         let headers = req.headers().clone();
         let my_payload = req.take_payload();
+
+        // let complete_payload = my_payload;
+
+        let multipart = actix_multipart::Multipart::new(&headers, my_payload);
+
+        // let service = self.service.clone();
+        // let upload_file_result = upload_file(multipart).await;
         let fut = self.service.call(req);
+        
         Box::pin(async move {
-            let res = fut.await?;
-            let multipart = actix_multipart::Multipart::new(&headers, my_payload);
-
-
+            
+            
             let upload_file_result = upload_file(multipart).await;
             println!("upload_file_result: {:?}", upload_file_result);
             upload_file_result.expect("File upload failed");
             println!("Hi i am upload_file middleware");
+            let res = fut.await?;
             Ok(res)
         })
     }
@@ -83,12 +90,14 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_w
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    let aux_result = payload.try_next().await;
-    println!("PAyload next test: {:?}", aux_result);
+    // let aux_result = payload.try_next().await;
+    // println!("PAyload next test: {:?}", aux_result);
 
-    if let Err(e) = aux_result {
-        println!("Print aux_result match {}", e);
-    }
+    // if let Err(e) = aux_result {
+    //     println!("Print aux_result match {}", e);
+    // }
+
+    println!("asjhdkaslhdkasjhlajhsdjk");
 
     while let Ok(Some(field_result)) = payload.try_next().await {
         println!("BORRAR inside while loop");
@@ -108,6 +117,7 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_w
             web::block(move || file_pointer_clone.write_all(&chunk)).await??;
         }
         file_paths.push(file_path);
+        println!("Going to while loop top");
     }
     println!("After while loop");
     if file_paths.is_empty() {

@@ -49,13 +49,13 @@ where
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         // Do something before handling the request
-        println!("Test Middleware executed before handling the request");
+        println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Test Middleware executed before handling the request");
         let headers = req.headers().clone();
         let my_payload = req.take_payload();
         let fut = self.service.call(req);
         Box::pin(async move {
-            let res = fut.await?;
             println!("Hi I am test middleware");
+            let res = fut.await?;
             Ok(res)
         })
     }
