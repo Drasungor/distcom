@@ -16,6 +16,7 @@ fn create_folder(path: &str) -> () {
 }
 
 pub async fn upload_file(payload: &mut Multipart) -> Result<HttpResponse, actix_web::error::Error> {
+// pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
@@ -25,6 +26,7 @@ pub async fn upload_file(payload: &mut Multipart) -> Result<HttpResponse, actix_
 
     if let Err(e) = aux_result {
         println!("Print aux_result match {}", e);
+        panic!("");
     }
 
     println!("asjhdkaslhdkasjhlajhsdjk");
