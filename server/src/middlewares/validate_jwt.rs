@@ -61,6 +61,7 @@ where
             // upload_file(multipart).await?;
             println!("Hi from jwt");
             let res = fut.await?;
+            println!("RIGHT BEFORE JWT OK(RES): {:?}", res.status());
             Ok(res)
         })
     }

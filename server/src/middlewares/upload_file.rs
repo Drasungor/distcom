@@ -69,6 +69,7 @@ where
             upload_file_result.expect("File upload failed");
             println!("Hi i am upload_file middleware");
             let res = fut.await?;
+            println!("RIGHT BEFORE UPLOAD FILE OK(RES): {:?}", res.status());
             Ok(res)
         })
     }

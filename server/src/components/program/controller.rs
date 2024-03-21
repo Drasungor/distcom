@@ -1,4 +1,5 @@
-use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
+use actix_multipart::Multipart;
+use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use serde_derive::{Serialize, Deserialize};
 
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
@@ -20,8 +21,11 @@ impl ProgramController {
     //     return AppHttpResponseBuilder::get_http_response(login_result);
     // }
 
-    pub async fn upload_program(body: web::Json<()>) -> impl Responder {
-        println!("I am upload_program in the controller");
+    // pub async fn upload_program(body: web::Json<()>) -> impl Responder {
+    // pub async fn upload_program(req: HttpRequest, form: web::Form<FormData>) -> impl Responder {
+        // pub async fn upload_program(form: web::Form<actix_web::http::header::DispositionType>) -> impl Responder {
+    pub async fn upload_program(form: Multipart) -> impl Responder {
+        println!("HELLO HELLO HELLO I am upload_program in the controller");
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
