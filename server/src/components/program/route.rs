@@ -15,11 +15,13 @@ pub fn program_router(path_prefix: &str) -> Scope {
                     // wrap(UploadFileMiddleware).
                     // wrap(ValidateJwtMiddleware))
 
-                    wrap(ValidateJwtMiddleware).
-                    wrap(UploadFileMiddleware))
+                    // wrap(ValidateJwtMiddleware).
+                    // wrap(UploadFileMiddleware))
 
                     // wrap(UploadFileMiddleware).
                     // wrap(ValidateJwtMiddleware))
+
+                    wrap(ValidateJwtMiddleware))
 
                     // wrap(UploadFileMiddleware))
 

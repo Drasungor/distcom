@@ -86,7 +86,7 @@ fn create_folder(path: &str) -> () {
     }
 }
 
-pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
+async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
