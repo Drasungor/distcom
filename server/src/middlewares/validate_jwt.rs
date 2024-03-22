@@ -49,7 +49,7 @@ where
         // Do something before handling the request
         println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Validate jwt Middleware executed before handling the request");
         let headers = req.headers().clone();
-        let my_payload = req.take_payload();
+        // let my_payload = req.take_payload();
         let fut = self.service.call(req);
 
         // let asdd = headers.get("token").unwrap().to_str();

@@ -7,7 +7,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
     web::scope(path_prefix).
         route("upload", 
               web::post().to(ProgramController::upload_program).
-            //   web::post().to(ProgramController::upload_program))
+              // web::post().to(ProgramController::upload_program))
                     // wrap(ValidateJwtMiddleware).
                     // wrap(TestMiddleware))
 
@@ -19,4 +19,6 @@ pub fn program_router(path_prefix: &str) -> Scope {
 
                     wrap(UploadFileMiddleware).
                     wrap(ValidateJwtMiddleware))
+
+                    // wrap(ValidateJwtMiddleware))
 }

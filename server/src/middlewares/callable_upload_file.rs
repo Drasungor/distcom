@@ -20,6 +20,13 @@ pub async fn upload_file(payload: &mut Multipart) -> Result<HttpResponse, actix_
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
+    let aux_result = payload.try_next().await;
+    println!("PAyload next test: {:?}", aux_result);
+
+    if let Err(e) = aux_result {
+        println!("Print aux_result match {}", e);
+    }
+
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
