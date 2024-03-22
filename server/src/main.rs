@@ -49,12 +49,9 @@ async fn main() -> std::io::Result<()> {
                     jwt_payload: None,
                 };
                 req.extensions_mut().insert(init_data);
-                println!("BORRAR Soy un middleware general antes de llamar a call");
-                // req.extensions_mut().insert(init_data);
                 let return_value = srv.call(req).map(|res| {
                     res
                 });
-                println!("BORRAR Soy un middleware general despues de llamar a call");
                 return_value
             })
             .service(

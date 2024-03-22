@@ -15,31 +15,18 @@ fn create_folder(path: &str) -> () {
     }
 }
 
-// pub async fn upload_file(mut payload: web::Payload) -> Result<HttpResponse, actix_web::error::Error> {
 pub async fn upload_file(payload: &mut Multipart) -> Result<HttpResponse, actix_web::error::Error> {
-// pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    let aux_result = payload.try_next().await;
-    println!("PAyload next test: {:?}", aux_result);
-
-    if let Err(e) = aux_result {
-        println!("Print aux_result match {}", e);
-        panic!("Epicooooooooooooooooooooo");
-    }
-
-    println!("asjhdkaslhdkasjhlajhsdjk");
-
     while let Ok(Some(field_result)) = payload.try_next().await {
-        println!("BORRAR inside while loop");
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
             None => "unknown".to_string(),
         };
-        
+
         // Define the file path where you want to save the uploaded file
         let file_path = format!("{}/{}", uploads_folder, filename);
         let file_path_clone = file_path.clone();
@@ -50,9 +37,7 @@ pub async fn upload_file(payload: &mut Multipart) -> Result<HttpResponse, actix_
             web::block(move || file_pointer_clone.write_all(&chunk)).await??;
         }
         file_paths.push(file_path);
-        println!("Going to while loop top");
     }
-    println!("After while loop");
     if file_paths.is_empty() {
         Ok(HttpResponse::Ok().body("No file uploaded"))
     } else {
