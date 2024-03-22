@@ -65,11 +65,8 @@ where
             
             
             let upload_file_result = upload_file(multipart).await;
-            println!("upload_file_result: {:?}", upload_file_result);
             upload_file_result.expect("File upload failed");
-            println!("Hi i am upload_file middleware");
             let res = fut.await?;
-            println!("RIGHT BEFORE UPLOAD FILE OK(RES): {:?}", res.status());
             Ok(res)
         })
     }
@@ -91,17 +88,7 @@ async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
-    println!("asjhdkaslhdkasjhlajhsdjk");
-
     while let Ok(Some(field_result)) = payload.try_next().await {
-        println!("BORRAR inside while loop");
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
@@ -118,9 +105,7 @@ async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::
             web::block(move || file_pointer_clone.write_all(&chunk)).await??;
         }
         file_paths.push(file_path);
-        println!("Going to while loop top");
     }
-    println!("After while loop");
     if file_paths.is_empty() {
         Ok(HttpResponse::Ok().body("No file uploaded"))
     } else {
