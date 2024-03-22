@@ -57,7 +57,6 @@ async fn main() -> std::io::Result<()> {
                 println!("BORRAR Soy un middleware general despues de llamar a call");
                 return_value
             })
-            // .app_data(state.clone())
             .service(
                 account_router("/account")
             )
