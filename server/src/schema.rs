@@ -37,6 +37,17 @@ diesel::table! {
     }
 }
 
+
+diesel::table! {
+    program_input (id) {
+        id -> Integer,
+
+        #[max_length = 255]
+        blob_data -> Nullable<Varbinary>,
+    }
+}
+
+
 // diesel::allow_tables_to_appear_in_same_query!(
 //     account, 
 //     papafrita,
