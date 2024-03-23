@@ -1,11 +1,15 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::dev::Service;
+use actix_web::{web, App, HttpMessage, HttpServer};
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ ConnectionManager, Pool };
 use diesel::r2d2::R2D2Connection;
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
+use futures_util::FutureExt;
+use utils::jwt_helpers::Claims;
 
 use crate::components::account::route::account_router;
+use crate::components::program::route::program_router;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -19,6 +23,11 @@ mod services;
 mod components;
 mod schema;
 mod utils;
+
+
+pub struct RequestExtension {
+    pub jwt_payload: Option<Claims>,
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -35,14 +44,21 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            // .app_data(state.clone())
-            // .service(
-            //     web::scope("/upload")
-            //     .wrap(middlewares::upload_file::CustomMiddleware)
-            //     .route("", web::post().to(handlers::greet::greet_two))
-            // )
+            .wrap_fn(|req, srv| {
+                let init_data = RequestExtension {
+                    jwt_payload: None,
+                };
+                req.extensions_mut().insert(init_data);
+                let return_value = srv.call(req).map(|res| {
+                    res
+                });
+                return_value
+            })
             .service(
                 account_router("/account")
+            )
+            .service(
+                program_router("/program")
             )
     })
     .bind("127.0.0.1:8080")?

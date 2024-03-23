@@ -29,6 +29,7 @@ rand = "0.8.5"
 deadpool = "0.10.0"
 uuid = { version = "1.7.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
 jsonwebtoken = "9.2.0"
+async-trait = "0.1.78"
 
 
 

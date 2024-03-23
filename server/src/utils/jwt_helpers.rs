@@ -4,10 +4,10 @@ use uuid::Uuid;
 use serde_derive::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    exp: usize,
-    organization_id: String,
-    token_id: String,
+pub struct Claims {
+    pub exp: usize,
+    pub organization_id: String,
+    pub token_id: String,
 }
 
 #[derive(Serialize)]

@@ -10,9 +10,9 @@ use std::future::{ready, Ready};
 use std::pin::Pin;
 
 
-pub struct CustomMiddleware;
+pub struct UploadFileMiddleware;
 
-impl<S, B> Transform<S, ServiceRequest> for CustomMiddleware
+impl<S, B> Transform<S, ServiceRequest> for UploadFileMiddleware
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -21,21 +21,21 @@ where
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
-    type Transform = CustomMiddlewareMiddleware<S>;
+    type Transform = UploadFileMiddlewareMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(CustomMiddlewareMiddleware { service }))
+        ready(Ok(UploadFileMiddlewareMiddleware { service }))
     }
 }
 
 // Important docs: https://www.shuttle.rs/blog/2023/12/15/using-actix-rust
 
-pub struct CustomMiddlewareMiddleware<S> {
+pub struct UploadFileMiddlewareMiddleware<S> {
     service: S,
 }
 
-impl<S, B> Service<ServiceRequest> for CustomMiddlewareMiddleware<S>
+impl<S, B> Service<ServiceRequest> for UploadFileMiddlewareMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -49,15 +49,24 @@ where
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         // Do something before handling the request
-        println!("Middleware executed before handling the request");
+        println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Upload file Middleware executed before handling the request");
         let headers = req.headers().clone();
         let my_payload = req.take_payload();
+
+        // let complete_payload = my_payload;
+
+        let multipart = actix_multipart::Multipart::new(&headers, my_payload);
+
+        // let service = self.service.clone();
+        // let upload_file_result = upload_file(multipart).await;
         let fut = self.service.call(req);
+        
         Box::pin(async move {
+            
+            
+            let upload_file_result = upload_file(multipart).await;
+            upload_file_result.expect("File upload failed");
             let res = fut.await?;
-            let multipart = actix_multipart::Multipart::new(&headers, my_payload);
-            upload_file(multipart).await?;
-            println!("Hi from response");
             Ok(res)
         })
     }
@@ -74,10 +83,18 @@ fn create_folder(path: &str) -> () {
     }
 }
 
-pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
+async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, actix_web::error::Error> {
     let mut file_paths: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
+
+    // let aux_result = payload.try_next().await;
+    // println!("PAyload next test: {:?}", aux_result);
+
+    // if let Err(e) = aux_result {
+    //     println!("Print aux_result match {}", e);
+    // }
+
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
