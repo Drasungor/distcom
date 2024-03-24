@@ -6,3 +6,4 @@ migrations
 *.trace
 *.memory
 *.proof
+*dev.json
