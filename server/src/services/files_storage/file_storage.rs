@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
+use crate::common::app_error::AppError;
+
 #[async_trait]
-trait FileStorage {
-    async fn upload(&self, file_path: str);
-
-    async fn delete(&self);
-
+pub trait FileStorage {
+    async fn upload(&self, file_path: &str) -> Result<(), AppError>;
+    async fn delete(&self) -> Result<(), AppError>;
 }

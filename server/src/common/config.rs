@@ -12,6 +12,8 @@ pub struct Config {
    pub y: i32,
    pub database_url: String,
    pub token: Token,
+   pub uploaded_files_url: String, // String that defines where the files are stored, it is a single attribute so that different
+                                   // parameters can be formatted inside it
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

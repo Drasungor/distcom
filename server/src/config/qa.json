@@ -7,5 +7,6 @@
         "basic_token_minutes_duration": 60,
         "refresh_token_secret": "",
         "refresh_token_days_duration": 360
-    }
+    },
+    "uploaded_files_url": ""
 }
