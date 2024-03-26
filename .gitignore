@@ -7,3 +7,4 @@ migrations
 *.memory
 *.proof
 *dev.json
+server/.env
