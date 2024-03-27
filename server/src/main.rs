@@ -38,8 +38,11 @@ async fn main() -> std::io::Result<()> {
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    // We establish the connection to s3
-    &common::config::FILES_STORAGE..set_up_connection().await;
+    {
+        // We establish the connection to s3
+        let mut write_guard = common::config::FILES_STORAGE.write().expect("Error in rw lock");
+        write_guard.set_up_connection().await.expect("Error in file storage connection setup");
+    }
 
     // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
 

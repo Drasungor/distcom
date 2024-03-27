@@ -2,6 +2,7 @@ use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
 use std::fs::File;
 use std::io::Read;
+use std::sync::RwLock;
 use lazy_static::lazy_static;
 use diesel::mysql::MysqlConnection;
 use diesel::r2d2::{ ConnectionManager, Pool };
@@ -32,7 +33,8 @@ lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&CONFIG_OBJECT.database_url);
     // pub static ref FILES_STORAGE: AwsS3Handler = AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url);
-    pub static ref FILES_STORAGE: Mutex<AwsS3Handler> = Mutex::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
+    // pub static ref FILES_STORAGE: Mutex<AwsS3Handler> = Mutex::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
+    pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
 }
 
 fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
