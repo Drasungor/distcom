@@ -10,7 +10,7 @@ use crate::common::app_error::{AppError, AppErrorType};
 use super::file_storage::FileStorage;
 
 pub struct AwsS3Handler {
-    s3_client: s3::Client,
+    s3_client: Option<s3::Client>,
     bucket_name: String,
 }
 
@@ -18,6 +18,11 @@ pub struct AwsS3Handler {
 impl FileStorage for AwsS3Handler {
 
 
+    async fn set_up_connection(&mut self) -> Result<(), AppError> {
+        let my_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+        self.s3_client = Some(s3::Client::new(&my_config));
+        Ok(())
+    }
 
     async fn upload(&self, file_path: &Path) -> Result<(), AppError> {
     // Path::new();
@@ -46,7 +51,7 @@ impl FileStorage for AwsS3Handler {
         }
 
         let content_type = mime_guess::from_path(file_path).first_or_octet_stream().to_string();
-        let req = self.s3_client.put_object().bucket(self.bucket_name.clone()).key(key).
+        let req = self.s3_client.expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
                                             body(body).content_type(content_type);
 
         match req.send().await {
@@ -66,12 +71,13 @@ impl FileStorage for AwsS3Handler {
 impl AwsS3Handler {
 
     // TODO: Check if this function can be async, or if the initialization of s3_client should be done in another method
-    async fn new(uploaded_files_url: &str) -> Result<AwsS3Handler, AppError> {
-        let my_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
-        return Ok(AwsS3Handler {
-            s3_client: s3::Client::new(&my_config),
-            bucket_name: "a".to_string(),
-        });
+    fn new(bucket_name: &str) -> AwsS3Handler {
+        // let my_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+        return AwsS3Handler {
+            // s3_client: s3::Client::new(&my_config),
+            s3_client: None,
+            bucket_name: bucket_name.to_string(),
+        };
     }
 
 }
