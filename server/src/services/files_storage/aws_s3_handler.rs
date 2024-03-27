@@ -71,7 +71,7 @@ impl FileStorage for AwsS3Handler {
 impl AwsS3Handler {
 
     // TODO: Check if this function can be async, or if the initialization of s3_client should be done in another method
-    fn new(bucket_name: &str) -> AwsS3Handler {
+    pub fn new(bucket_name: &str) -> AwsS3Handler {
         // let my_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
         return AwsS3Handler {
             // s3_client: s3::Client::new(&my_config),

@@ -10,6 +10,7 @@ use utils::jwt_helpers::Claims;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
+use crate::services::files_storage::file_storage::FileStorage;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -36,6 +37,9 @@ async fn main() -> std::io::Result<()> {
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
+
+    // We establish the connection to s3
+    &common::config::FILES_STORAGE..set_up_connection().await;
 
     // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
 
