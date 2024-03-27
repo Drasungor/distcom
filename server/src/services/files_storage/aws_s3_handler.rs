@@ -51,7 +51,7 @@ impl FileStorage for AwsS3Handler {
         }
 
         let content_type = mime_guess::from_path(file_path).first_or_octet_stream().to_string();
-        let req = self.s3_client.expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
+        let req = self.s3_client.as_ref().expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
                                             body(body).content_type(content_type);
 
         match req.send().await {
