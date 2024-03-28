@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use actix_web::dev::Service;
 use actix_web::{web, App, HttpMessage, HttpServer};
 use diesel::mysql::MysqlConnection;
@@ -46,6 +48,10 @@ async fn main() -> std::io::Result<()> {
 
     // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
 
+    {
+        let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+        read_guard.upload(Path::new("./uploads/test.png")).await.expect("File upload error");
+    }
 
     println!("pase el ping");
 
