@@ -46,11 +46,8 @@ async fn main() -> std::io::Result<()> {
         write_guard.set_up_connection().await.expect("Error in file storage connection setup");
     }
 
-    // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
-
     {
         let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-        // read_guard.upload(Path::new("./uploads/test.png")).await.expect("File upload error");
         read_guard.upload(Path::new("./uploads/test.png"), "test_image_upload.png").await.expect("File upload error");
     }
 
