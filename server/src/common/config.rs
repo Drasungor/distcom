@@ -17,7 +17,7 @@ pub struct Config {
    pub y: i32,
    pub database_url: String,
    pub token: Token,
-   pub uploaded_files_url: String, // String that defines where the files are stored, it is a single attribute so that different
+   pub uploaded_files_connection_string: String, // String that defines where the files are stored, it is a single attribute so that different
                                    // parameters can be formatted inside it
 }
 
@@ -34,7 +34,7 @@ lazy_static! {
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&CONFIG_OBJECT.database_url);
     // pub static ref FILES_STORAGE: AwsS3Handler = AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url);
     // pub static ref FILES_STORAGE: Mutex<AwsS3Handler> = Mutex::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
-    pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
+    pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
 }
 
 fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
