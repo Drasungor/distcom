@@ -48,17 +48,9 @@ where
     forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        // Do something before handling the request
-        println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Upload file Middleware executed before handling the request");
         let headers = req.headers().clone();
         let my_payload = req.take_payload();
-
-        // let complete_payload = my_payload;
-
         let multipart = actix_multipart::Multipart::new(&headers, my_payload);
-
-        // let service = self.service.clone();
-        // let upload_file_result = upload_file(multipart).await;
         let fut = self.service.call(req);
         
         Box::pin(async move {
