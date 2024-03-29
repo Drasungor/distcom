@@ -30,6 +30,7 @@ mod utils;
 
 pub struct RequestExtension {
     pub jwt_payload: Option<Claims>,
+    pub files_names: Option<Vec<String>>,
 }
 
 #[actix_web::main]
@@ -48,7 +49,7 @@ async fn main() -> std::io::Result<()> {
 
     {
         let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-        read_guard.upload(Path::new("./uploads/test.png"), "test_image_upload.png").await.expect("File upload error");
+        // read_guard.upload(Path::new("./uploads/test.png"), "test_image_upload.png").await.expect("File upload error");
     }
 
     println!("pase el ping");
@@ -58,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             .wrap_fn(|req, srv| {
                 let init_data = RequestExtension {
                     jwt_payload: None,
+                    files_names: None,
                 };
                 req.extensions_mut().insert(init_data);
                 let return_value = srv.call(req).map(|res| {
