@@ -8,6 +8,8 @@ use crate::common::app_error::AppError;
 pub trait FileStorage {
     async fn set_up_connection(&mut self) -> Result<(), AppError>;
     // async fn upload(&self, file_path: &str) -> Result<(), AppError>;
-    async fn upload(&self, file_path: &Path) -> Result<(), AppError>;
+    
+    // async fn upload(&self, file_path: &Path) -> Result<(), AppError>;
+    async fn upload(&self, file_path: &Path, new_object_name: &str) -> Result<(), AppError>;
     async fn delete(&self) -> Result<(), AppError>;
 }

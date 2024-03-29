@@ -12,6 +12,9 @@ use super::file_storage::FileStorage;
 pub struct AwsS3Handler {
     s3_client: Option<s3::Client>,
     bucket_name: String,
+    region: String,
+    key_id: String,
+    key_secret: String,
 }
 
 #[async_trait]
@@ -30,12 +33,12 @@ impl FileStorage for AwsS3Handler {
         // let key_id = env::var("AWS_ACCESS_KEY_ID").expect("No AWS_ACCESS_KEY_ID environment variable");
         // let key_secret = env::var("AWS_SECRET_ACCESS_KEY").expect("No AWS_SECRET_ACCESS_KEY environment variable");
 
-        let key_id = ""; // TODO: GET VALUES FROM THE CONFIG VALUE
-        let key_secret = ""; // TODO: GET VALUES FROM THE CONFIG VALUE
+        // let key_id = ""; // TODO: GET VALUES FROM THE CONFIG VALUE
+        // let key_secret = ""; // TODO: GET VALUES FROM THE CONFIG VALUE
 
 
-        let region = Region::new("us-east-1"); // TODO: GET VALUES FROM THE CONFIG VALUE
-        let cred = s3::config::Credentials::new(key_id, key_secret, None, None, "Loaded-from-custom-env");
+        let region = Region::new(self.region.clone()); // TODO: GET VALUES FROM THE CONFIG VALUE
+        let cred = s3::config::Credentials::new(self.key_id.clone(), self.key_secret.clone(), None, None, "Loaded-from-custom-env");
         let conf_builder = s3::config::Builder::new().region(region).credentials_provider(cred);
         let conf = conf_builder.build();
 
@@ -44,7 +47,8 @@ impl FileStorage for AwsS3Handler {
         Ok(())
     }
 
-    async fn upload(&self, file_path: &Path) -> Result<(), AppError> {
+    // async fn upload(&self, file_path: &Path) -> Result<(), AppError> {
+    async fn upload(&self, file_path: &Path, new_object_name: &str) -> Result<(), AppError> {
     // Path::new();
         if (!file_path.exists()) {
             println!("The path does not exist");
@@ -54,7 +58,7 @@ impl FileStorage for AwsS3Handler {
         let key: &str;
         match file_path.to_str() {
             Some(stringified_path) => {
-                key = stringified_path;
+                key = new_object_name;
             },
             None => {
                 println!("Path conversion error");
@@ -108,13 +112,19 @@ impl FileStorage for AwsS3Handler {
 
 impl AwsS3Handler {
 
-    // TODO: Check if this function can be async, or if the initialization of s3_client should be done in another method
+    // s3_conection_data: "region:bucket_name:key_id:key_secret", variables cannot contain the ":" character
     pub fn new(s3_conection_data: &str) -> AwsS3Handler {
+        let connection_parameters: Vec<&str> = s3_conection_data.split(":").collect(); // TODO: make the separation character a config attribute
+
+
         // let my_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
         return AwsS3Handler {
             // s3_client: s3::Client::new(&my_config),
             s3_client: None,
-            bucket_name: s3_conection_data.to_string(), // TODO: GET BUCKET VALUE FROM THE CONFIG VALUE
+            region: connection_parameters[0].to_string(),
+            bucket_name: connection_parameters[1].to_string(),
+            key_id: connection_parameters[2].to_string(),
+            key_secret: connection_parameters[3].to_string(),
         };
     }
 
