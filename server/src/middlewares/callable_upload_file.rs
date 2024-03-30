@@ -4,6 +4,7 @@ use std::fs::File; // Add import for File
 use actix_multipart::Multipart;
 use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
+use uuid::Uuid;
 
 fn folder_exists(path: &str) -> bool {
     fs::metadata(path).is_ok()
@@ -38,9 +39,17 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
             }
         };
 
+        let filename_split: Vec<&str> = filename.split(".").collect(); // TODO: make the separation character a config attribute
+
+
+        println!("filename_split: {:?}", filename_split);
+
+
         if (field_is_file) {
+            let new_filename = Uuid::new_v4();
             // Define the file path where you want to save the uploaded file
-            let file_path = format!("{}/{}", uploads_folder, filename);
+            // let file_path = format!("{}/{}", uploads_folder, filename);
+            let file_path = format!("{}/{}", uploads_folder, new_filename);
             let file_path_clone = file_path.clone();
             // Create a new file and write the field data to it
             let f = web::block(|| File::create(file_path_clone)).await.

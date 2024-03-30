@@ -16,6 +16,8 @@ impl ProgramController {
 
         println!("files_names: {:?}", files_names);
 
+        // TODO: add deletion of the file locally
+
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
