@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub exp: usize,
     pub organization_id: String,

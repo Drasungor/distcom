@@ -12,6 +12,9 @@ impl ProgramController {
         println!("HELLO HELLO HELLO I am upload_program in the controller");
 
         // upload_file(&mut form).await.expect("Failed file upload");
+        let files_names = upload_file(form).await.expect("Failed file upload");
+
+        println!("files_names: {:?}", files_names);
 
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
