@@ -17,7 +17,7 @@ fn create_folder(path: &str) -> () {
 }
 
 pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> {
-    let mut file_paths: Vec<String> = Vec::new();
+    let mut files_names: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
@@ -39,16 +39,17 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
             }
         };
 
-        let filename_split: Vec<&str> = filename.split(".").collect(); // TODO: make the separation character a config attribute
-
-
-        println!("filename_split: {:?}", filename_split);
-
-
+        
         if (field_is_file) {
-            let new_filename = Uuid::new_v4();
+            
+            let filename_split: Vec<&str> = filename.split(".").collect(); // TODO: make the separation character a config attribute
+            let file_suffix = filename_split[filename_split.len() - 1];
+            // let new_filename = Uuid::new_v4();
+            let new_filename = format!("{}.{}", Uuid::new_v4(), file_suffix);
+            
+
             // Define the file path where you want to save the uploaded file
-            // let file_path = format!("{}/{}", uploads_folder, filename);
+            // let file_path = format!("{}/{}.{}", uploads_folder, new_filename, file_suffix);
             let file_path = format!("{}/{}", uploads_folder, new_filename);
             let file_path_clone = file_path.clone();
             // Create a new file and write the field data to it
@@ -59,13 +60,8 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
                 web::block(move || file_pointer_clone.write_all(&chunk)).await.
                         expect("Error chunk creation task").expect("Error in chunk creation");
             }
-            file_paths.push(file_path);
+            files_names.push(new_filename);
         }
     }
-    // if file_paths.is_empty() {
-    //     Ok(HttpResponse::Ok().body("No file uploaded"))
-    // } else {
-    //     Ok(HttpResponse::Ok().body(format!("Files saved at: {:?}", file_paths)))
-    // }
-    return Ok(file_paths);
+    return Ok(files_names);
 }
