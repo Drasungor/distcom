@@ -12,7 +12,6 @@ pub struct ProgramController;
 
 impl ProgramController {
 
-    // pub async fn upload_program(mut form: Multipart) -> impl Responder {
     pub async fn upload_program(req: HttpRequest, mut form: Multipart) -> impl Responder {
         let files_names = upload_file(form).await.expect("Failed file upload");
 
@@ -27,7 +26,6 @@ impl ProgramController {
             let new_file_name = format!("{}/{}", jwt_payload.organization_id, file_name);
             {
                 let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-                println!("I am going to upload the files");
                 read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
             }
             fs::remove_file(file_path).expect("Error in file deletion");
