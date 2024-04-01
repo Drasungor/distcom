@@ -27,10 +27,10 @@ mod components;
 mod schema;
 mod utils;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RequestExtension {
     pub jwt_payload: Option<Claims>,
-    pub files_names: Option<Vec<String>>,
+    // pub files_names: Option<Vec<String>>,
 }
 
 #[actix_web::main]
@@ -59,7 +59,7 @@ async fn main() -> std::io::Result<()> {
             .wrap_fn(|req, srv| {
                 let init_data = RequestExtension {
                     jwt_payload: None,
-                    files_names: None,
+                    // files_names: None,
                 };
                 req.extensions_mut().insert(init_data);
                 let return_value = srv.call(req).map(|res| {

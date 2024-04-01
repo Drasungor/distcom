@@ -56,10 +56,10 @@ where
         let my_payload = req.take_payload();
         let multipart = actix_multipart::Multipart::new(&headers, my_payload);
 
-        let init_data = RequestExtension {
-            jwt_payload: None,
-            files_names: None,
-        };
+        // let init_data = RequestExtension {
+        //     jwt_payload: None,
+        //     // files_names: None,
+        // };
 
         // let mut extension = req.extensions_mut();
 

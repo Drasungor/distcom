@@ -6,5 +6,6 @@ migrations
 *.trace
 *.memory
 *.proof
+*.tar
 *dev.json
 server/.env

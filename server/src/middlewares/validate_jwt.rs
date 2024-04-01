@@ -1,11 +1,12 @@
 use actix_web::{web, HttpResponse, HttpMessage};
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
+use diesel::insert_into;
 use std::future::{ready, Ready};
 use std::pin::Pin;
 
-use crate::common;
-use crate::utils::jwt_helpers::validate_jwt;
+use crate::{common, RequestExtension};
+use crate::utils::jwt_helpers::{validate_jwt, Claims};
 
 
 pub struct ValidateJwtMiddleware;
@@ -46,19 +47,25 @@ where
     forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        // Do something before handling the request
         println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Validate jwt Middleware executed before handling the request");
         let headers = req.headers().clone();
-        // let my_payload = req.take_payload();
+        
+        // TODO: manage this errors correctly instead of using expect
+        let token = headers.get("token").expect("No token was received").to_str().expect("Error in token parsing");
+        let jwt_payload: Claims = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token).expect("Error in token decoding");
+        
+        {
+            let mut extensions = req.extensions_mut();
+            let extensions_value = extensions.get::<RequestExtension>().expect("The extension was never initialized");
+            let mut cloned_extension = extensions_value.clone();
+            cloned_extension.jwt_payload = Some(jwt_payload);
+            extensions.insert(cloned_extension);
+            // println!("Extensions asdasdasdasdasd: {:?}", req.extensions().get::<RequestExtension>());
+        }
+        
         let fut = self.service.call(req);
 
-        // let asdd = headers.get("token").unwrap().to_str();
-
-        // validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token);
-
         Box::pin(async move {
-            // let multipart = actix_multipart::Multipart::new(&headers, my_payload);
-            // upload_file(multipart).await?;
             println!("Hi from jwt");
             let res = fut.await?;
             println!("RIGHT BEFORE JWT OK(RES): {:?}", res.status());
