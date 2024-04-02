@@ -17,7 +17,7 @@ diesel::table! {
         account_was_verified -> Bool,
         
         #[max_length = 255]
-        username -> Varchar,
+        username -> Varchar, // Set as unique in migration
 
         #[max_length = 255]
         password_hash -> Varchar,
@@ -37,9 +37,47 @@ diesel::table! {
     }
 }
 
+// A group represents a set of inputs reserved for a specific program, inputs
+// are classified as a group because all the inputs used for a program are either
+// used at the same time or not at all, a program can have multiple input groups
+diesel::table! {
+    program_input_group (input_group_id) {
+
+        #[max_length = 255]
+        input_group_id -> Varchar,
+
+        #[max_length = 255]
+        program_id -> Varchar,
+
+        // Determines if this group was provided to a prover
+        input_was_reserved -> Bool,
+    }
+}
+
+// Where the specific groups are stored, order is important because inputs are inserted sequentially
+// inside the prover. Inputs have a size limit, but since the insertion is sequential any object that
+// does not fit inside the limit can be separated in multiple parts
+diesel::table! {
+    specific_program_input (specific_input_id) {
+
+        #[max_length = 255]
+        specific_input_id -> Varchar,
+
+        #[max_length = 255]
+        input_group_id -> Varchar, // Generate index in migration
+
+        #[max_length = 1024]
+        blob_data -> Nullable<Varbinary>,
+
+        order -> Integer,
+    }
+}
+
+
 // diesel::allow_tables_to_appear_in_same_query!(
 //     account, 
 //     papafrita,
+//     program_input
 // );
 
 // Add a unique index to ensure username uniqueness

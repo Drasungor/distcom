@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use actix_web::dev::Service;
 use actix_web::{web, App, HttpMessage, HttpServer};
 use diesel::mysql::MysqlConnection;
@@ -10,6 +12,7 @@ use utils::jwt_helpers::Claims;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
+use crate::services::files_storage::file_storage::FileStorage;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -24,9 +27,10 @@ mod components;
 mod schema;
 mod utils;
 
-
+#[derive(Clone, Debug)]
 pub struct RequestExtension {
     pub jwt_payload: Option<Claims>,
+    // pub files_names: Option<Vec<String>>,
 }
 
 #[actix_web::main]
@@ -37,8 +41,16 @@ async fn main() -> std::io::Result<()> {
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    // diesel::sql_query("CREATE UNIQUE INDEX account_username ON account (username)").execute(&mut pooled_connection).unwrap();
+    {
+        // We establish the connection to s3
+        let mut write_guard = common::config::FILES_STORAGE.write().expect("Error in rw lock");
+        write_guard.set_up_connection().await.expect("Error in file storage connection setup");
+    }
 
+    {
+        let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+        read_guard.upload(Path::new("./uploads/test.png"), "test_image_upload.png").await.expect("File upload error");
+    }
 
     println!("pase el ping");
 
@@ -47,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             .wrap_fn(|req, srv| {
                 let init_data = RequestExtension {
                     jwt_payload: None,
+                    // files_names: None,
                 };
                 req.extensions_mut().insert(init_data);
                 let return_value = srv.call(req).map(|res| {
