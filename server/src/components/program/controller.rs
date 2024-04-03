@@ -2,10 +2,10 @@ use actix_multipart::Multipart;
 use actix_web::{dev::{Payload, ServiceRequest}, web, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use serde_derive::{Serialize, Deserialize};
 use std::{fs, path::Path, thread, time::Duration};
-use crate::{common, RequestExtension};
+use actix_files;
 
+use crate::{common, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
-// use crate::services::files_storage::aws_s3_handler::AwsS3Handler;
 use crate::services::files_storage::file_storage::FileStorage;
 
 pub struct ProgramController;
@@ -32,6 +32,11 @@ impl ProgramController {
         }
 
         return AppHttpResponseBuilder::get_http_response(Ok(()));
+    }
+
+    pub async fn download_program(req: HttpRequest) -> impl Responder {
+        let file = actix_files::NamedFile::open_async("./uploads/test.png").await.expect("Problem with async read file");
+        return file.into_response(&req);
     }
 
 }
