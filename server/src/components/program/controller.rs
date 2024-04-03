@@ -31,6 +31,32 @@ impl ProgramController {
             fs::remove_file(file_path).expect("Error in file deletion");
         }
 
+        // TODO: store the new programs data in the database
+
+        return AppHttpResponseBuilder::get_http_response(Ok(()));
+    }
+
+    // TODO: implement the storage of inputs group in the database
+
+    pub async fn add_inputs_group(req: HttpRequest) -> impl Responder {
+        // let files_names = upload_file(form).await.expect("Failed file upload");
+
+        // // TODO: Change expect calls to an internal server error handling
+        // let extension_value = req.extensions().get::<RequestExtension>().expect("Extension should be initialized").clone();
+        // let jwt_payload = extension_value.jwt_payload.clone().expect("The jwt payload does not exist");
+        
+        // // println!("files_names: {:?}", files_names);
+
+        // for file_name in files_names {
+        //     let file_path = format!("./uploads/{}", file_name);
+        //     let new_file_name = format!("{}/{}", jwt_payload.organization_id, file_name);
+        //     {
+        //         let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+        //         read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
+        //     }
+        //     fs::remove_file(file_path).expect("Error in file deletion");
+        // }
+
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 

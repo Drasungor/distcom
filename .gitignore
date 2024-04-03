@@ -2,7 +2,7 @@ target
 uploads
 db_data
 db.sql
-migrations
+// migrations
 *.trace
 *.memory
 *.proof
