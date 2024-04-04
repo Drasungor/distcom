@@ -24,7 +24,7 @@ CREATE TABLE `specific_program_input`(
 	`specific_input_id` VARCHAR(255) NOT NULL PRIMARY KEY,
 	`input_group_id` VARCHAR(255) NOT NULL,
 	`blob_data` VARBINARY(1024),
-	`order` INTEGER NOT NULL
+	`order` INTEGER NOT NULL,
 	INDEX `input_group_id_index` (`input_group_id`)
 );
 

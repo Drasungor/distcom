@@ -6,6 +6,8 @@ use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
 use uuid::Uuid;
 
+use crate::utils::file_helpers::get_file_suffix;
+
 fn folder_exists(path: &str) -> bool {
     fs::metadata(path).is_ok()
 }
@@ -41,12 +43,8 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
 
         
         if (field_is_file) {
-            
-            let filename_split: Vec<&str> = filename.split(".").collect(); // TODO: make the separation character a config attribute
-            let file_suffix = filename_split[filename_split.len() - 1];
-            // let new_filename = Uuid::new_v4();
+            let file_suffix = get_file_suffix(&filename);
             let new_filename = format!("{}.{}", Uuid::new_v4(), file_suffix);
-            
 
             // Define the file path where you want to save the uploaded file
             // let file_path = format!("{}/{}.{}", uploads_folder, new_filename, file_suffix);
