@@ -1,3 +1,5 @@
+use std::str::Bytes;
+
 use actix_web::error::BlockingError;
 use diesel::connection;
 use diesel::result::DatabaseErrorKind;
@@ -49,6 +51,43 @@ impl ProgramMysqlDal {
             },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         }
+    }
+
+
+    
+    // pub async fn add_input_group(organization_id: String, program_id: String, inputs: &[&[u8]]) -> Result<(), AppError> {
+    pub async fn add_input_group(organization_id: String, program_id: String, inputs: &Vec<Vec<u8>>) -> Result<(), AppError> {
+
+        // let stored_program = StoredProgram {
+        //     organization_id,
+        //     program_id,
+        //     input_lock_timeout,
+        // };
+
+        // let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        // let result = web::block(move || {
+        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+        //     let insertion_result = diesel::insert_into(program::table)
+        //             .values(&stored_program)
+        //             .execute(connection);
+        //     return insertion_result;
+
+        // })
+        // }).await;
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+        //     Ok(Ok(_)) => Ok(()),
+        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //         match db_err_kind {
+        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //             _ => Err(AppError::new(AppErrorType::InternalServerError))
+        //         }
+        //     },
+        //     Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        // }
+
+        return Ok(());
     }
 
 }
