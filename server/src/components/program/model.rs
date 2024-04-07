@@ -2,13 +2,13 @@ use serde_derive::{Serialize, Deserialize};
 
 use crate::utils::jwt_helpers::GeneratedToken;
 
-// // Controller input models
+// Controller input models
 
-// #[derive(Deserialize)]
-// pub struct Credentials {
-//     pub username: String,
-//     pub password: String,
-// }
+#[derive(Deserialize)]
+pub struct Credentialsasdasdas {
+    pub username: String,
+    pub password: String,
+}
 
 // #[derive(Deserialize)]
 // pub struct ReceivedNewAccount {
