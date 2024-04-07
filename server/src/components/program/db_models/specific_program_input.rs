@@ -8,6 +8,8 @@ pub struct SpecificProgramInput {
     pub input_group_id: String,
     // pub blob_data: Option<[u8]>,
     // pub blob_data: Option<&[u8]>,
+
+    // TODO: Check why this is an option, maybe it could be just a u8 vec
     pub blob_data: Option<Vec<u8>>,
     pub order: i32,
 }
