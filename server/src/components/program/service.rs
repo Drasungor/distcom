@@ -17,10 +17,21 @@ impl ProgramService {
         return Ok(());
     }
 
-    pub async fn add_program_input_group(organization_id: String, program_id: String, input_file_path: String) -> Result<(), AppError> {
+    pub async fn add_program_input_group(organization_id: &String, program_id: &String, input_file_path: &String) -> Result<(), AppError> {
 
         let file = File::open(input_file_path).expect("Error while reading file");
-        let mut reader = csv::ReaderBuilder::new().from_reader(file);
+        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
+
+        println!("AAAAAAAAAAAAAAAAAAAAAAAAA");
+
+        for line in reader.records() {
+            let line_ok = line.expect("Error in line reading");
+            let line_iterator = line_ok.into_iter();
+            for value in line_iterator {
+                println!("Reading a csv line: {}", value);
+            }
+            
+        }
 
         // ProgramMysqlDal::add_organization_program(organization_id, program_id, input_lock_timeout).await?;
         return Ok(());

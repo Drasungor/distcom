@@ -49,7 +49,7 @@ impl ProgramController {
 
         println!("Path variable: {}", path.as_str());
 
-        let program_id = path.as_str();
+        let program_id = path.as_str().to_string();
 
         let files_names = upload_file(form).await.expect("Failed file upload");
 
@@ -66,6 +66,8 @@ impl ProgramController {
             //     let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
             //     read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
             // }
+            ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
+
             fs::remove_file(file_path).expect("Error in file deletion");
         }
 
