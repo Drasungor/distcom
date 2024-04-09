@@ -62,8 +62,10 @@ impl ProgramMysqlDal {
     }
 
     pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
         let cloned_input_group_id = input_group_id.clone();
         let cloned_program_id = program_id.clone();
+        
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
@@ -77,7 +79,7 @@ impl ProgramMysqlDal {
             println!("program::table.filter: {}", cloned_program_id);
 
             program::table
-                .filter(program::program_id.eq(cloned_program_id))
+                .filter(program::program_id.eq(cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
                 .first::<StoredProgram>(connection)?;
 
             println!("diesel::insert_into");
