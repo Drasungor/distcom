@@ -21,6 +21,7 @@ use super::db_models::specific_program_input::SpecificProgramInput;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
 use crate::schema::program_input_group;
+use crate::schema::specific_program_input;
 use crate::schema::{program};
 // use crate::schema::account::dsl::*;
 
@@ -60,22 +61,9 @@ impl ProgramMysqlDal {
         }
     }
 
-
-    
-    // pub async fn add_input_group(organization_id: String, program_id: String, inputs: &[&[u8]]) -> Result<(), AppError> {
-    // pub async fn add_input_group(organization_id: String, program_id: String, inputs: &Vec<Vec<u8>>) -> Result<(), AppError> {
     pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
-
-        // let stored_program = StoredProgram {
-        //     organization_id,
-        //     program_id,
-        //     input_lock_timeout,
-        // };
-
         let cloned_input_group_id = input_group_id.clone();
         let cloned_program_id = program_id.clone();
-
-
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
@@ -89,7 +77,6 @@ impl ProgramMysqlDal {
             program::table
                 .filter(program::program_id.eq(cloned_program_id))
                 .first::<StoredProgram>(connection)?;
-        // return found_account;
 
             diesel::insert_into(program_input_group::table)
                     .values(&program_input_group)
@@ -110,32 +97,14 @@ impl ProgramMysqlDal {
                         order: current_input
                     };
                     counter += 1;
+                    diesel::insert_into(specific_program_input::table)
+                        .values(&specific_input)
+                        .execute(connection)?;
                 }
-                assert!(counter == 1, "A csv line has more than one element");
-                // let specific_input = SpecificProgramInput {
-                //     specific_input_id: Uuid::new_v4().to_string(),
-                //     input_group_id,
-                //     // blob_data: Option<Vec<u8>>,
-                //     blob_data: Some(line.expect("Error in line reading").into_iter()),
-                //     order: current_input
-                // };
+                assert!(counter == 1, "There is more than one element per line");
 
                 current_input += 1;
             }
-
-            // println!("AAAAAAAAAAAAAAAAAAAAAAAAA");
-
-            // for line in reader.records() {
-            //     let line_ok = line.expect("Error in line reading");
-            //     let line_iterator = line_ok.into_iter();
-            //     let mut counter = 0; 
-            //     for value in line_iterator {
-            //         println!("Reading a csv line: {}", value);
-            //         counter += 1;
-            //     }
-            //     println!("Counter: {}", counter);
-                
-            // }
 
             return Ok(());
         })
