@@ -76,6 +76,8 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
+            // TODO: Check why when no value is found we do not return an error, probably not returning a value is not viewed as an
+            // error, but as a valid result
             program::table
                 .filter(program::program_id.eq(cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
                 .first::<StoredProgram>(connection)?;
