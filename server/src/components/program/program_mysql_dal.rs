@@ -77,8 +77,8 @@ impl ProgramMysqlDal {
 
 
         let program_input_group = ProgramInputGroup {
-            input_group_id: cloned_input_group_id,
-            program_id: cloned_program_id,
+            input_group_id: cloned_input_group_id.clone(),
+            program_id: cloned_program_id.clone(),
             input_was_reserved: false,
         };
 
@@ -87,7 +87,7 @@ impl ProgramMysqlDal {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
             program::table
-                .filter(program::program_id.eq(program_id))
+                .filter(program::program_id.eq(cloned_program_id))
                 .first::<StoredProgram>(connection)?;
         // return found_account;
 
