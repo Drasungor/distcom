@@ -22,16 +22,19 @@ impl ProgramService {
         let file = File::open(input_file_path).expect("Error while reading file");
         let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
 
-        println!("AAAAAAAAAAAAAAAAAAAAAAAAA");
+        // println!("AAAAAAAAAAAAAAAAAAAAAAAAA");
 
-        for line in reader.records() {
-            let line_ok = line.expect("Error in line reading");
-            let line_iterator = line_ok.into_iter();
-            for value in line_iterator {
-                println!("Reading a csv line: {}", value);
-            }
+        // for line in reader.records() {
+        //     let line_ok = line.expect("Error in line reading");
+        //     let line_iterator = line_ok.into_iter();
+        //     let mut counter = 0; 
+        //     for value in line_iterator {
+        //         println!("Reading a csv line: {}", value);
+        //         counter += 1;
+        //     }
+        //     println!("Counter: {}", counter);
             
-        }
+        // }
 
         // ProgramMysqlDal::add_organization_program(organization_id, program_id, input_lock_timeout).await?;
         return Ok(());

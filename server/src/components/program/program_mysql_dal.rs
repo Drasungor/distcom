@@ -12,6 +12,7 @@ use diesel::mysql::MysqlConnection;
 use diesel::r2d2::{ ConnectionManager, Pool };
 use actix_web::web;
 use uuid::Uuid;
+use base64::prelude::*;
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
@@ -65,60 +66,93 @@ impl ProgramMysqlDal {
     // pub async fn add_input_group(organization_id: String, program_id: String, inputs: &Vec<Vec<u8>>) -> Result<(), AppError> {
     pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
 
-        // // let stored_program = StoredProgram {
-        // //     organization_id,
-        // //     program_id,
-        // //     input_lock_timeout,
-        // // };
-
-        // let program_input_group = ProgramInputGroup {
-        //     input_group_id,
-        //     program_id: program_id.clone(),
-        //     input_was_reserved: false,
+        // let stored_program = StoredProgram {
+        //     organization_id,
+        //     program_id,
+        //     input_lock_timeout,
         // };
 
-        // let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
-        // let result = web::block(move || {
-        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        let cloned_input_group_id = input_group_id.clone();
+        let cloned_program_id = program_id.clone();
 
-        //     program::table
-        //         .filter(program::program_id.eq(program_id))
-        //         .first::<StoredProgram>(connection)?;
-        // // return found_account;
 
-        //     diesel::insert_into(program_input_group::table)
-        //             .values(&program_input_group)
-        //             .execute(connection)?;
+        let program_input_group = ProgramInputGroup {
+            input_group_id: cloned_input_group_id,
+            program_id: cloned_program_id,
+            input_was_reserved: false,
+        };
 
-        //     let mut current_input = 0;
-        //     for line in input_reader.records() {
-        //         let specific_input = SpecificProgramInput {
-        //             specific_input_id: Uuid::new_v4().to_string(),
-        //             input_group_id,
-        //             // blob_data: Option<Vec<u8>>,
-        //             blob_data: Some(line.expect("Error in line reading").into_iter()),
-        //             order: current_input
-        //         };
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-        //         current_input += 1;
-        //     }
+            program::table
+                .filter(program::program_id.eq(program_id))
+                .first::<StoredProgram>(connection)?;
+        // return found_account;
 
-        //     return Ok(());
-        // })
-        // }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-        //     Ok(Ok(_)) => Ok(()),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         match db_err_kind {
-        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-        //             _ => Err(AppError::new(AppErrorType::InternalServerError))
-        //         }
-        //     },
-        //     Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-        // };
+            diesel::insert_into(program_input_group::table)
+                    .values(&program_input_group)
+                    .execute(connection)?;
 
-        return Ok(());
+            let mut current_input = 0;
+            for line in input_reader.records() {
+                let line_ok = line.expect("Error in line reading");
+                let line_iterator = line_ok.into_iter();
+                let mut counter = 0;
+                for value in line_iterator {
+                    // println!("Reading a csv line: {}", value);
+                    let specific_input = SpecificProgramInput {
+                        specific_input_id: Uuid::new_v4().to_string(),
+                        input_group_id: cloned_input_group_id.clone(),
+                        // blob_data: Option<Vec<u8>>,
+                        blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
+                        order: current_input
+                    };
+                    counter += 1;
+                }
+                assert!(counter == 1, "A csv line has more than one element");
+                // let specific_input = SpecificProgramInput {
+                //     specific_input_id: Uuid::new_v4().to_string(),
+                //     input_group_id,
+                //     // blob_data: Option<Vec<u8>>,
+                //     blob_data: Some(line.expect("Error in line reading").into_iter()),
+                //     order: current_input
+                // };
+
+                current_input += 1;
+            }
+
+            // println!("AAAAAAAAAAAAAAAAAAAAAAAAA");
+
+            // for line in reader.records() {
+            //     let line_ok = line.expect("Error in line reading");
+            //     let line_iterator = line_ok.into_iter();
+            //     let mut counter = 0; 
+            //     for value in line_iterator {
+            //         println!("Reading a csv line: {}", value);
+            //         counter += 1;
+            //     }
+            //     println!("Counter: {}", counter);
+                
+            // }
+
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(_)) => Ok(()),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+
+        // return Ok(());
     }
 
 }
