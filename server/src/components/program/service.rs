@@ -19,6 +19,8 @@ impl ProgramService {
 
     pub async fn add_program_input_group(organization_id: &String, program_id: &String, input_file_path: &String) -> Result<(), AppError> {
 
+        println!("AJSDHASJLKDHLASKJDHLAJSDHLSHLASKJDHLKASJDHLAKSJDHASLDJ");
+
         let file = File::open(input_file_path).expect("Error while reading file");
         let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
 
@@ -36,7 +38,11 @@ impl ProgramService {
             
         // }
 
-        // ProgramMysqlDal::add_organization_program(organization_id, program_id, input_lock_timeout).await?;
+        println!("Estoy en el service ekideeeee");
+
+        let input_group_id = Uuid::new_v4().to_string();
+
+        ProgramMysqlDal::add_input_group(organization_id, program_id, &input_group_id, reader).await?;
         return Ok(());
     }
 

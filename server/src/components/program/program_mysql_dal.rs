@@ -74,20 +74,34 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
+            println!("program::table.filter: {}", cloned_program_id);
+
             program::table
                 .filter(program::program_id.eq(cloned_program_id))
                 .first::<StoredProgram>(connection)?;
+
+            println!("diesel::insert_into");
 
             diesel::insert_into(program_input_group::table)
                     .values(&program_input_group)
                     .execute(connection)?;
 
+            // Storage of specific inputs
             let mut current_input = 0;
+
+            println!("antes del for");
+
             for line in input_reader.records() {
                 let line_ok = line.expect("Error in line reading");
                 let line_iterator = line_ok.into_iter();
                 let mut counter = 0;
+
+                println!("Adentro de input_reader");
+
                 for value in line_iterator {
+
+                    println!("Adentro de line_iterator");
+
                     // println!("Reading a csv line: {}", value);
                     let specific_input = SpecificProgramInput {
                         specific_input_id: Uuid::new_v4().to_string(),
@@ -102,7 +116,6 @@ impl ProgramMysqlDal {
                         .execute(connection)?;
                 }
                 assert!(counter == 1, "There is more than one element per line");
-
                 current_input += 1;
             }
 
