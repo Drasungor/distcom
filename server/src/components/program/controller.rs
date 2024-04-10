@@ -65,4 +65,11 @@ impl ProgramController {
         return file.into_response(&req);
     }
 
+    pub async fn retrieve_input_group(path: web::Path<String>) -> impl Responder {
+        let program_id = path.as_str().to_string();
+        ProgramService::retrieve_input_group(&program_id).await;
+        return AppHttpResponseBuilder::get_http_response(Ok(()));
+    }
+
+
 }

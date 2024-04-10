@@ -175,13 +175,29 @@ impl ProgramMysqlDal {
             let input_group_id = found_input_group.input_group_id;
 
             // diesel::update(program_input_group::table.find(input_group_id))
-            diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id)))
+            diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
                 .set(program_input_group::input_was_reserved.eq(true))
                 .execute(connection).expect("Error in input group update");
 
-            // while let Ok(current_input) =  {
-                
-            // }
+            let mut input_line_counter = 0;
+            let mut current_input = specific_program_input::table
+                .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
+                // TODO: return a good error indicating that no unreserved input was found
+                .first::<SpecificProgramInput>(connection);
+
+            while let Ok(input_tuple) = current_input {
+                input_line_counter += 1;
+
+                // TODO: store the read data in a file after encoding it to base 64
+
+                // println!("I read some nice data from the database: {}", input_tuple.blob_data);
+                println!("The order of the read data is: {}", input_tuple.order);
+
+                current_input = specific_program_input::table
+                .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
+                // TODO: return a good error indicating that no unreserved input was found
+                .first::<SpecificProgramInput>(connection);
+            }
 
             return Ok(());
         })

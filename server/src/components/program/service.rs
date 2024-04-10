@@ -25,4 +25,10 @@ impl ProgramService {
         return Ok(());
     }
 
+    pub async fn retrieve_input_group(program_id: &String) -> Result<(), AppError> {
+        ProgramMysqlDal::retrieve_input_group(program_id).await?;
+        return Ok(());
+    }
+
+
 }
