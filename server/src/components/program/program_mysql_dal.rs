@@ -152,8 +152,50 @@ impl ProgramMysqlDal {
             },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
-
         // return Ok(());
     }
 
+    // pub async fn retrieve_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
+    pub async fn retrieve_input_group(program_id: &String) -> Result<(), AppError> {
+        let cloned_program_id = program_id.clone();
+
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            // program::table
+            // .filter(program::program_id.eq(cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+            // .first::<StoredProgram>(connection)?;
+
+            let found_input_group: ProgramInputGroup = program_input_group::table
+                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
+                // TODO: return a good error indicating that no unreserved input was found
+                .first::<ProgramInputGroup>(connection).expect("No input group was found");
+
+            let input_group_id = found_input_group.input_group_id;
+
+            // diesel::update(program_input_group::table.find(input_group_id))
+            diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id)))
+                .set(program_input_group::input_was_reserved.eq(true))
+                .execute(connection).expect("Error in input group update");
+
+            // while let Ok(current_input) =  {
+                
+            // }
+
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(_)) => Ok(()),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
 }
