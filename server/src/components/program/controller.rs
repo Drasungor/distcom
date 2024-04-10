@@ -46,30 +46,17 @@ impl ProgramController {
 
     // pub async fn add_inputs_group(req: HttpRequest) -> impl Responder {
     pub async fn add_inputs_group(req: HttpRequest, path: web::Path<String>, form: Multipart) -> impl Responder {
-
-        println!("Path variable: {}", path.as_str());
-
         let program_id = path.as_str().to_string();
-
         let files_names = upload_file(form).await.expect("Failed file upload");
 
         // TODO: Change expect calls to an internal server error handling
         let extension_value = req.extensions().get::<RequestExtension>().expect("Extension should be initialized").clone();
         let jwt_payload = extension_value.jwt_payload.clone().expect("The jwt payload does not exist");
-        
-        println!("111111111111111111111111111111111111111");
-
         for file_name in files_names {
-
-            println!("2222222222222222222222222222222222222");
-
-
             let file_path = format!("./uploads/{}", file_name);
             ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
-
             fs::remove_file(file_path).expect("Error in file deletion");
         }
-
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 

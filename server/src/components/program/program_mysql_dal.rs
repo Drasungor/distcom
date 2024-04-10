@@ -4,6 +4,7 @@ use std::str::Bytes;
 use actix_web::error::BlockingError;
 use csv::Reader;
 use diesel::connection;
+use diesel::r2d2::PooledConnection;
 use diesel::result::DatabaseErrorKind;
 // use super::{dal::AccountDal, db_models::account::NewAccount};
 use diesel::RunQueryDsl;
@@ -61,6 +62,32 @@ impl ProgramMysqlDal {
         }
     }
 
+    fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), diesel::result::Error> {
+        // Storage of specific inputs
+        let mut current_input = 0;
+        for line in input_reader.records() {
+            let line_ok = line.expect("Error in line reading");
+            let line_iterator = line_ok.into_iter();
+            let mut counter = 0;
+
+            for value in line_iterator {
+                let specific_input = SpecificProgramInput {
+                    specific_input_id: Uuid::new_v4().to_string(),
+                    input_group_id: input_group_id.clone(),
+                    blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
+                    order: current_input
+                };
+                counter += 1;
+                diesel::insert_into(specific_program_input::table)
+                    .values(&specific_input)
+                    .execute(connection)?;
+            }
+            assert!(counter == 1, "There is more than one element per line");
+            current_input += 1;
+        }
+        return Ok(());
+    }
+
     pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
         let cloned_organization_id = organization_id.clone();
         let cloned_input_group_id = input_group_id.clone();
@@ -86,28 +113,30 @@ impl ProgramMysqlDal {
                     .values(&program_input_group)
                     .execute(connection)?;
 
-            // Storage of specific inputs
-            let mut current_input = 0;
-            for line in input_reader.records() {
-                let line_ok = line.expect("Error in line reading");
-                let line_iterator = line_ok.into_iter();
-                let mut counter = 0;
+            // // Storage of specific inputs
+            // let mut current_input = 0;
+            // for line in input_reader.records() {
+            //     let line_ok = line.expect("Error in line reading");
+            //     let line_iterator = line_ok.into_iter();
+            //     let mut counter = 0;
 
-                for value in line_iterator {
-                    let specific_input = SpecificProgramInput {
-                        specific_input_id: Uuid::new_v4().to_string(),
-                        input_group_id: cloned_input_group_id.clone(),
-                        blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
-                        order: current_input
-                    };
-                    counter += 1;
-                    diesel::insert_into(specific_program_input::table)
-                        .values(&specific_input)
-                        .execute(connection)?;
-                }
-                assert!(counter == 1, "There is more than one element per line");
-                current_input += 1;
-            }
+            //     for value in line_iterator {
+            //         let specific_input = SpecificProgramInput {
+            //             specific_input_id: Uuid::new_v4().to_string(),
+            //             input_group_id: cloned_input_group_id.clone(),
+            //             blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
+            //             order: current_input
+            //         };
+            //         counter += 1;
+            //         diesel::insert_into(specific_program_input::table)
+            //             .values(&specific_input)
+            //             .execute(connection)?;
+            //     }
+            //     assert!(counter == 1, "There is more than one element per line");
+            //     current_input += 1;
+            // }
+
+            Self::store_inputs(connection, cloned_input_group_id, input_reader)?;
 
             return Ok(());
         })
