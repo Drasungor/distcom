@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::str::Bytes;
-
 use actix_web::error::BlockingError;
 use csv::Reader;
 use diesel::connection;
@@ -14,6 +13,7 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use actix_web::web;
 use uuid::Uuid;
 use base64::prelude::*;
+use csv;
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
@@ -156,9 +156,8 @@ impl ProgramMysqlDal {
     }
 
     // pub async fn retrieve_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
-    pub async fn retrieve_input_group(program_id: &String) -> Result<(), AppError> {
+    pub async fn retrieve_input_group(program_id: &String) -> Result<String, AppError> {
         let cloned_program_id = program_id.clone();
-
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
@@ -185,6 +184,16 @@ impl ProgramMysqlDal {
                 // TODO: return a good error indicating that no unreserved input was found
                 .first::<SpecificProgramInput>(connection);
 
+            let file_path = format!("./downloads/{}.csv", input_group_id);
+            // let file_path_clone = file_path.clone();
+            {
+                // let file = File::create(file_path_clone).expect("Error in file creation");
+                let file = File::create(file_path.clone()).expect("Error in file creation");
+            }
+
+            let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
+
+
             while let Ok(input_tuple) = current_input {
                 input_line_counter += 1;
 
@@ -193,18 +202,21 @@ impl ProgramMysqlDal {
                 // println!("I read some nice data from the database: {}", input_tuple.blob_data);
                 println!("The order of the read data is: {}", input_tuple.order);
 
+                let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.expect("Blob data is null"));
+                writer.write_record(&[encoded_data]).expect("Error in writer");
+
                 current_input = specific_program_input::table
                 .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
                 // TODO: return a good error indicating that no unreserved input was found
                 .first::<SpecificProgramInput>(connection);
             }
 
-            return Ok(());
+            return Ok(file_path);
         })
         }).await;
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-            Ok(Ok(_)) => Ok(()),
+            Ok(Ok(file_path)) => Ok(file_path),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),

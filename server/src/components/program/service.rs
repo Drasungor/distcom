@@ -25,9 +25,10 @@ impl ProgramService {
         return Ok(());
     }
 
-    pub async fn retrieve_input_group(program_id: &String) -> Result<(), AppError> {
-        ProgramMysqlDal::retrieve_input_group(program_id).await?;
-        return Ok(());
+    pub async fn retrieve_input_group(program_id: &String) -> Result<String, AppError> {
+        let file_name = ProgramMysqlDal::retrieve_input_group(program_id).await?;
+        // println!("File name: {}", file_name);
+        return Ok(file_name);
     }
 
 

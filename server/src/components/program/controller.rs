@@ -65,11 +65,16 @@ impl ProgramController {
         return file.into_response(&req);
     }
 
-    pub async fn retrieve_input_group(path: web::Path<String>) -> impl Responder {
+    pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();
-        ProgramService::retrieve_input_group(&program_id).await;
-        return AppHttpResponseBuilder::get_http_response(Ok(()));
+        let file_path = ProgramService::retrieve_input_group(&program_id).await;
+        // return AppHttpResponseBuilder::get_http_response(Ok(()));
+        if (file_path.is_err()) {
+            // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
+            // return AppHttpResponseBuilder::get_http_response(file_path);
+        }
+        let file = actix_files::NamedFile::open_async(file_path.unwrap()).await.expect("Problem with async read file");
+        return file.into_response(&req);
     }
-
 
 }
