@@ -60,8 +60,18 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
-    pub async fn download_program(req: HttpRequest) -> impl Responder {
-        let file = actix_files::NamedFile::open_async("./uploads/test.png").await.expect("Problem with async read file");
+    pub async fn download_program(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
+        // let program_id = path.as_str().to_string();
+        let (organization_id, program_id) = &path.into_inner();
+        let file_name = format!("{}.tar", program_id);
+        let download_file_path = format!("./downloads/{}", file_name);
+        let object_name = format!("{}/{}", organization_id, file_name);
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+            read_guard.download(&object_name, Path::new(&download_file_path)).await.expect("File upload error");
+        }
+
+        let file = actix_files::NamedFile::open_async(download_file_path).await.expect("Problem with async read file");
         return file.into_response(&req);
     }
 
