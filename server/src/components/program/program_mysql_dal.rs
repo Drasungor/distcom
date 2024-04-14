@@ -155,6 +155,34 @@ impl ProgramMysqlDal {
         // return Ok(());
     }
 
+    pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
+        let cloned_program_id = program_id.clone();
+        
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let found_program = program::table
+            .filter(program::program_id.eq(cloned_program_id))
+            .first::<StoredProgram>(connection)?;
+
+            return Ok(found_program.organization_id);
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(organization_id)) => Ok(organization_id),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+        // return Ok(());
+    }
+
     // pub async fn retrieve_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
     pub async fn retrieve_input_group(program_id: &String) -> Result<String, AppError> {
         let cloned_program_id = program_id.clone();

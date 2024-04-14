@@ -31,5 +31,10 @@ impl ProgramService {
         return Ok(file_name);
     }
 
+    pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
+        let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
+        return Ok(organization_id);
+    }
+
 
 }
