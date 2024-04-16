@@ -1,8 +1,9 @@
 use actix_multipart::Multipart;
 use actix_web::{dev::{Payload, ServiceRequest}, web, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use serde_derive::{Serialize, Deserialize};
-use std::{fs, path::Path, thread, time::Duration};
+use std::{fs::{self, File}, path::Path, thread, time::Duration};
 use actix_files;
+use tar::{Builder, Archive};
 
 use crate::{common, utils::file_helpers::{get_file_suffix, get_filename_without_suffix}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
@@ -85,14 +86,52 @@ impl ProgramController {
 
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();
-        let file_path = ProgramService::retrieve_input_group(&program_id).await;
+        let input_result = ProgramService::retrieve_input_group(&program_id).await;
         // return AppHttpResponseBuilder::get_http_response(Ok(()));
-        if (file_path.is_err()) {
+        if (input_result.is_err()) {
             // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
-        let file = actix_files::NamedFile::open_async(file_path.unwrap()).await.expect("Problem with async read file");
+        let file = actix_files::NamedFile::open_async(input_result.unwrap().1).await.expect("Problem with async read file");
         return file.into_response(&req);
     }
+
+    pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
+
+        let program_id = path.as_str().to_string();
+        // let (organization_id, program_id) = &path.into_inner();
+        let program_file_name = format!("{}.tar", program_id);
+        let downloaded_program_file_path = format!("./downloads/{}", program_file_name);
+        let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
+
+        if (organization_id.is_err()) {
+            // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
+            // return AppHttpResponseBuilder::get_http_response(file_path);
+        }
+
+        let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+            read_guard.download(&object_name, Path::new(&downloaded_program_file_path)).await.expect("File upload error");
+        }
+        let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
+
+        let tar_file_path = format!("./downloads/{}_{}.tar", program_id, input_group_id);
+        // let tar_file_path = "./downloads/foo.tar";
+        let tar_file = File::create(tar_file_path.clone()).unwrap();
+        let mut tar_file_builder = Builder::new(tar_file);
+
+        tar_file_builder.append_path(downloaded_program_file_path).expect("Error in adding program to tar builder");
+        tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
+        tar_file_builder.finish().expect("Error in builder finish");
+
+        let file = actix_files::NamedFile::open_async(tar_file_path).await.expect("Problem with async read file");
+        return file.into_response(&req);
+
+
+    }
+
+    
+
 
 }

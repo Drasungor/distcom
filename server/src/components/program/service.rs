@@ -25,10 +25,10 @@ impl ProgramService {
         return Ok(());
     }
 
-    pub async fn retrieve_input_group(program_id: &String) -> Result<String, AppError> {
-        let file_name = ProgramMysqlDal::retrieve_input_group(program_id).await?;
+    pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
+        let (input_group_id, file_path) = ProgramMysqlDal::retrieve_input_group(program_id).await?;
         // println!("File name: {}", file_name);
-        return Ok(file_name);
+        return Ok((input_group_id, file_path));
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {

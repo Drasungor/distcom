@@ -184,7 +184,7 @@ impl ProgramMysqlDal {
     }
 
     // pub async fn retrieve_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
-    pub async fn retrieve_input_group(program_id: &String) -> Result<String, AppError> {
+    pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
@@ -239,12 +239,12 @@ impl ProgramMysqlDal {
                 .first::<SpecificProgramInput>(connection);
             }
 
-            return Ok(file_path);
+            return Ok((input_group_id, file_path));
         })
         }).await;
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-            Ok(Ok(file_path)) => Ok(file_path),
+            Ok(Ok(result_tuple)) => Ok(result_tuple),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
