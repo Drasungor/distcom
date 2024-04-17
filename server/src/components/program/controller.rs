@@ -98,10 +98,6 @@ impl ProgramController {
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
         let input_file_name = input_result.unwrap().1;
-
-        // let file = actix_files::NamedFile::open_async(input_file_name).await.expect("Problem with async read file");
-        // return file.into_response(&req);
-
         let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
         let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
         return named_file.into_response(&req);
@@ -132,16 +128,12 @@ impl ProgramController {
         let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
 
         let tar_file_path = format!("./downloads/{}_{}.tar", program_id, input_group_id);
-        // let tar_file_path = "./downloads/foo.tar";
         let tar_file = File::create(tar_file_path.clone()).unwrap();
         let mut tar_file_builder = Builder::new(tar_file);
 
         tar_file_builder.append_path(downloaded_program_file_path).expect("Error in adding program to tar builder");
         tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
         tar_file_builder.finish().expect("Error in builder finish");
-
-        // let file = actix_files::NamedFile::open_async(tar_file_path).await.expect("Problem with async read file");
-        // return file.into_response(&req);
 
         let tar_file = File::open(tar_file_path.clone()).expect("Error opening program file");
         let named_file = actix_files::NamedFile::from_file(tar_file, tar_file_path).expect("Error in NamedFile creation");
