@@ -1,48 +1,40 @@
 use diesel::mysql::MysqlConnection;
 use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
+use csv;
+use std::fs::File; // Add import for File
 
 use crate::common::app_error::{AppError, AppErrorType};
-// use super::account_mysql_dal::AccountMysqlDal;
-// use super::db_models::refresh_token::RefreshToken;
-// use super::model::{LoginTokens, ReceivedNewAccount};
-// use super::db_models::account::CompleteAccount;
-// use super::utils::{generate_basic_token, generate_login_tokens, generate_password_hash, is_password_valid};
+use crate::components::program::program_mysql_dal::ProgramMysqlDal;
+
 
 pub struct ProgramService;
 
 impl ProgramService {
 
-    // pub async fn register(new_account_data: ReceivedNewAccount) -> Result<(), AppError> {
-    //     let id = Uuid::new_v4();
-    //     let password_hash = generate_password_hash(new_account_data.password);
+    pub async fn add_organization_program(organization_id: String, program_id: String, input_lock_timeout: i64) -> Result<(), AppError> {
+        ProgramMysqlDal::add_organization_program(organization_id, program_id, input_lock_timeout).await?;
+        return Ok(());
+    }
 
-    //     let new_account = CompleteAccount {
-    //         organization_id: id.to_string(),
-    //         username: new_account_data.username,
-    //         password_hash,
-    //         name: new_account_data.name,
-    //         description: new_account_data.description,
-    //         account_was_verified: false,
-    //     };
+    pub async fn add_program_input_group(organization_id: &String, program_id: &String, input_file_path: &String) -> Result<(), AppError> {
+        let file = File::open(input_file_path).expect("Error while reading file");
+        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
+        let input_group_id = Uuid::new_v4().to_string();
+        ProgramMysqlDal::add_input_group(organization_id, program_id, &input_group_id, reader).await?;
+        return Ok(());
+    }
 
-    //     AccountMysqlDal::register_account(new_account).await?;
-    //     println!("ekisdeeeee");
-    //     return Ok(())
-    // }
+    pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
+        let (input_group_id, file_path) = ProgramMysqlDal::retrieve_input_group(program_id).await?;
+        // println!("File name: {}", file_name);
+        return Ok((input_group_id, file_path));
+    }
 
-    // pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {
-    //     let account_data = AccountMysqlDal::get_account_data_by_username(username).await?;
-    //     if (!is_password_valid(password, account_data.password_hash)) {
-    //         return Err(AppError::new(AppErrorType::WrongCredentials));
-    //     }
-    //     let login_tokens = generate_login_tokens(&account_data.organization_id);
-    //     let refresh_token_data = RefreshToken {
-    //         token_id: login_tokens.refresh_token.token_id.clone(),
-    //         user_id: account_data.organization_id,
-    //     };
-    //     AccountMysqlDal::add_refresh_token(refresh_token_data).await?;
-    //     return Ok(login_tokens);
-    // }
+    pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
+        let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
+        return Ok(organization_id);
+    }
+
 
 }

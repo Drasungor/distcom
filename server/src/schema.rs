@@ -41,6 +41,22 @@ diesel::table! {
 // are classified as a group because all the inputs used for a program are either
 // used at the same time or not at all, a program can have multiple input groups
 diesel::table! {
+    program (program_id) {
+
+        #[max_length = 255]
+        organization_id -> Varchar,
+
+        #[max_length = 255]
+        program_id -> Varchar,
+
+        input_lock_timeout -> BigInt,
+    }
+}
+
+// A group represents a set of inputs reserved for a specific program, inputs
+// are classified as a group because all the inputs used for a program are either
+// used at the same time or not at all, a program can have multiple input groups
+diesel::table! {
     program_input_group (input_group_id) {
 
         #[max_length = 255]

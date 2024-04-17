@@ -1,8 +1,9 @@
 target
 uploads
+downloads
 db_data
 db.sql
-migrations
+// migrations
 *.trace
 *.memory
 *.proof
