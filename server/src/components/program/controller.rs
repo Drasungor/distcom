@@ -97,9 +97,15 @@ impl ProgramController {
             // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
-        let file = actix_files::NamedFile::open_async(input_result.unwrap().1).await.expect("Problem with async read file");
-        let res = file.into_response(&req);
-        return res;
+        let input_file_name = input_result.unwrap().1;
+
+        // let file = actix_files::NamedFile::open_async(input_file_name).await.expect("Problem with async read file");
+        // return file.into_response(&req);
+
+        let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
+        let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
+        return named_file.into_response(&req);
+
         // return file.into_response(&req);
         // file.into_response(&req).await;
         // return AppHttpResponseBuilder::get_http_response(Ok(()));
@@ -134,8 +140,12 @@ impl ProgramController {
         tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
         tar_file_builder.finish().expect("Error in builder finish");
 
-        let file = actix_files::NamedFile::open_async(tar_file_path).await.expect("Problem with async read file");
-        return file.into_response(&req);
+        // let file = actix_files::NamedFile::open_async(tar_file_path).await.expect("Problem with async read file");
+        // return file.into_response(&req);
+
+        let tar_file = File::open(tar_file_path.clone()).expect("Error opening program file");
+        let named_file = actix_files::NamedFile::from_file(tar_file, tar_file_path).expect("Error in NamedFile creation");
+        return named_file.into_response(&req);
 
 
     }
