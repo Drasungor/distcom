@@ -1407,6 +1407,7 @@ dependencies = [
  "diesel_migrations",
  "dotenv",
  "embed_migrations_macro_function",
+ "fs2",
  "futures-util",
  "jsonwebtoken",
  "lazy_static",
@@ -1623,6 +1624,16 @@ dependencies = [
  "frunk_proc_macro_helpers",
  "quote",
  "syn 2.0.48",
+]
+
+[[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]

@@ -4,6 +4,7 @@ use serde_derive::{Serialize, Deserialize};
 use std::{fs::{self, File}, path::Path, thread, time::Duration};
 use actix_files;
 use tar::{Builder, Archive};
+use fs2::FileExt;
 
 use crate::{common, utils::file_helpers::{get_file_suffix, get_filename_without_suffix}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
@@ -80,8 +81,12 @@ impl ProgramController {
             read_guard.download(&object_name, Path::new(&download_file_path)).await.expect("File upload error");
         }
 
-        let file = actix_files::NamedFile::open_async(download_file_path).await.expect("Problem with async read file");
-        return file.into_response(&req);
+        // let file = actix_files::NamedFile::open_async(download_file_path).await.expect("Problem with async read file");
+        // return file.into_response(&req);
+
+        let program_file = File::open(download_file_path.clone()).expect("Error opening program file");
+        let named_file = actix_files::NamedFile::from_file(program_file, download_file_path).expect("Error in NamedFile creation");
+        return named_file.into_response(&req);
     }
 
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
@@ -93,7 +98,11 @@ impl ProgramController {
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
         let file = actix_files::NamedFile::open_async(input_result.unwrap().1).await.expect("Problem with async read file");
-        return file.into_response(&req);
+        let res = file.into_response(&req);
+        return res;
+        // return file.into_response(&req);
+        // file.into_response(&req).await;
+        // return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
     pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
