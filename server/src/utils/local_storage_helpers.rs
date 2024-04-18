@@ -13,9 +13,9 @@ pub fn clear_directory(folder_path: &str) {
         if file_path.is_file() {
             // Attempt to delete the file
 
-            // TODO: 
-            fs::remove_file(&file_path).expect("Error in file deletion");
-            println!("Deleted file: {:?}", file_path);
+            // If the file deletion fails it is because the file is being used by the server, it can be deleted
+            // in another moment
+            let _ = fs::remove_file(&file_path);
         }
     }
 }
