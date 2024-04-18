@@ -9,10 +9,12 @@ use diesel::r2d2::R2D2Connection;
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
+use cronjob::CronJob;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
 use crate::services::files_storage::file_storage::FileStorage;
+use crate::utils::local_storage_helpers::{clear_directory};
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -40,6 +42,12 @@ async fn main() -> std::io::Result<()> {
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
+
+    let mut cron = CronJob::new("./downloads", clear_directory);
+    cron.seconds("0");
+    // Start the cronjob.
+    // cron.start_job();
+    CronJob::start_job_threaded(cron);
 
     {
         // We establish the connection to s3
