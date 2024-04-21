@@ -99,6 +99,11 @@ impl ProgramController {
         }
         let input_file_name = input_result.unwrap().1;
         let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
+
+        // println!("Before sleep function");
+        // thread::sleep(Duration::from_secs(100));
+        // println!("After sleep function");
+
         let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
         return named_file.into_response(&req);
 
