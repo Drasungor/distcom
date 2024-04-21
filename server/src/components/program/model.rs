@@ -5,18 +5,10 @@ use crate::utils::jwt_helpers::GeneratedToken;
 // Controller input models
 
 #[derive(Deserialize)]
-pub struct Credentialsasdasdas {
-    pub username: String,
-    pub password: String,
+pub struct UploadProgram {
+    // Amount of seconds that will be waited before considering a requested program-input duo as abandoned
+    pub execution_timeout: i64,
 }
-
-// #[derive(Deserialize)]
-// pub struct ReceivedNewAccount {
-//     pub username: String,
-//     pub password: String,
-//     pub name: String,
-//     pub description: String,
-// }
 
 // // Useful models
 

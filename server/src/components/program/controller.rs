@@ -6,18 +6,19 @@ use actix_files;
 use tar::{Builder, Archive};
 use fs2::FileExt;
 
-use crate::{common, utils::file_helpers::{get_file_suffix, get_filename_without_suffix}, RequestExtension};
+use crate::{common, middlewares::callable_upload_file::upload_file_with_body, utils::file_helpers::{get_file_suffix, get_filename_without_suffix}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::service::ProgramService;
+use super::{model::UploadProgram, service::ProgramService};
 
 pub struct ProgramController;
 
 impl ProgramController {
 
     pub async fn upload_program(req: HttpRequest, form: Multipart) -> impl Responder {
-        let files_names = upload_file(form).await.expect("Failed file upload");
+        // let files_names = upload_file(form).await.expect("Failed file upload");
+        let (files_names, uploaded_program) = upload_file_with_body::<UploadProgram>(form).await.expect("Failed file upload");
 
         // TODO: Change expect calls to an internal server error handling
         let extension_value = req.extensions().get::<RequestExtension>().expect("Extension should be initialized").clone();
@@ -38,7 +39,8 @@ impl ProgramController {
 
 
         // TODO: stop hardcoding and receive this from the multipart form data
-        let input_lock_timeout = 3600;
+        // let input_lock_timeout = 3600;
+        let input_lock_timeout = uploaded_program.execution_timeout;
 
         let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id, input_lock_timeout).await;
         return AppHttpResponseBuilder::get_http_response(program_storage_result);
