@@ -32,8 +32,6 @@ pub struct Token {
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&CONFIG_OBJECT.database_url);
-    // pub static ref FILES_STORAGE: AwsS3Handler = AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url);
-    // pub static ref FILES_STORAGE: Mutex<AwsS3Handler> = Mutex::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_url));
     pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
 }
 

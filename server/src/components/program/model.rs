@@ -10,18 +10,6 @@ pub struct UploadProgram {
     pub execution_timeout: i64,
 }
 
-// // Useful models
+// Useful models
 
-// #[derive(Serialize)]
-// pub struct LoginTokens {
-//     pub basic_token: GeneratedToken,
-//     pub refresh_token: GeneratedToken,
-// }
-
-// // Controller output models
-
-// #[derive(Serialize)]
-// pub struct InitSession {
-//     pub token: String,
-//     pub refresh_token: String,
-// }
+// Controller output models

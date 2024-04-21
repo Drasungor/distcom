@@ -1,10 +1,6 @@
-// use diesel_async::AsyncMysqlConnection;
-// use diesel_async::RunQueryDsl;
-
 use actix_web::error::BlockingError;
 use diesel::connection;
 use diesel::result::DatabaseErrorKind;
-// use super::{dal::AccountDal, db_models::account::NewAccount};
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
@@ -16,7 +12,6 @@ use super::db_models::refresh_token::RefreshToken;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
 use crate::schema::{account, refresh_token};
-// use crate::schema::account::dsl::*;
 
 pub struct AccountMysqlDal;
 
@@ -28,10 +23,8 @@ impl AccountMysqlDal {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
             let insertion_result = diesel::insert_into(account::table)
-            // return diesel::insert_into(account::table)
                     .values(&new_account_data)
                     .execute(connection);
-            // println!("{:?}", insertion_result);
             return insertion_result;
 
         })
@@ -61,7 +54,6 @@ impl AccountMysqlDal {
             return found_account;
 
         })
-        // }).await.expect("Failed wait for get_account_data");
         }).await;
         return match found_account_result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),

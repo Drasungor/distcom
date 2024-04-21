@@ -6,8 +6,6 @@ use diesel::prelude::*;
 pub struct SpecificProgramInput {
     pub specific_input_id: String,
     pub input_group_id: String,
-    // pub blob_data: Option<[u8]>,
-    // pub blob_data: Option<&[u8]>,
 
     // TODO: Check why this is an option, maybe it could be just a u8 vec
     pub blob_data: Option<Vec<u8>>,

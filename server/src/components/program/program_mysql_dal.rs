@@ -5,7 +5,6 @@ use csv::Reader;
 use diesel::connection;
 use diesel::r2d2::PooledConnection;
 use diesel::result::DatabaseErrorKind;
-// use super::{dal::AccountDal, db_models::account::NewAccount};
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
@@ -18,13 +17,11 @@ use csv;
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
 use super::db_models::specific_program_input::SpecificProgramInput;
-// use super::db_models::refresh_token::RefreshToken;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
 use crate::schema::{program};
-// use crate::schema::account::dsl::*;
 
 pub struct ProgramMysqlDal;
 
@@ -113,29 +110,6 @@ impl ProgramMysqlDal {
                     .values(&program_input_group)
                     .execute(connection)?;
 
-            // // Storage of specific inputs
-            // let mut current_input = 0;
-            // for line in input_reader.records() {
-            //     let line_ok = line.expect("Error in line reading");
-            //     let line_iterator = line_ok.into_iter();
-            //     let mut counter = 0;
-
-            //     for value in line_iterator {
-            //         let specific_input = SpecificProgramInput {
-            //             specific_input_id: Uuid::new_v4().to_string(),
-            //             input_group_id: cloned_input_group_id.clone(),
-            //             blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
-            //             order: current_input
-            //         };
-            //         counter += 1;
-            //         diesel::insert_into(specific_program_input::table)
-            //             .values(&specific_input)
-            //             .execute(connection)?;
-            //     }
-            //     assert!(counter == 1, "There is more than one element per line");
-            //     current_input += 1;
-            // }
-
             Self::store_inputs(connection, cloned_input_group_id, input_reader)?;
 
             return Ok(());
@@ -152,7 +126,6 @@ impl ProgramMysqlDal {
             },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
-        // return Ok(());
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -180,10 +153,8 @@ impl ProgramMysqlDal {
             },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
-        // return Ok(());
     }
 
-    // pub async fn retrieve_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
     pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
@@ -213,9 +184,7 @@ impl ProgramMysqlDal {
                 .first::<SpecificProgramInput>(connection);
 
             let file_path = format!("./downloads/{}.csv", input_group_id);
-            // let file_path_clone = file_path.clone();
             {
-                // let file = File::create(file_path_clone).expect("Error in file creation");
                 let file = File::create(file_path.clone()).expect("Error in file creation");
             }
 
@@ -224,12 +193,6 @@ impl ProgramMysqlDal {
 
             while let Ok(input_tuple) = current_input {
                 input_line_counter += 1;
-
-                // TODO: store the read data in a file after encoding it to base 64
-
-                // println!("I read some nice data from the database: {}", input_tuple.blob_data);
-                println!("The order of the read data is: {}", input_tuple.order);
-
                 let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.expect("Blob data is null"));
                 writer.write_record(&[encoded_data]).expect("Error in writer");
 
