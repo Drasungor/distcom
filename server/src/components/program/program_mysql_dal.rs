@@ -13,6 +13,7 @@ use actix_web::web;
 use uuid::Uuid;
 use base64::prelude::*;
 use csv;
+use chrono::{NaiveDateTime};
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
@@ -161,18 +162,39 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
+            let input_group_to_process: ProgramInputGroup;
+
             let found_program: StoredProgram = program::table
                 .filter(program::program_id.eq(cloned_program_id.clone()))
                 .first::<StoredProgram>(connection)?;
 
-            let found_input_group: ProgramInputGroup = program_input_group::table
-                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
-                // TODO: return a good error indicating that no unreserved input was found
-                .first::<ProgramInputGroup>(connection).expect("No input group was found");
+            let found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+                // .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
+                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
+                .first::<ProgramInputGroup>(connection);
+
+            if (found_input_group.is_ok()) {
+                input_group_to_process = found_input_group.unwrap();
+            } else {
+                let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
+                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
+                .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
+
+                let current_timestamp = NaiveDateTime::now();
+
+                for i in 0..found_input_groups_array.len() {
+                    let current_input_group = found_input_groups_array[i];
+                    if () {
+
+                    }
+                }
+
+            }
+
+
 
             let input_group_id = found_input_group.input_group_id;
 
-            // diesel::update(program_input_group::table.find(input_group_id))
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
                 .set(program_input_group::input_was_reserved.eq(true))
                 .execute(connection).expect("Error in input group update");

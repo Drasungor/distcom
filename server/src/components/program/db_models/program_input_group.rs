@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use chrono::{DateTime, Local, NaiveDate};
+use chrono::{NaiveDateTime};
 use diesel::sql_types::Timestamp;
 use std::time::{SystemTime};
 
@@ -12,5 +12,5 @@ pub struct ProgramInputGroup {
     // pub input_was_reserved: bool,
     // pub last_reserved: DateTime<Local>,
     // pub last_reserved: SystemTime,
-    pub last_reserved: NaiveDate,
+    pub last_reserved: Option<NaiveDateTime>,
 }

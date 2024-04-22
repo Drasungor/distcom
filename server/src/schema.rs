@@ -69,7 +69,7 @@ diesel::table! {
         // input_was_reserved -> Bool,
 
         // last_reserved -> Timestamp,
-        last_reserved -> Date,
+        last_reserved -> Nullable<Datetime>,
     }
 }
 
