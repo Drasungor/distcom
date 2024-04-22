@@ -161,9 +161,9 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-            // program::table
-            // .filter(program::program_id.eq(cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
-            // .first::<StoredProgram>(connection)?;
+            let found_program: StoredProgram = program::table
+                .filter(program::program_id.eq(cloned_program_id.clone()))
+                .first::<StoredProgram>(connection)?;
 
             let found_input_group: ProgramInputGroup = program_input_group::table
                 .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
