@@ -13,7 +13,9 @@ use actix_web::web;
 use uuid::Uuid;
 use base64::prelude::*;
 use csv;
-use chrono::{NaiveDateTime};
+use chrono::{NaiveDateTime, NaiveDate, NaiveTime};
+use chrono::prelude::*;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
@@ -94,7 +96,8 @@ impl ProgramMysqlDal {
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
-            input_was_reserved: false,
+            // input_was_reserved: false,
+            last_reserved: None,
         };
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
@@ -168,10 +171,19 @@ impl ProgramMysqlDal {
                 .filter(program::program_id.eq(cloned_program_id.clone()))
                 .first::<StoredProgram>(connection)?;
 
-            let found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+            let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
                 // .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
-                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
+                .filter(program_input_group::program_id.eq(&cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
                 .first::<ProgramInputGroup>(connection);
+
+            let utc: DateTime<Utc> = Utc::now();
+            let start = SystemTime::now();
+            let since_the_epoch = start
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards");
+            let current_datetime = DateTime::from_timestamp_millis(since_the_epoch.as_millis().try_into().unwrap()).unwrap();
+            let now_naive_datetime = current_datetime.naive_utc();
+
 
             if (found_input_group.is_ok()) {
                 input_group_to_process = found_input_group.unwrap();
@@ -180,24 +192,34 @@ impl ProgramMysqlDal {
                 .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
                 .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
 
-                let current_timestamp = NaiveDateTime::now();
 
+                let mut chosen_input_index: i32 = -1;
+
+                // Try to find of the reserved inputs one one that 
                 for i in 0..found_input_groups_array.len() {
-                    let current_input_group = found_input_groups_array[i];
-                    if () {
-
+                    let current_input_group = &found_input_groups_array[i];
+                    let current_last_reserved_date = current_input_group.last_reserved.unwrap();
+                    let difference = now_naive_datetime - current_last_reserved_date;
+                    let difference_in_seconds = difference.num_seconds();
+                    if (difference_in_seconds > found_program.input_lock_timeout) {
+                        chosen_input_index = i as i32;
+                        break;
                     }
                 }
-
+                assert!(chosen_input_index != -1, "No input group is available");
+                input_group_to_process = found_input_groups_array[chosen_input_index as usize].clone();
             }
 
+            let input_group_id = input_group_to_process.input_group_id;
 
-
-            let input_group_id = found_input_group.input_group_id;
+            // diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
+            //     .set(program_input_group::input_was_reserved.eq(true))
+            //     .execute(connection).expect("Error in input group update");
 
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
-                .set(program_input_group::input_was_reserved.eq(true))
-                .execute(connection).expect("Error in input group update");
+                    .set(program_input_group::last_reserved.eq(Some(now_naive_datetime)))
+                    .execute(connection).expect("Error in input group update");
+
 
             let mut input_line_counter = 0;
             let mut current_input = specific_program_input::table

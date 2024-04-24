@@ -3,7 +3,7 @@ use chrono::{NaiveDateTime};
 use diesel::sql_types::Timestamp;
 use std::time::{SystemTime};
 
-#[derive(Queryable, Selectable, Insertable)]
+#[derive(Queryable, Selectable, Insertable, Clone)]
 #[diesel(table_name = crate::schema::program_input_group)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct ProgramInputGroup {
