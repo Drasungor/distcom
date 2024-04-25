@@ -80,6 +80,15 @@ impl ProgramController {
         let program_id = path.as_str().to_string();
         let input_result = ProgramService::retrieve_input_group(&program_id).await;
         if (input_result.is_err()) {
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
+            println!("Error in input result get");
             // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
