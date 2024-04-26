@@ -207,6 +207,31 @@ impl ProgramMysqlDal {
         return input_group_id;
     }
 
+    fn store_input_group_in_csv(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
+                                file_path: &String, input_group_id: &String) {
+        let mut input_line_counter = 0;
+        let mut current_input = specific_program_input::table
+            .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
+            // TODO: return a good error indicating that no unreserved input was found
+            .first::<SpecificProgramInput>(connection);
+
+        {
+            let file = File::create(file_path.clone()).expect("Error in file creation");
+        }
+        let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
+
+        while let Ok(input_tuple) = current_input {
+            input_line_counter += 1;
+            let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.expect("Blob data is null"));
+            writer.write_record(&[encoded_data]).expect("Error in writer");
+
+            current_input = specific_program_input::table
+            .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
+            // TODO: return a good error indicating that no unreserved input was found
+            .first::<SpecificProgramInput>(connection);
+        }
+    }
+
     pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
@@ -218,37 +243,12 @@ impl ProgramMysqlDal {
             let current_datetime = DateTime::from_timestamp_millis(since_the_epoch.as_millis().try_into().unwrap()).unwrap();
             let now_naive_datetime = current_datetime.naive_utc();
 
-            // let chosen_input_group = Self::get_available_input_group(connection, &cloned_program_id, &now_naive_datetime);
-
-            // let input_group_id = chosen_input_group.input_group_id;
-            // diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
-            //         .set(program_input_group::last_reserved.eq(Some(now_naive_datetime)))
-            //         .execute(connection).expect("Error in input group update");
-
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
 
-            let mut input_line_counter = 0;
-            let mut current_input = specific_program_input::table
-                .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
-                // TODO: return a good error indicating that no unreserved input was found
-                .first::<SpecificProgramInput>(connection);
-
             let file_path = format!("./downloads/{}.csv", input_group_id);
-            {
-                let file = File::create(file_path.clone()).expect("Error in file creation");
-            }
-            let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
 
-            while let Ok(input_tuple) = current_input {
-                input_line_counter += 1;
-                let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.expect("Blob data is null"));
-                writer.write_record(&[encoded_data]).expect("Error in writer");
+            Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
 
-                current_input = specific_program_input::table
-                .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
-                // TODO: return a good error indicating that no unreserved input was found
-                .first::<SpecificProgramInput>(connection);
-            }
             return Ok((input_group_id, file_path));
         })
         }).await;
