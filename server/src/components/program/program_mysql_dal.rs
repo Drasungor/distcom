@@ -159,43 +159,62 @@ impl ProgramMysqlDal {
         };
     }
 
+
+    fn get_available_input_group(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
+                                      program_id: &String, current_datetime: &NaiveDateTime) -> ProgramInputGroup {
+
+        let returned_input_group;
+
+        let found_program: StoredProgram = program::table
+            .filter(program::program_id.eq(program_id.clone()))
+            .first::<StoredProgram>(connection).expect("No program was found");
+
+
+        let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+            .filter(program_input_group::program_id.eq(program_id.clone()).and(program_input_group::last_reserved.is_null()))
+            .first::<ProgramInputGroup>(connection);
+
+
+        if (found_input_group.is_ok()) {
+            returned_input_group = found_input_group.unwrap();
+        } else {
+            let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
+            .filter(program_input_group::program_id.eq(program_id).and(program_input_group::last_reserved.is_not_null()))
+            .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
+
+            let mut chosen_input_index: i32 = -1;
+
+            // Try to find of the reserved inputs one that suffered a timeout
+            for i in 0..found_input_groups_array.len() {
+                let current_input_group = &found_input_groups_array[i];
+                let current_last_reserved_date = current_input_group.last_reserved.unwrap();
+                let difference = *current_datetime - current_last_reserved_date;
+                let difference_in_seconds = difference.num_seconds();
+                if (difference_in_seconds > found_program.input_lock_timeout) {
+                    chosen_input_index = i as i32;
+                    break;
+                }
+            }
+            assert!(chosen_input_index != -1, "No input group is available");
+            returned_input_group = found_input_groups_array[chosen_input_index as usize].clone();
+        }
+        return returned_input_group;
+    }
+
     pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
-            println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-
             let input_group_to_process: ProgramInputGroup;
 
-            let found_program: StoredProgram = program::table
-                .filter(program::program_id.eq(cloned_program_id.clone()))
-                .first::<StoredProgram>(connection)?;
-
-            println!("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
-
-
-            println!("program_id: {}", cloned_program_id.clone());
+            // let found_program: StoredProgram = program::table
+            //     .filter(program::program_id.eq(cloned_program_id.clone()))
+            //     .first::<StoredProgram>(connection)?;
 
             // let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
-            // .filter(program_input_group::program_id.eq(cloned_program_id.clone())).filter(program_input_group::last_reserved.is_not_null())
-            // .first::<ProgramInputGroup>(connection);
-
-
-            let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
-                .filter(program_input_group::program_id.eq(cloned_program_id.clone()).and(program_input_group::last_reserved.is_null()))
-                // .filter(program_input_group::program_id.eq(cloned_program_id.clone()).and(program_input_group::last_reserved.ne::<Option<NaiveDateTime>>(None)))
-                .first::<ProgramInputGroup>(connection);
-
-            // let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
-            //     // .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::input_was_reserved.eq(false)))
-            //     // .filter(program_input_group::program_id.eq(&cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
-            //     .filter(program_input_group::program_id.eq(cloned_program_id.clone()))
+            //     .filter(program_input_group::program_id.eq(cloned_program_id.clone()).and(program_input_group::last_reserved.is_null()))
             //     .first::<ProgramInputGroup>(connection);
-
-
-            println!("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
 
             let utc: DateTime<Utc> = Utc::now();
             let start = SystemTime::now();
@@ -205,73 +224,36 @@ impl ProgramMysqlDal {
             let current_datetime = DateTime::from_timestamp_millis(since_the_epoch.as_millis().try_into().unwrap()).unwrap();
             let now_naive_datetime = current_datetime.naive_utc();
 
-            println!("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+            // if (found_input_group.is_ok()) {
+            //     input_group_to_process = found_input_group.unwrap();
+            // } else {
+            //     let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
+            //     .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
+            //     .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
 
-            if (found_input_group.is_ok()) {
+            //     let mut chosen_input_index: i32 = -1;
 
-                println!("EN EL TRUE DEL IF");
+            //     // Try to find of the reserved inputs one that suffered a timeout
+            //     for i in 0..found_input_groups_array.len() {
+            //         let current_input_group = &found_input_groups_array[i];
+            //         let current_last_reserved_date = current_input_group.last_reserved.unwrap();
+            //         let difference = now_naive_datetime - current_last_reserved_date;
+            //         let difference_in_seconds = difference.num_seconds();
+            //         if (difference_in_seconds > found_program.input_lock_timeout) {
+            //             chosen_input_index = i as i32;
+            //             break;
+            //         }
+            //     }
+            //     assert!(chosen_input_index != -1, "No input group is available");
+            //     input_group_to_process = found_input_groups_array[chosen_input_index as usize].clone();
+            // }
 
+            let chosen_input_group = Self::get_available_input_group(connection, &cloned_program_id, &now_naive_datetime);
 
-                input_group_to_process = found_input_group.unwrap();
-            } else {
-
-                
-                if let Err(found_input_group_error) = found_input_group {
-                    println!("Error value: {:?}", found_input_group_error);
-                }
-
-
-                println!("EN EL FALSE DEL IF 111111111111111111111111111");
-
-                let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
-                .filter(program_input_group::program_id.eq(cloned_program_id).and(program_input_group::last_reserved.is_not_null()))
-                .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
-
-                println!("EN EL FALSE DEL IF 222222222222222222222222222");
-
-
-
-                let mut chosen_input_index: i32 = -1;
-
-                // Try to find of the reserved inputs one one that 
-                for i in 0..found_input_groups_array.len() {
-                    let current_input_group = &found_input_groups_array[i];
-                    let current_last_reserved_date = current_input_group.last_reserved.unwrap();
-                    let difference = now_naive_datetime - current_last_reserved_date;
-                    let difference_in_seconds = difference.num_seconds();
-                    if (difference_in_seconds > found_program.input_lock_timeout) {
-                        chosen_input_index = i as i32;
-                        break;
-                    }
-                }
-
-                println!("EN EL FALSE DEL IF 33333333333333333333333333333");
-
-                println!("chosen_input_index: {}", chosen_input_index);
-
-                assert!(chosen_input_index != -1, "No input group is available");
-                input_group_to_process = found_input_groups_array[chosen_input_index as usize].clone();
-
-                println!("EN EL FALSE DEL IF 444444444444444444444444444");
-
-            }
-
-            println!("input_group_to_process: {:?}", input_group_to_process);
-
-            let input_group_id = input_group_to_process.input_group_id;
-
-            // diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
-            //     .set(program_input_group::input_was_reserved.eq(true))
-            //     .execute(connection).expect("Error in input group update");
-
-            println!("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-
+            let input_group_id = chosen_input_group.input_group_id;
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
                     .set(program_input_group::last_reserved.eq(Some(now_naive_datetime)))
                     .execute(connection).expect("Error in input group update");
-
-            println!("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-
 
             let mut input_line_counter = 0;
             let mut current_input = specific_program_input::table
@@ -279,21 +261,11 @@ impl ProgramMysqlDal {
                 // TODO: return a good error indicating that no unreserved input was found
                 .first::<SpecificProgramInput>(connection);
 
-            println!("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-
-
             let file_path = format!("./downloads/{}.csv", input_group_id);
             {
                 let file = File::create(file_path.clone()).expect("Error in file creation");
-
-                println!("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
-
             }
-
             let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
-
-            println!("IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII");
-
 
             while let Ok(input_tuple) = current_input {
                 input_line_counter += 1;
@@ -305,9 +277,6 @@ impl ProgramMysqlDal {
                 // TODO: return a good error indicating that no unreserved input was found
                 .first::<SpecificProgramInput>(connection);
             }
-
-            println!("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
-
             return Ok((input_group_id, file_path));
         })
         }).await;
