@@ -246,7 +246,6 @@ impl ProgramMysqlDal {
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
 
             let file_path = format!("./downloads/{}.csv", input_group_id);
-
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
 
             return Ok((input_group_id, file_path));
