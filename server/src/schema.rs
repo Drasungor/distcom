@@ -65,8 +65,11 @@ diesel::table! {
         #[max_length = 255]
         program_id -> Varchar,
 
-        // Determines if this group was provided to a prover
-        input_was_reserved -> Bool,
+        // // Determines if this group was provided to a prover
+        // input_was_reserved -> Bool,
+
+        // last_reserved -> Timestamp,
+        last_reserved -> Nullable<Datetime>,
     }
 }
 
