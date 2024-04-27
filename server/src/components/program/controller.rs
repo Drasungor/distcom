@@ -36,7 +36,8 @@ impl ProgramController {
             fs::remove_file(file_path).expect("Error in file deletion");
         }
         let input_lock_timeout = uploaded_program.execution_timeout;
-        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id, input_lock_timeout).await;
+        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id, 
+                                                                                                    uploaded_program.description, input_lock_timeout).await;
         return AppHttpResponseBuilder::get_http_response(program_storage_result);
     }
 

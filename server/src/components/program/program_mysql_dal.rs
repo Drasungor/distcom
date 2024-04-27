@@ -30,11 +30,12 @@ pub struct ProgramMysqlDal;
 
 impl ProgramMysqlDal {
 
-    pub async fn add_organization_program(organization_id: String, program_id: String, input_lock_timeout: i64) -> Result<(), AppError> {
+    pub async fn add_organization_program(organization_id: String, program_id: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
 
         let stored_program = StoredProgram {
             organization_id,
             program_id,
+            description,
             input_lock_timeout,
         };
 

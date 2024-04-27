@@ -9,8 +9,5 @@ use std::time::{SystemTime};
 pub struct ProgramInputGroup {
     pub input_group_id: String,
     pub program_id: String,
-    // pub input_was_reserved: bool,
-    // pub last_reserved: DateTime<Local>,
-    // pub last_reserved: SystemTime,
     pub last_reserved: Option<NaiveDateTime>,
 }

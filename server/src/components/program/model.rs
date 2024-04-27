@@ -7,6 +7,7 @@ use crate::utils::jwt_helpers::GeneratedToken;
 #[derive(Deserialize)]
 pub struct UploadProgram {
     // Amount of seconds that will be waited before considering a requested program-input duo as abandoned
+    pub description: String,
     pub execution_timeout: i64,
 }
 
