@@ -45,5 +45,5 @@ pub struct ReturnedOrganization {
 #[derive(Serialize)]
 pub struct PagedOrganizations {
     pub organizations: Vec<ReturnedOrganization>,
-    pub pages_amount: i64,
+    pub total_elements_amount: i64,
 }

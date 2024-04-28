@@ -112,7 +112,7 @@ impl AccountMysqlDal {
  
             return Ok(PagedOrganizations {
                 organizations: returned_organizations,
-                pages_amount: count_of_matched_elements,
+                total_elements_amount: count_of_matched_elements,
             });
         })
         }).await;
