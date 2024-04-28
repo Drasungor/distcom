@@ -9,6 +9,8 @@ use actix_web::web;
 
 use super::db_models::account::CompleteAccount;
 use super::db_models::refresh_token::RefreshToken;
+use super::model::PagedOrganizations;
+use super::model::ReturnedOrganization;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
 use crate::schema::{account, refresh_token};
@@ -86,6 +88,45 @@ impl AccountMysqlDal {
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
     }
+
+    pub async fn get_paged_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            let found_input_groups_array: Vec<CompleteAccount> = account::table
+                .filter(account::account_was_verified.eq(true))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<CompleteAccount>(connection).expect("Error finding taken input groups");
+
+            let count_of_matched_elements: i64 = account::table
+                .filter(account::account_was_verified.eq(true))
+                .count()
+                .get_result(connection)
+                .expect("Error finding count of matched elements");
+            
+            let returned_organizations = found_input_groups_array.iter().map(|organization| ReturnedOrganization {
+                organization_id: organization.organization_id.clone(),
+                name: organization.name.clone(),
+                description: organization.description.clone(),
+            }).collect();
+ 
+            return Ok(PagedOrganizations {
+                organizations: returned_organizations,
+                pages_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
 
     
 }

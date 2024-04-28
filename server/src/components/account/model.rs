@@ -18,6 +18,7 @@ pub struct ReceivedNewAccount {
     pub description: String,
 }
 
+
 // Useful models
 
 #[derive(Serialize)]
@@ -32,4 +33,17 @@ pub struct LoginTokens {
 pub struct InitSession {
     pub token: String,
     pub refresh_token: String,
+}
+
+#[derive(Serialize)]
+pub struct ReturnedOrganization {
+    pub organization_id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Serialize)]
+pub struct PagedOrganizations {
+    pub organizations: Vec<ReturnedOrganization>,
+    pub pages_amount: i64,
 }
