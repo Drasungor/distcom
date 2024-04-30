@@ -20,11 +20,13 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
 use super::db_models::specific_program_input::SpecificProgramInput;
+use super::model::PagedPrograms;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
+use crate::components::account::db_models::account::CompleteAccount;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
-use crate::schema::{program};
+use crate::schema::{program, account};
 
 pub struct ProgramMysqlDal;
 
@@ -264,4 +266,45 @@ impl ProgramMysqlDal {
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
     }
+
+
+    pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        // let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            
+            account::table
+                .filter(account::account_was_verified.eq(true))
+                .first::<CompleteAccount>(connection).expect("No verified account with that id was found");
+
+            let programs: Vec<StoredProgram> = program::table
+                .filter(program::organization_id.eq(&organization_id))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<StoredProgram>(connection)?;
+
+            let count_of_matched_elements: i64 = program::table
+                .filter(program::organization_id.eq(&organization_id))
+                .count()
+                .get_result(connection)
+                .expect("Error finding count of matched elements");
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
+
 }

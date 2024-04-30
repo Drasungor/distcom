@@ -2,6 +2,8 @@ use serde_derive::{Serialize, Deserialize};
 
 use crate::utils::jwt_helpers::GeneratedToken;
 
+use super::db_models::program::StoredProgram;
+
 // Controller input models
 
 #[derive(Deserialize)]
@@ -14,3 +16,9 @@ pub struct UploadProgram {
 // Useful models
 
 // Controller output models
+
+#[derive(Serialize, Debug)]
+pub struct PagedPrograms {
+    pub programs: Vec<StoredProgram>,
+    pub total_elements_amount: i64,
+}

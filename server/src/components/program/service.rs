@@ -7,6 +7,8 @@ use std::fs::File; // Add import for File
 use crate::common::app_error::{AppError, AppErrorType};
 use crate::components::program::program_mysql_dal::ProgramMysqlDal;
 
+use super::model::PagedPrograms;
+
 
 pub struct ProgramService;
 
@@ -34,6 +36,11 @@ impl ProgramService {
         let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
         return Ok(organization_id);
     }
+
+    pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        return ProgramMysqlDal::get_organization_programs(organization_id, limit, page).await;
+    }
+
 
 
 }

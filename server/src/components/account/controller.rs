@@ -23,7 +23,7 @@ impl AccountController {
 
     pub async fn get_paged_organizations(query_params: web::Query<PagingParameters>) -> impl Responder {
         let paging_params = process_paging_inputs(query_params.into_inner());
-        let get_organizations_result = AccountService::get_paged_organizations(paging_params.limit, paging_params.page).await;
+        let get_organizations_result = AccountService::get_organizations(paging_params.limit, paging_params.page).await;
         return AppHttpResponseBuilder::get_http_response(get_organizations_result);
     }
     

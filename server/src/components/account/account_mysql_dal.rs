@@ -89,7 +89,7 @@ impl AccountMysqlDal {
         };
     }
 
-    pub async fn get_paged_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
+    pub async fn get_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
@@ -126,7 +126,5 @@ impl AccountMysqlDal {
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
     }
-
-
     
 }

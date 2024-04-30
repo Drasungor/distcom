@@ -6,11 +6,11 @@ use actix_files;
 use tar::{Builder, Archive};
 use fs2::FileExt;
 
-use crate::{common, middlewares::callable_upload_file::upload_file_with_body, utils::file_helpers::{get_file_suffix, get_filename_without_suffix}, RequestExtension};
+use crate::{common, middlewares::callable_upload_file::upload_file_with_body, utils::{file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::UploadProgram, service::ProgramService};
+use super::{model::{PagedPrograms, UploadProgram}, service::ProgramService};
 
 pub struct ProgramController;
 
@@ -81,15 +81,6 @@ impl ProgramController {
         let program_id = path.as_str().to_string();
         let input_result = ProgramService::retrieve_input_group(&program_id).await;
         if (input_result.is_err()) {
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
-            println!("Error in input result get");
             // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
@@ -130,5 +121,14 @@ impl ProgramController {
         let named_file = actix_files::NamedFile::from_file(tar_file, tar_file_path).expect("Error in NamedFile creation");
         return named_file.into_response(&req);
     }
+
+    pub async fn get_organization_programs(path: web::Path<String>, query_params: web::Query<PagingParameters>) -> impl Responder {
+        // pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        let paging_params = process_paging_inputs(query_params.into_inner());
+        let organization_id = path.as_str().to_string();
+        let organization_programs = ProgramService::get_organization_programs(organization_id, paging_params.limit, paging_params.page).await;
+        return AppHttpResponseBuilder::get_http_response(organization_programs)
+    }
+
 
 }
