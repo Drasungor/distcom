@@ -123,10 +123,15 @@ impl ProgramController {
     }
 
     pub async fn get_organization_programs(path: web::Path<String>, query_params: web::Query<PagingParameters>) -> impl Responder {
-        // pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let paging_params = process_paging_inputs(query_params.into_inner());
         let organization_id = path.as_str().to_string();
         let organization_programs = ProgramService::get_organization_programs(organization_id, paging_params.limit, paging_params.page).await;
+        return AppHttpResponseBuilder::get_http_response(organization_programs)
+    }
+
+    pub async fn get_unfiltered_programs(query_params: web::Query<PagingParameters>) -> impl Responder {
+        let paging_params = process_paging_inputs(query_params.into_inner());
+        let organization_programs = ProgramService::get_unfiltered_programs(paging_params.limit, paging_params.page).await;
         return AppHttpResponseBuilder::get_http_response(organization_programs)
     }
 

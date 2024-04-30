@@ -306,5 +306,38 @@ impl ProgramMysqlDal {
         };
     }
 
+    
+
+    pub async fn get_unfiltered_programs(limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        // let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            
+            let programs: Vec<StoredProgram> = program::table
+                .offset((page - 1) * limit).limit(limit)
+                .load::<StoredProgram>(connection)?;
+
+            let count_of_matched_elements: i64 = program::table
+                .count()
+                .get_result(connection)
+                .expect("Error finding count of matched elements");
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
 
 }
