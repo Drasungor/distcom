@@ -1,5 +1,6 @@
 use std::env;
 use std::fs::File;
+use std::io::Write;
 use std::io;
 use tar::{Builder, Archive};
 // use clap::{crate_name};
@@ -60,30 +61,22 @@ enum Commands {
     }
 }
 
-fn main() {
-    // // Get command line arguments
-    // let args: Vec<String> = env::args().collect();
+#[tokio::main]
+async fn main() {
 
-    // println!("{}", args.len());
+    let response = reqwest::get("http://localhost:8080/program/b1eca5b7-5c28-459e-a64b-5244aabf1ab9").await.expect("Error in get");
 
-    // // Check if the correct number of arguments is provided
-    // if args.len() != 3 {
-    //     eprintln!("Usage: cargo run <folder_path> <output_path>");
-    //     std::process::exit(1);
-    // }
-    // let folder_path = &args[1];
-    // let output_path = &args[2];
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        // Open a file to write the downloaded content
+        let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
+        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
 
-    // // Call the function to compress the folder
-    // match compress_folder(folder_path, output_path) {
-    //     Ok(_) => println!("Folder compressed successfully."),
-    //     Err(err) => eprintln!("Error: {}", err),
-    // }
-    // match decompress_tar(output_path, &format!("./test/{}.", output_path)) {
-    // // match decompress_tar(output_path, output_path) {
-    //     Ok(_) => println!("Folder decompressed successfully."),
-    //     Err(err) => eprintln!("Error: {}", err),
-    // }
+        
+        println!("File downloaded successfully!");
+    } else {
+        println!("Failed to download file: {}", response.status());
+    }
 
     loop {
         let mut buf = format!("{} ", crate_name!());
