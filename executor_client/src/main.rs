@@ -6,6 +6,7 @@ use tar::{Builder, Archive};
 // use clap::{crate_name};
 use clap::{crate_name, Parser, Subcommand};
 use reqwest::Client;
+use serde_derive::{Deserialize};
 
 mod common;
 
@@ -58,6 +59,19 @@ async fn run_program_get_example() {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ReturnedOrganization {
+    pub organization_id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PagedOrganizations {
+    pub organizations: Vec<ReturnedOrganization>,
+    pub total_elements_amount: i64,
+}
+
 async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
 
     // let params: Vec<(&str, &str)> = Vec::new();
@@ -79,16 +93,91 @@ async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
-        // Open a file to write the downloaded content
-        let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
-        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+        let organizations: PagedOrganizations = response.json().await.expect("Error deserializing JSON");
 
-        
-        println!("File downloaded successfully!");
+        println!("get_organizations: {:?}", organizations);
+
     } else {
         println!("Failed to download file: {}", response.status());
     }
 }
+
+#[derive(Deserialize, Debug)]
+pub struct StoredProgram {
+    pub organization_id: String,
+    pub program_id: String,
+    pub description: String,
+    pub input_lock_timeout: i64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PagedPrograms {
+    pub programs: Vec<StoredProgram>,
+    pub total_elements_amount: i64,
+}
+
+async fn get_organization_programs(organization_id: String, limit: Option<u32>, page: Option<u32>) {
+
+    // let params: Vec<(&str, &str)> = Vec::new();
+    let mut params: Vec<(&str, u32)> = Vec::new();
+
+    if (limit.is_some()) {
+        params.push(("limit", limit.unwrap()))
+    }
+
+    if (page.is_some()) {
+        params.push(("limit", page.unwrap()))
+    }
+
+    // TODO: Check if the client should only be instanced once in the whole program execution
+    let client = reqwest::Client::new();
+
+    let get_organization_programs_url = format!("http://localhost:8080/program/organization/{}", organization_id);
+
+    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
+    let response = client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
+
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        let programs: PagedPrograms = response.json().await.expect("Error deserializing JSON");
+
+        println!("get_organization_programs: {:?}", programs);
+    } else {
+        println!("Failed to download file: {}", response.status());
+    }
+}
+
+async fn get_programs(organization_id: String, limit: Option<u32>, page: Option<u32>) {
+
+    // let params: Vec<(&str, &str)> = Vec::new();
+    let mut params: Vec<(&str, u32)> = Vec::new();
+
+    if (limit.is_some()) {
+        params.push(("limit", limit.unwrap()))
+    }
+
+    if (page.is_some()) {
+        params.push(("limit", page.unwrap()))
+    }
+
+    // TODO: Check if the client should only be instanced once in the whole program execution
+    let client = reqwest::Client::new();
+
+    let get_programs_url = format!("http://localhost:8080/program/all");
+
+    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
+    let response = client.get(get_programs_url).query(&params).send().await.expect("Error in get");
+
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        let programs: PagedPrograms = response.json().await.expect("Error deserializing JSON");
+
+        println!("get_organization_programs: {:?}", programs);
+    } else {
+        println!("Failed to download file: {}", response.status());
+    }
+}
+
 
 
 #[derive(Parser)]
@@ -102,28 +191,28 @@ struct Args {
 enum Commands {
     Organizations {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<String>,
+        limit: Option<u32>,
 
         #[clap(short = 'p', long = "page")]
-        page: Option<String>,
+        page: Option<u32>,
     },
     OrganizationPrograms {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<String>,
+        limit: Option<u32>,
 
         #[clap(short = 'p', long = "page")]
-        page: Option<String>,
+        page: Option<u32>,
     },
     AllPrograms {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<String>,
+        limit: Option<u32>,
 
         #[clap(short = 'p', long = "page")]
-        page: Option<String>,
+        page: Option<u32>,
     },
 }
 
-fn run_commands_loop() {
+async fn run_commands_loop() {
     loop {
         let mut buf = format!("{} ", crate_name!());
         
@@ -146,6 +235,7 @@ fn run_commands_loop() {
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
                         }
+                        // get_organizations(limit, page).await;
                     },
                     Commands::OrganizationPrograms{limit, page} => {
                         if (limit.is_some()) {
@@ -176,6 +266,9 @@ fn run_commands_loop() {
 async fn main() {
     // run_program_get_example().await;
 
-    run_commands_loop();
+    get_organizations(None, None).await;
+    get_organization_programs("75878fb8-f10b-4fd3-be15-339b3c19b2c".to_string(), None, None).await;
+    
+    // run_commands_loop();
 
 }
