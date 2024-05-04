@@ -9,6 +9,7 @@ use super::db_models::program::StoredProgram;
 #[derive(Deserialize)]
 pub struct UploadProgram {
     // Amount of seconds that will be waited before considering a requested program-input duo as abandoned
+    pub name: String,
     pub description: String,
     pub execution_timeout: i64,
 }

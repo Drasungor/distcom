@@ -8,5 +8,6 @@ pub struct StoredProgram {
     pub organization_id: String,
     pub program_id: String,
     pub description: String,
+    pub name: String,
     pub input_lock_timeout: i64,
 }

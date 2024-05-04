@@ -49,6 +49,9 @@ diesel::table! {
         #[max_length = 255]
         program_id -> Varchar,
 
+        #[max_length = 255]
+        name -> Varchar,
+
         #[max_length = 700]
         description -> Varchar,
 
