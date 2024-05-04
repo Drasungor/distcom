@@ -121,6 +121,7 @@ async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
 pub struct StoredProgram {
     pub organization_id: String,
     pub program_id: String,
+    pub name: String,
     pub description: String,
     pub input_lock_timeout: i64,
 }
@@ -287,7 +288,7 @@ async fn main() {
     println!("");
     println!("");
 
-    get_organization_programs("75878fb8-f10b-4fd3-be15-339b3c19b2c".to_string(), None, None).await;
+    get_organization_programs("210c3559-86d1-4bbb-999b-dcc1d27867ea".to_string(), None, None).await;
 
     println!("");
     println!("");
