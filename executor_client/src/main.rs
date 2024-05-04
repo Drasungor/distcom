@@ -7,6 +7,7 @@ use tar::{Builder, Archive};
 use clap::{crate_name, Parser, Subcommand};
 use reqwest::Client;
 use serde_derive::{Deserialize};
+// use serde::de::{DeserializeOwned};
 
 mod common;
 
@@ -59,6 +60,20 @@ async fn run_program_get_example() {
     }
 }
 
+
+// #[derive(Debug, Deserialize)]
+// pub struct EndpointResult<T: DeserializeOwned> {
+//     pub status: String,
+//     pub data: T,
+// }
+
+#[derive(Debug, Deserialize)]
+pub struct EndpointResult<T> {
+    pub status: String,
+    pub data: T,
+}
+
+
 #[derive(Debug, Deserialize)]
 pub struct ReturnedOrganization {
     pub organization_id: String,
@@ -93,7 +108,7 @@ async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
-        let organizations: PagedOrganizations = response.json().await.expect("Error deserializing JSON");
+        let organizations: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
 
         println!("get_organizations: {:?}", organizations);
 
@@ -139,7 +154,7 @@ async fn get_organization_programs(organization_id: String, limit: Option<u32>, 
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
-        let programs: PagedPrograms = response.json().await.expect("Error deserializing JSON");
+        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
 
         println!("get_organization_programs: {:?}", programs);
     } else {
@@ -147,7 +162,7 @@ async fn get_organization_programs(organization_id: String, limit: Option<u32>, 
     }
 }
 
-async fn get_programs(organization_id: String, limit: Option<u32>, page: Option<u32>) {
+async fn get_programs(limit: Option<u32>, page: Option<u32>) {
 
     // let params: Vec<(&str, &str)> = Vec::new();
     let mut params: Vec<(&str, u32)> = Vec::new();
@@ -170,7 +185,7 @@ async fn get_programs(organization_id: String, limit: Option<u32>, page: Option<
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
-        let programs: PagedPrograms = response.json().await.expect("Error deserializing JSON");
+        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
 
         println!("get_organization_programs: {:?}", programs);
     } else {
@@ -267,8 +282,19 @@ async fn main() {
     // run_program_get_example().await;
 
     get_organizations(None, None).await;
+
+    println!("");
+    println!("");
+    println!("");
+
     get_organization_programs("75878fb8-f10b-4fd3-be15-339b3c19b2c".to_string(), None, None).await;
-    
+
+    println!("");
+    println!("");
+    println!("");
+
+    get_programs(None, None).await;
+
     // run_commands_loop();
 
 }
