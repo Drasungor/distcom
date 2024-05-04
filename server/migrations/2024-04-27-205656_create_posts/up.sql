@@ -5,7 +5,8 @@ CREATE TABLE `account`(
 	`description` VARCHAR(700) NOT NULL,
 	`account_was_verified` BOOL NOT NULL,
 	`username` VARCHAR(255) NOT NULL,
-	`password_hash` VARCHAR(255) NOT NULL
+	`password_hash` VARCHAR(255) NOT NULL,
+	INDEX `name_index` (`name`)
 );
 
 CREATE TABLE `refresh_token`(
