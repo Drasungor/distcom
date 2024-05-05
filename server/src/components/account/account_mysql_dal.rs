@@ -94,26 +94,8 @@ impl AccountMysqlDal {
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-
-            // // let mut filter_object = account::account_was_verified.eq(true);
-            // let mut filter_object;
-
-            // if (name_filter.is_none()) {
-            //     filter_object = account::account_was_verified.eq(true);
-            // } else {
-            //     filter_object = account::account_was_verified.eq(true).and(account::name.like(format!("{}%", name_filter)));
-            // }
-
-
-            // let found_accounts: Vec<CompleteAccount> = account::table
-            //     .filter(account::account_was_verified.eq(true))
-            //     .offset((page - 1) * limit).limit(limit)
-            //     .load::<CompleteAccount>(connection).expect("Error finding taken input groups");
-
             let mut find_accounts_query = account::table
-                // .filter(account::account_was_verified.eq(true))
                 .offset((page - 1) * limit).limit(limit).into_boxed().filter(account::account_was_verified.eq(true));
-                // .load::<CompleteAccount>(connection).expect("Error finding taken input groups");
 
             if let Some(name_string) = name_filter {
                 // We only use the % at the end of the "like" filter because otherwise the column index will not be used
