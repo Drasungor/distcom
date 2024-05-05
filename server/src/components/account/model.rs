@@ -18,6 +18,12 @@ pub struct ReceivedNewAccount {
     pub description: String,
 }
 
+#[derive(Deserialize)]
+pub struct GetPagedOrganizations {
+    pub limit: Option<i64>,
+    pub page: Option<i64>,
+    pub name_filter: Option<String>,
+}
 
 // Useful models
 

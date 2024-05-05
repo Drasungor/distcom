@@ -45,7 +45,7 @@ impl AccountService {
         return Ok(login_tokens);
     }
 
-    pub async fn get_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
+    pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
         // let account_data = AccountMysqlDal::get_account_data_by_username(username).await?;
         // if (!is_password_valid(password, account_data.password_hash)) {
         //     return Err(AppError::new(AppErrorType::WrongCredentials));
@@ -56,7 +56,7 @@ impl AccountService {
         //     user_id: account_data.organization_id,
         // };
         // return Ok(login_tokens);
-        return AccountMysqlDal::get_organizations(limit, page).await;
+        return AccountMysqlDal::get_organizations(name_filter, limit, page).await;
     }
 
     // get_paged_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError>
