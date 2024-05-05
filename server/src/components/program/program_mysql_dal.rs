@@ -314,22 +314,10 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-            
-            // let programs: Vec<StoredProgram> = program::table
-            //     .offset((page - 1) * limit).limit(limit)
-            //     .load::<StoredProgram>(connection)?;
 
             let mut programs_query = program::table.offset((page - 1) * limit).limit(limit).into_boxed();
 
-
-            // let count_of_matched_elements: i64 = program::table
-            //     .count()
-            //     .get_result(connection)
-            //     .expect("Error finding count of matched elements");
-
             let mut count_of_matched_elements_query = program::table.into_boxed();
-
-
 
             if let Some(name_string) = name_filter {
                 programs_query = programs_query.filter(program::name.like(format!("{}%", name_string)));
