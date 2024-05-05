@@ -7,7 +7,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
     // web::scope(path_prefix)
     web::scope(path_prefix).
         // get
-        route("all", web::get().to(ProgramController::get_unfiltered_programs)).
+        route("all", web::get().to(ProgramController::get_general_programs)).
         route("{program_id}", web::get().to(ProgramController::download_program)).
         route("inputs/{program_id}", web::get().to(ProgramController::retrieve_input_group)).
         route("program-and-inputs/{program_id}", web::get().to(ProgramController::retrieve_program_and_input_group)).

@@ -41,8 +41,8 @@ impl ProgramService {
         return ProgramMysqlDal::get_organization_programs(organization_id, limit, page).await;
     }
 
-    pub async fn get_unfiltered_programs(limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
-        return ProgramMysqlDal::get_unfiltered_programs(limit, page).await;
+    pub async fn get_general_programs(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        return ProgramMysqlDal::get_general_programs(name_filter, limit, page).await;
     }
 
 }

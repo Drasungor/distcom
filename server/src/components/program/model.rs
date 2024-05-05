@@ -14,6 +14,13 @@ pub struct UploadProgram {
     pub execution_timeout: i64,
 }
 
+#[derive(Deserialize)]
+pub struct GetPagedPrograms {
+    pub limit: Option<i64>,
+    pub page: Option<i64>,
+    pub name_filter: Option<String>,
+}
+
 // Useful models
 
 // Controller output models

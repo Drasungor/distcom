@@ -10,7 +10,7 @@ use crate::{common, middlewares::callable_upload_file::upload_file_with_body, ut
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{PagedPrograms, UploadProgram}, service::ProgramService};
+use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService};
 
 pub struct ProgramController;
 
@@ -130,9 +130,14 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(organization_programs)
     }
 
-    pub async fn get_unfiltered_programs(query_params: web::Query<PagingParameters>) -> impl Responder {
-        let paging_params = process_paging_inputs(query_params.into_inner());
-        let organization_programs = ProgramService::get_unfiltered_programs(paging_params.limit, paging_params.page).await;
+    pub async fn get_general_programs(query_params: web::Query<GetPagedPrograms>) -> impl Responder {
+        let query_params = query_params.into_inner();
+        let paging = PagingParameters {
+            limit: query_params.limit,
+            page: query_params.page,
+        };
+        let paging_params = process_paging_inputs(paging);
+        let organization_programs = ProgramService::get_general_programs(query_params.name_filter, paging_params.limit, paging_params.page).await;
         return AppHttpResponseBuilder::get_http_response(organization_programs)
     }
 

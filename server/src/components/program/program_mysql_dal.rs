@@ -309,20 +309,35 @@ impl ProgramMysqlDal {
 
     
 
-    pub async fn get_unfiltered_programs(limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+    pub async fn get_general_programs(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         // let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
             
-            let programs: Vec<StoredProgram> = program::table
-                .offset((page - 1) * limit).limit(limit)
-                .load::<StoredProgram>(connection)?;
+            // let programs: Vec<StoredProgram> = program::table
+            //     .offset((page - 1) * limit).limit(limit)
+            //     .load::<StoredProgram>(connection)?;
 
-            let count_of_matched_elements: i64 = program::table
-                .count()
-                .get_result(connection)
-                .expect("Error finding count of matched elements");
+            let mut programs_query = program::table.offset((page - 1) * limit).limit(limit).into_boxed();
+
+
+            // let count_of_matched_elements: i64 = program::table
+            //     .count()
+            //     .get_result(connection)
+            //     .expect("Error finding count of matched elements");
+
+            let mut count_of_matched_elements_query = program::table.into_boxed();
+
+
+
+            if let Some(name_string) = name_filter {
+                programs_query = programs_query.filter(program::name.like(format!("{}%", name_string)));
+                count_of_matched_elements_query = count_of_matched_elements_query.filter(program::name.like(format!("{}%", name_string)))
+            }
+
+            let programs: Vec<StoredProgram> = programs_query.load::<StoredProgram>(connection)?;
+            let count_of_matched_elements = count_of_matched_elements_query.count().get_result(connection)?;
  
             return Ok(PagedPrograms {
                 programs,
