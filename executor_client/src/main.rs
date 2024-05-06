@@ -7,9 +7,13 @@ use tar::{Builder, Archive};
 use clap::{crate_name, Parser, Subcommand};
 use reqwest::Client;
 use serde_derive::{Deserialize};
+
+use crate::commands::get_organizations::{get_organizations};
+use crate::commands::get_programs::{get_organization_programs, get_general_programs};
 // use serde::de::{DeserializeOwned};
 
 mod common;
+mod commands;
 
 fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
     let file = File::create(output_path)?;
@@ -59,142 +63,6 @@ async fn run_program_get_example() {
         println!("Failed to download file: {}", response.status());
     }
 }
-
-
-// #[derive(Debug, Deserialize)]
-// pub struct EndpointResult<T: DeserializeOwned> {
-//     pub status: String,
-//     pub data: T,
-// }
-
-#[derive(Debug, Deserialize)]
-pub struct EndpointResult<T> {
-    pub status: String,
-    pub data: T,
-}
-
-
-#[derive(Debug, Deserialize)]
-pub struct ReturnedOrganization {
-    pub organization_id: String,
-    pub name: String,
-    pub description: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PagedOrganizations {
-    pub organizations: Vec<ReturnedOrganization>,
-    pub total_elements_amount: i64,
-}
-
-async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
-
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
-
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let organizations: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organizations: {:?}", organizations);
-
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct StoredProgram {
-    pub organization_id: String,
-    pub program_id: String,
-    pub name: String,
-    pub description: String,
-    pub input_lock_timeout: i64,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct PagedPrograms {
-    pub programs: Vec<StoredProgram>,
-    pub total_elements_amount: i64,
-}
-
-async fn get_organization_programs(organization_id: String, limit: Option<u32>, page: Option<u32>) {
-
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
-
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    let get_organization_programs_url = format!("http://localhost:8080/program/organization/{}", organization_id);
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organization_programs: {:?}", programs);
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
-}
-
-async fn get_programs(limit: Option<u32>, page: Option<u32>) {
-
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
-
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    let get_programs_url = format!("http://localhost:8080/program/all");
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get(get_programs_url).query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organization_programs: {:?}", programs);
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
-}
-
-
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -294,7 +162,8 @@ async fn main() {
     println!("");
     println!("");
 
-    get_programs(None, None).await;
+
+    get_general_programs(None, None).await;
 
     // run_commands_loop();
 
