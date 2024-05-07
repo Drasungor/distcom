@@ -14,6 +14,7 @@ use crate::commands::get_programs::{get_organization_programs, get_general_progr
 
 mod common;
 mod commands;
+mod runner;
 
 fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
     let file = File::create(output_path)?;
@@ -127,14 +128,16 @@ async fn run_commands_loop() {
                         }
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
-                        }                    },
+                        }
+                    },
                     Commands::AllPrograms{limit, page} => {
                         if (limit.is_some()) {
                             println!("Get valuea: {}", limit.unwrap());
                         }
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
-                        }                    },
+                        }
+                    },
                }
             }
             Err(_) => {
