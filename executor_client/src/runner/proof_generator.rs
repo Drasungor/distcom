@@ -1,5 +1,5 @@
 use methods::{
-    BASIC_PRIME_TEST_GUEST_ELF, BASIC_PRIME_TEST_GUEST_ID
+    DOWNLOADED_PROGRAM_ELF, DOWNLOADED_PROGRAM_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use std::env;
