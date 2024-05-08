@@ -49,18 +49,19 @@ fn main() {
         current_input += 1;
     }
 
+    let executor_env = env_bulder_ref.build().unwrap();;
 
     let prover = default_prover();
     let receipt = prover
-        .prove(env, BASIC_PRIME_TEST_GUEST_ELF)
+        .prove(executor_env, BASIC_PRIME_TEST_GUEST_ELF)
         .unwrap();
 
-    let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
+    // let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
 
-    println!("The output of the journal is {:?}", _output);
+    // println!("The output of the journal is {:?}", _output);
 
-    receipt
-        .verify(BASIC_PRIME_TEST_GUEST_ID)
-        .expect("Proof verification failed");
-    println!("Successful verification");
+    // receipt
+    //     .verify(BASIC_PRIME_TEST_GUEST_ID)
+    //     .expect("Proof verification failed");
+    // println!("Successful verification");
 }
