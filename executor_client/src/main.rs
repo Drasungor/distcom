@@ -14,7 +14,7 @@ use crate::commands::get_programs::{get_organization_programs, get_general_progr
 
 mod common;
 mod commands;
-mod runner;
+// mod runner;
 
 fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
     let file = File::create(output_path)?;
