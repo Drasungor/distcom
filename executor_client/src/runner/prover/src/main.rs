@@ -5,6 +5,7 @@ use risc0_zkvm::{default_prover, ExecutorEnv};
 use std::env;
 use std::fs::File;
 use std::io::{self, Read};
+use bincode;
 
 // use basic_prime_test_core;
 
@@ -56,6 +57,9 @@ fn main() {
         .prove(executor_env, BASIC_PRIME_TEST_GUEST_ELF)
         .unwrap();
 
+    let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
+
+    std::fs::write("./proof.bin", serialized_proof);
     // let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
 
     // println!("The output of the journal is {:?}", _output);

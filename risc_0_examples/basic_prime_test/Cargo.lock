@@ -666,6 +666,7 @@ name = "host"
 version = "0.1.0"
 dependencies = [
  "basic-prime-test-core",
+ "bincode",
  "methods",
  "risc0-zkvm",
  "serde",

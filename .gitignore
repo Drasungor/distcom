@@ -8,5 +8,6 @@ db.sql
 *.memory
 *.proof
 *.tar
+*.bin
 *dev.json
 server/.env
