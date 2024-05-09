@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::io;
+use std::fs;
 use tar::{Builder, Archive};
 // use clap::{crate_name};
 use clap::{crate_name, Parser, Subcommand};
@@ -39,18 +40,21 @@ fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
 }
 
 fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
+
+    fs::create_dir_all(output_folder)?;
+
     let file = File::open(tar_path)?;
     let mut archive = Archive::new(file);
 
-    // archive.unpack(output_folder)?;
-    archive.unpack("./")?;
+    archive.unpack(output_folder)?;
+    // archive.unpack("./")?;
 
     Ok(())
 }
 
 
 async fn run_program_get_example() {
-    let response = reqwest::get("http://localhost:8080/program/b1eca5b7-5c28-459e-a64b-5244aabf1ab9").await.expect("Error in get");
+    let response = reqwest::get("http://localhost:8080/program/47d9c392-a758-44fd-bbda-7d06fa7f9c4b").await.expect("Error in get");
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
@@ -58,6 +62,7 @@ async fn run_program_get_example() {
         let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
         file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
 
+        decompress_tar("./downloaded_file.tar", "./src/runner/methods");
         
         println!("File downloaded successfully!");
     } else {
@@ -151,23 +156,23 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    // run_program_get_example().await;
+    run_program_get_example().await;
 
-    get_organizations(None, None).await;
+    // get_organizations(None, None).await;
 
-    println!("");
-    println!("");
-    println!("");
+    // println!("");
+    // println!("");
+    // println!("");
 
-    get_organization_programs("210c3559-86d1-4bbb-999b-dcc1d27867ea".to_string(), None, None).await;
+    // get_organization_programs("210c3559-86d1-4bbb-999b-dcc1d27867ea".to_string(), None, None).await;
 
-    println!("");
-    println!("");
-    println!("");
+    // println!("");
+    // println!("");
+    // println!("");
 
 
-    get_general_programs(None, None).await;
+    // get_general_programs(None, None).await;
 
-    // run_commands_loop();
+    // // run_commands_loop();
 
 }

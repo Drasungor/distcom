@@ -9,5 +9,6 @@ db.sql
 *.proof
 *.tar
 *.bin
+executor_client/src/runner/methods
 *dev.json
 server/.env
