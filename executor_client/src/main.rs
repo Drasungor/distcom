@@ -54,7 +54,7 @@ fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
 
 
 async fn run_program_get_example() {
-    let response = reqwest::get("http://localhost:8080/program/47d9c392-a758-44fd-bbda-7d06fa7f9c4b").await.expect("Error in get");
+    let response = reqwest::get("http://localhost:8080/program/821435bf-256f-4699-aa8b-218611999a14").await.expect("Error in get");
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
@@ -157,6 +157,10 @@ async fn run_commands_loop() {
 #[tokio::main]
 async fn main() {
     run_program_get_example().await;
+
+    // compress_folder("./src/methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // decompress_tar("./my_compressed_src", "./my_decompressed_src").expect("Decompression failed")
+    // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
 
     // get_organizations(None, None).await;
 
