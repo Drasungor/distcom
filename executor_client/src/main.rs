@@ -62,7 +62,7 @@ async fn run_program_get_example() {
         let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
         file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
 
-        decompress_tar("./downloaded_file.tar", "./src/runner/methods");
+        // decompress_tar("./downloaded_file.tar", "./src/runner/methods");
         
         println!("File downloaded successfully!");
     } else {
@@ -156,10 +156,13 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    run_program_get_example().await;
+    // run_program_get_example().await;
 
-    // compress_folder("./src/methods", "./my_compressed_methods.tar").expect("Compression failed");
-    // decompress_tar("./my_compressed_src", "./my_decompressed_src").expect("Decompression failed")
+    // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
+    compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
+    decompress_tar("./my_compressed_methods.tar", "./src/runner").expect("Decompression failed")
     // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
 
     // get_organizations(None, None).await;
