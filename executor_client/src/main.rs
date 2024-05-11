@@ -42,55 +42,22 @@ fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
 fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Result<()> {
     let file = File::create(output_path)?;
     let mut builder = Builder::new(file);
-
-    // // Recursively add all files in the folder to the tar file
-    // builder.append_dir_all(folder_path, folder_path)?;
-
-    // // Recursively add all files in the folder to the tar file
-    // let _ = builder.append_dir_all(folder_path, folder_path);
-
     let folder_contents = fs::read_dir(folder_path).expect("Error in ");
 
     for entry in folder_contents {
         let unwrapped_entry = entry.expect("Error in folder entry processing");
         let path = unwrapped_entry.path();
-        // let rel_path = path.strip_prefix(folder_path)?;
 
         let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
         let entry_path = format!("{}/{}", folder_path, entry_name);
 
-        println!("path: {:?}", path);
-        println!("entry path: {:?}", entry_path);
-        println!("entry name: {:?}", entry_name);
-
-
         if (path.is_dir()) {
-            println!("Es dir");
-            // builder.append_dir_all(path, entry_path).expect("Error in directory appending");
-
             builder.append_dir_all(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
-            // builder.append_dir_all(path, entry_name).expect("Error in directory appending");
-            // builder.append_dir_all(entry_name, entry_path).expect("Error in directory appending");
         } else {
-            println!("No es dir");
-            // builder.append_path_with_name(path, entry_path).expect("Error in directory appending");
-
             builder.append_path_with_name(path, entry_name).expect("Error in directory appending");
-            // builder.append_path_with_name(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
-            // builder.append_path_with_name(path, entry_name).expect("Error in directory appending");
-            // builder.append_path_with_name(entry_name, entry_path).expect("Error in directory appending");
         }
 
     }
-
-    // // Attempt to append all files in the folder to the tar file
-    // // if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
-    // if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
-    //     // If an error occurs, call finish to clean up resources and then propagate the error
-    //     let _ = builder.finish();
-    //     return Err(err);
-    // }
-
     builder.finish()?;
     Ok(())
 }
@@ -98,21 +65,20 @@ fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Result<
 
 
 fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
-
     fs::create_dir_all(output_folder)?;
-
     let file = File::open(tar_path)?;
     let mut archive = Archive::new(file);
-
     archive.unpack(output_folder)?;
-    // archive.unpack("./")?;
-
     Ok(())
 }
 
 
-async fn run_program_get_example() {
-    let response = reqwest::get("http://localhost:8080/program/821435bf-256f-4699-aa8b-218611999a14").await.expect("Error in get");
+async fn run_program_get_example(program_id: String) {
+
+
+    let request_url = format!("http://localhost:8080/program/{}", program_id);
+
+    let response = reqwest::get(request_url).await.expect("Error in get");
 
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
@@ -120,7 +86,7 @@ async fn run_program_get_example() {
         let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
         file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
 
-        // decompress_tar("./downloaded_file.tar", "./src/runner/methods");
+        decompress_tar("./downloaded_file.tar", "./src/runner/methods");
         
         println!("File downloaded successfully!");
     } else {
@@ -214,18 +180,18 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    // run_program_get_example().await;
+    run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
 
-    // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
-    // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
-    // compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
+    // // compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
 
-    compress_folder_contents("./methods_test", "./my_compressed_methods.tar").expect("Compression failed");
+    // compress_folder_contents("./methods_test", "./my_compressed_methods.tar").expect("Compression failed");
     
 
+    // // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
     // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
-    decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
-    // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
+    // // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
 
     // get_organizations(None, None).await;
 
