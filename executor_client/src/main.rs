@@ -58,11 +58,26 @@ fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Result<
 
         let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
         let entry_path = format!("{}/{}", folder_path, entry_name);
+
+        println!("path: {:?}", path);
+        println!("entry path: {:?}", entry_path);
+        println!("entry name: {:?}", entry_name);
+
+
         if (path.is_dir()) {
-            builder.append_dir_all(path, entry_path).expect("Error in directory appending");
+            println!("Es dir");
+            // builder.append_dir_all(path, entry_path).expect("Error in directory appending");
+
+            builder.append_dir_all(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
+            // builder.append_dir_all(path, entry_name).expect("Error in directory appending");
             // builder.append_dir_all(entry_name, entry_path).expect("Error in directory appending");
         } else {
-            builder.append_path_with_name(path, entry_path).expect("Error in directory appending");
+            println!("No es dir");
+            // builder.append_path_with_name(path, entry_path).expect("Error in directory appending");
+
+            builder.append_path_with_name(path, entry_name).expect("Error in directory appending");
+            // builder.append_path_with_name(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
+            // builder.append_path_with_name(path, entry_name).expect("Error in directory appending");
             // builder.append_path_with_name(entry_name, entry_path).expect("Error in directory appending");
         }
 
