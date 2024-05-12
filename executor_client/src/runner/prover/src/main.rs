@@ -6,6 +6,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, Read};
 use bincode;
+use csv;
 
 // use basic_prime_test_core;
 
@@ -23,7 +24,7 @@ fn main() {
     // .unwrap();
 
     let mut env_builder = ExecutorEnv::builder();
-    let mut env_bulder_ref = &env_builder;
+    let mut env_bulder_ref = &mut env_builder;
 
     let file = File::open("input_file_path").expect("Error while reading file");
     let mut input_reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
@@ -54,7 +55,7 @@ fn main() {
 
     let prover = default_prover();
     let receipt = prover
-        .prove(executor_env, BASIC_PRIME_TEST_GUEST_ELF)
+        .prove(executor_env, DOWNLOADED_PROGRAM_ELF)
         .unwrap();
 
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
