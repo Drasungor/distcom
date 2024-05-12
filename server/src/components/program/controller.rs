@@ -91,6 +91,13 @@ impl ProgramController {
         return named_file.into_response(&req);
     }
 
+    pub async fn retrieve_program_template(req: HttpRequest) -> impl Responder {
+        let input_file_name = "./proven_code_template/compressed_template.tar";
+        let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
+        let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
+        return named_file.into_response(&req);
+    }
+
     pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
 
         let program_id = path.as_str().to_string();

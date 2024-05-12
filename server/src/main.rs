@@ -14,7 +14,7 @@ use cronjob::CronJob;
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
 use crate::services::files_storage::file_storage::FileStorage;
-use crate::utils::local_storage_helpers::{clear_directory};
+use crate::utils::local_storage_helpers::{clear_directory, compress_folder_contents};
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -37,6 +37,9 @@ pub struct RequestExtension {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
+
     println!("{:?}", common::config::CONFIG_OBJECT.x);
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
