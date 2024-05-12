@@ -1,6 +1,6 @@
 [package]
 # This is where the ELF and ID method element names are defined
-name = "basic_prime_test_guest"
+name = "downloaded_program"
 version = "0.1.0"
 edition = "2021"
 

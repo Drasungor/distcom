@@ -5,7 +5,7 @@
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
 
-use basic_prime_test_core;
+// use basic_prime_test_core;
 
 // Your code inside main
 fn main() {
