@@ -94,6 +94,27 @@ async fn run_program_get_example(program_id: String) {
     }
 }
 
+async fn get_program_template() {
+    let request_url = "http://localhost:8080/program/template";
+    let response = reqwest::get(request_url).await.expect("Error in get");
+
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        // Open a file to write the downloaded content
+        let mut file = File::create("downloaded_file.tar").expect("Error in file creation");
+        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+
+        decompress_tar("./downloaded_file.tar", "./src/runner/methods");
+        
+        println!("File downloaded successfully!");
+    } else {
+        println!("Failed to download file: {}", response.status());
+    }
+}
+
+
+
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -180,7 +201,10 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
+    // run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
+
+    get_program_template().await;
+
 
     // // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
     // // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
