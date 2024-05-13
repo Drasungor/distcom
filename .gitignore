@@ -1,6 +1,7 @@
 target
 uploads
 downloads
+aux_files
 db_data
 db.sql
 // migrations
