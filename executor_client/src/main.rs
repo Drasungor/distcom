@@ -94,6 +94,63 @@ async fn run_program_get_example(program_id: String) {
     }
 }
 
+async fn get_program_and_input_group(program_id: String) {
+
+
+    let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
+
+    let response = reqwest::get(request_url).await.expect("Error in get");
+
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        // Open a file to write the downloaded content
+        let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
+        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+
+        decompress_tar("./downloaded_program_with_input.tar", "./program_with_input");
+        
+
+        // We scan the folder for the program .tar file
+        let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
+
+        for entry in folder_contents {
+
+            let unwrapped_entry = entry.expect("Error in folder entry processing");
+            let path = unwrapped_entry.path();
+
+            let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
+            // let entry_path = format!("{}/{}", folder_path, entry_name);
+
+            // if (path.is_dir()) {
+            //     builder.append_dir_all(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
+            // } else {
+            //     builder.append_path_with_name(path, entry_name).expect("Error in directory appending");
+            // }
+
+            let path_string = path.to_str().expect("Error in conversion from path to string");
+
+
+            println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            println!("path_string: {}", path_string);
+
+
+            if (entry_name.contains(".tar")) {
+                println!("path_string: {}", path_string);
+                decompress_tar(path_string, "./src/runner/methods");
+            }
+
+        }
+
+
+        // decompress_tar("./downloaded_program_with_input.tar", "./program_with_input");
+
+
+        println!("File downloaded successfully!");
+    } else {
+        println!("Failed to download file: {}", response.status());
+    }
+}
+
 async fn get_program_template() {
     let request_url = "http://localhost:8080/program/template";
     let response = reqwest::get(request_url).await.expect("Error in get");
@@ -204,6 +261,8 @@ async fn main() {
     // run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
 
     get_program_template().await;
+
+    get_program_and_input_group("5793ec0c-d820-4613-bee9-46bf06dd6dbd".to_string()).await;
 
 
     // // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
