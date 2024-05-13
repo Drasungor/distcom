@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 
     compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
 
-    println!("{:?}", common::config::CONFIG_OBJECT.x);
+    // println!("{:?}", common::config::CONFIG_OBJECT.x);
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");

@@ -15,8 +15,6 @@ use crate::services::files_storage::file_storage::FileStorage;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-   pub x: i32,
-   pub y: i32,
    pub database_url: String,
    pub token: Token,
    pub uploaded_files_connection_string: String, // String that defines where the files are stored, it is a single attribute so that different
