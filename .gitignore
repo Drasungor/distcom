@@ -8,6 +8,7 @@ db.sql
 *.memory
 *.proof
 *.tar
+*.csv
 *.bin
 executor_client/src/runner/methods
 *dev.json
