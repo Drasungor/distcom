@@ -10,6 +10,7 @@ use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness 
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
 use cronjob::CronJob;
+use utils::local_storage_helpers::clear_aux_directories;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
@@ -35,6 +36,12 @@ pub struct RequestExtension {
     // pub files_names: Option<Vec<String>>,
 }
 
+
+
+fn cron_clear_aux_directories(input: &str) {
+    clear_aux_directories();
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -46,7 +53,8 @@ async fn main() -> std::io::Result<()> {
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    let mut cron = CronJob::new("./downloads", clear_directory);
+    // let mut cron = CronJob::new("./downloads", clear_directory);
+    let mut cron = CronJob::new("", cron_clear_aux_directories);
 
     // TODO: make the cron run once per hour or day, maybe make it configurable
     cron.seconds("0");
