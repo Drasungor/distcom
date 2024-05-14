@@ -74,12 +74,6 @@ impl FileStorage for AwsS3Handler {
     }
 
     async fn download(&self, object_name: &str, storage_path: &Path) -> Result<(), AppError> {
-
-        if let Some(parent_dir) = storage_path.parent() {
-            std::fs::create_dir_all(parent_dir).expect("Error while creating parent dir path");
-        }
-
-
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
         let req = client_ref.get_object().bucket(self.bucket_name.clone()).key(object_name);
         let res = req.send().await.expect("Error in sent request");

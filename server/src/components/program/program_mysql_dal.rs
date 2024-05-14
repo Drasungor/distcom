@@ -220,6 +220,13 @@ impl ProgramMysqlDal {
             .first::<SpecificProgramInput>(connection);
 
         {
+            // println!("file_path: {}", file_path);
+
+            // TODO: change this so that the created folder comes from the parent directory of the file path
+            // stored in the variable "file_path"
+            std::fs::create_dir_all(format!("./aux_files/{}", input_group_id)).expect("Error while creating parent dir path");
+
+
             let file = File::create(file_path.clone()).expect("Error in file creation");
         }
         let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
