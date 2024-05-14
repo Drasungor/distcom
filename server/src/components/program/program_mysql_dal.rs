@@ -249,10 +249,37 @@ impl ProgramMysqlDal {
 
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
 
-            let file_path = format!("./downloads/{}.csv", input_group_id);
+            // let file_path = format!("./aux_files/{}.csv", input_group_id);
+            let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
 
             return Ok((input_group_id, file_path));
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(result_tuple)) => Ok(result_tuple),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
+
+    pub async fn delete_input_group_reservation(input_group_id: &String) -> Result<(), AppError> {
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
+                .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
+                .execute(connection).expect("Error in input group update");
+            return Ok(());
         })
         }).await;
         return match result {

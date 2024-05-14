@@ -102,7 +102,8 @@ impl ProgramController {
 
         let program_id = path.as_str().to_string();
         let program_file_name = format!("{}.tar", program_id);
-        let downloaded_program_file_path = format!("./downloads/{}", program_file_name);
+        // let downloaded_program_file_path = format!("./aux_files/{}", program_file_name);
+        let downloaded_program_file_path = format!("./aux_files/{}", program_file_name);
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
 
         if (organization_id.is_err()) {
@@ -117,7 +118,7 @@ impl ProgramController {
         }
         let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
 
-        let tar_file_path = format!("./downloads/{}_{}.tar", program_id, input_group_id);
+        let tar_file_path = format!("./aux_files/{}_{}.tar", program_id, input_group_id);
         let tar_file = File::create(tar_file_path.clone()).unwrap();
         let mut tar_file_builder = Builder::new(tar_file);
 
