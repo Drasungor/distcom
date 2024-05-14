@@ -103,15 +103,16 @@ impl ProgramController {
         let program_id = path.as_str().to_string();
         let program_file_name = format!("{}.tar", program_id);
         // let downloaded_program_file_path = format!("./aux_files/{}", program_file_name);
-        let downloaded_program_file_path = format!("./aux_files/{}", program_file_name);
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
-
+        
         if (organization_id.is_err()) {
             // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
-
+        
         let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
+        
+        let downloaded_program_file_path = format!("./aux_files/{}/{}", input_group_id, program_file_name);
 
         let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
         {
@@ -125,12 +126,19 @@ impl ProgramController {
 
         }
 
-        let tar_file_path = format!("./aux_files/{}_{}.tar", program_id, input_group_id);
+        let tar_file_path = format!("./aux_files/{}/{}_{}.tar", input_group_id, program_id, input_group_id);
         let tar_file = File::create(tar_file_path.clone()).unwrap();
         let mut tar_file_builder = Builder::new(tar_file);
 
-        tar_file_builder.append_path(downloaded_program_file_path).expect("Error in adding program to tar builder");
-        tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
+        // tar_file_builder.append_path(downloaded_program_file_path).expect("Error in adding program to tar builder");
+        // tar_file_builder.append_dir_all(, downloaded_program_file_path).expect("Error in adding program to tar builder");
+        tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name).expect("Error in adding program to tar builder");
+        
+
+        // tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
+        // tar_file_builder.append_dir_all(, input_file_path).expect("Error in adding input to tar builder");
+        tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id)).expect("Error in adding input to tar builder");
+
         tar_file_builder.finish().expect("Error in builder finish");
 
         let tar_file = File::open(tar_file_path.clone()).expect("Error opening program file");
