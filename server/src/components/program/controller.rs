@@ -111,12 +111,19 @@ impl ProgramController {
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
 
+        let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
+
         let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.download(&object_name, Path::new(&downloaded_program_file_path)).await.expect("File upload error");
+            let download_result = read_guard.download(&object_name, Path::new(&downloaded_program_file_path)).await;
+
+            if (download_result.is_err()) {
+                ProgramService::delete_input_group_reservation(&input_group_id).await.expect("Error in input group reservation cancellation");
+                panic!("Error in program download");
+            }
+
         }
-        let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
 
         let tar_file_path = format!("./aux_files/{}_{}.tar", program_id, input_group_id);
         let tar_file = File::create(tar_file_path.clone()).unwrap();

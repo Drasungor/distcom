@@ -45,4 +45,9 @@ impl ProgramService {
         return ProgramMysqlDal::get_general_programs(name_filter, limit, page).await;
     }
 
+    pub async fn delete_input_group_reservation(input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::delete_input_group_reservation(input_group_id).await;
+    }
+
+
 }
