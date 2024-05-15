@@ -8,6 +8,7 @@ use tar::{Builder, Archive};
 use clap::{crate_name, Parser, Subcommand};
 use reqwest::Client;
 use serde_derive::{Deserialize};
+use std::process::Command;
 
 use crate::commands::get_organizations::{get_organizations};
 use crate::commands::get_programs::{get_organization_programs, get_general_programs};
@@ -145,6 +146,13 @@ async fn get_program_and_input_group(program_id: String) {
         // decompress_tar("./downloaded_program_with_input.tar", "./program_with_input");
 
 
+        let output = Command::new("cargo")
+        .arg("run")
+        .current_dir("./src/runner")
+        .output()
+        .expect("Failed to execute child program");
+
+
         println!("File downloaded successfully!");
     } else {
         println!("Failed to download file: {}", response.status());
@@ -260,21 +268,21 @@ async fn run_commands_loop() {
 async fn main() {
     // run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
 
-    get_program_template().await;
+    // get_program_template().await;
 
-    get_program_and_input_group("5793ec0c-d820-4613-bee9-46bf06dd6dbd".to_string()).await;
+    // get_program_and_input_group("5793ec0c-d820-4613-bee9-46bf06dd6dbd".to_string()).await;
 
 
-    // // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
-    // // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
-    // // compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
+    // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
+    // compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
 
-    // compress_folder_contents("./methods_test", "./my_compressed_methods.tar").expect("Compression failed");
+    compress_folder_contents("./methods_test", "./my_compressed_methods.tar").expect("Compression failed");
     
 
-    // // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
     // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
-    // // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
+    decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
+    // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
 
     // get_organizations(None, None).await;
 

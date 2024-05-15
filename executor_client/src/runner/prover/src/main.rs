@@ -26,7 +26,7 @@ fn main() {
     let mut env_builder = ExecutorEnv::builder();
     let mut env_bulder_ref = &mut env_builder;
 
-    let file = File::open("input_file_path").expect("Error while reading file");
+    let file = File::open("../../program_with_input/8abf4bc4-ffcd-40f7-ab32-8ad97962605e.csv").expect("Error while reading file");
     let mut input_reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
 
     let mut current_input = 0;
@@ -51,7 +51,7 @@ fn main() {
         current_input += 1;
     }
 
-    let executor_env = env_bulder_ref.build().unwrap();;
+    let executor_env = env_bulder_ref.build().unwrap();
 
     let prover = default_prover();
     let receipt = prover
