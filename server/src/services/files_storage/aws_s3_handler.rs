@@ -74,22 +74,13 @@ impl FileStorage for AwsS3Handler {
     }
 
     async fn download(&self, object_name: &str, storage_path: &Path) -> Result<(), AppError> {
-        println!("AAAAAAAAA");
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
-        println!("BBBBBBBBB");
         let req = client_ref.get_object().bucket(self.bucket_name.clone()).key(object_name);
-        println!("CCCCCCCCC");
-        println!("object_name: {}", object_name);
         let res = req.send().await.expect("Error in sent request");
-        println!("DDDDDDDDD");
         let mut data: ByteStream = res.body;
-        println!("EEEEEEEEE");
         let file_path_str = storage_path.to_str().expect("Error in file download path generation");
-        println!("FFFFFFFFF");
         let file = File::create(file_path_str).expect("Error in file creation");
-        println!("GGGGGGGGG");
         let mut buf_writer = BufWriter::new(file);
-        println!("HHHHHHHHH");
         while let Some(bytes) = data.try_next().await.expect("Error in received data stream chunk") {
             buf_writer.write(&bytes).expect("Error in chunch writing");
         }

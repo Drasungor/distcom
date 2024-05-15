@@ -9,6 +9,8 @@ use actix_web::web;
 
 use super::db_models::account::CompleteAccount;
 use super::db_models::refresh_token::RefreshToken;
+use super::model::PagedOrganizations;
+use super::model::ReturnedOrganization;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
 use crate::schema::{account, refresh_token};
@@ -87,5 +89,49 @@ impl AccountMysqlDal {
         };
     }
 
+    pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let mut find_accounts_query = account::table
+                .offset((page - 1) * limit).limit(limit).into_boxed().filter(account::account_was_verified.eq(true));
+
+            if let Some(name_string) = name_filter {
+                // We only use the % at the end of the "like" filter because otherwise the column index will not be used
+                find_accounts_query = find_accounts_query.filter(account::name.like(format!("{}%", name_string)));
+            }
+
+            let found_accounts: Vec<CompleteAccount> = find_accounts_query.load::<CompleteAccount>(connection).expect("Error finding taken input groups");
+
+
+            let count_of_matched_elements: i64 = account::table
+                .filter(account::account_was_verified.eq(true))
+                .count()
+                .get_result(connection)
+                .expect("Error finding count of matched elements");
+            
+            let returned_organizations = found_accounts.iter().map(|organization| ReturnedOrganization {
+                organization_id: organization.organization_id.clone(),
+                name: organization.name.clone(),
+                description: organization.description.clone(),
+            }).collect();
+ 
+            return Ok(PagedOrganizations {
+                organizations: returned_organizations,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
     
 }

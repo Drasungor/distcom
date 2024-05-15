@@ -10,11 +10,12 @@ use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness 
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
 use cronjob::CronJob;
+use utils::local_storage_helpers::clear_aux_directories;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
 use crate::services::files_storage::file_storage::FileStorage;
-use crate::utils::local_storage_helpers::{clear_directory};
+use crate::utils::local_storage_helpers::{clear_directory, compress_folder_contents};
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -35,15 +36,25 @@ pub struct RequestExtension {
     // pub files_names: Option<Vec<String>>,
 }
 
+
+
+fn cron_clear_aux_directories(input: &str) {
+    clear_aux_directories();
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("{:?}", common::config::CONFIG_OBJECT.x);
+
+    compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
+
+    // println!("{:?}", common::config::CONFIG_OBJECT.x);
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    let mut cron = CronJob::new("./downloads", clear_directory);
+    // let mut cron = CronJob::new("./downloads", clear_directory);
+    let mut cron = CronJob::new("", cron_clear_aux_directories);
 
     // TODO: make the cron run once per hour or day, maybe make it configurable
     cron.seconds("0");

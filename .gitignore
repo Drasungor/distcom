@@ -1,6 +1,7 @@
 target
 uploads
 downloads
+aux_files
 db_data
 db.sql
 // migrations
@@ -8,5 +9,10 @@ db.sql
 *.memory
 *.proof
 *.tar
+*.csv
+*.bin
+executor_client/src/runner/methods
+program_with_input
+methods_test
 *dev.json
 server/.env

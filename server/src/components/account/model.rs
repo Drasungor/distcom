@@ -18,6 +18,13 @@ pub struct ReceivedNewAccount {
     pub description: String,
 }
 
+#[derive(Deserialize)]
+pub struct GetPagedOrganizations {
+    pub limit: Option<i64>,
+    pub page: Option<i64>,
+    pub name_filter: Option<String>,
+}
+
 // Useful models
 
 #[derive(Serialize)]
@@ -32,4 +39,17 @@ pub struct LoginTokens {
 pub struct InitSession {
     pub token: String,
     pub refresh_token: String,
+}
+
+#[derive(Serialize)]
+pub struct ReturnedOrganization {
+    pub organization_id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Serialize)]
+pub struct PagedOrganizations {
+    pub organizations: Vec<ReturnedOrganization>,
+    pub total_elements_amount: i64,
 }

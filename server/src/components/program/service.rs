@@ -7,13 +7,15 @@ use std::fs::File; // Add import for File
 use crate::common::app_error::{AppError, AppErrorType};
 use crate::components::program::program_mysql_dal::ProgramMysqlDal;
 
+use super::model::PagedPrograms;
+
 
 pub struct ProgramService;
 
 impl ProgramService {
 
-    pub async fn add_organization_program(organization_id: String, program_id: String, input_lock_timeout: i64) -> Result<(), AppError> {
-        ProgramMysqlDal::add_organization_program(organization_id, program_id, input_lock_timeout).await?;
+    pub async fn add_organization_program(organization_id: String, program_id: String, name: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
+        ProgramMysqlDal::add_organization_program(organization_id, program_id, name, description, input_lock_timeout).await?;
         return Ok(());
     }
 
@@ -33,6 +35,18 @@ impl ProgramService {
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
         let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
         return Ok(organization_id);
+    }
+
+    pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        return ProgramMysqlDal::get_organization_programs(organization_id, limit, page).await;
+    }
+
+    pub async fn get_general_programs(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        return ProgramMysqlDal::get_general_programs(name_filter, limit, page).await;
+    }
+
+    pub async fn delete_input_group_reservation(input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::delete_input_group_reservation(input_group_id).await;
     }
 
 

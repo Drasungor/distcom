@@ -11,7 +11,7 @@ diesel::table! {
         #[max_length = 255]
         name -> Varchar,
         
-        #[max_length = 255]
+        #[max_length = 700]
         description -> Varchar,
         
         account_was_verified -> Bool,
@@ -49,6 +49,12 @@ diesel::table! {
         #[max_length = 255]
         program_id -> Varchar,
 
+        #[max_length = 255]
+        name -> Varchar,
+
+        #[max_length = 700]
+        description -> Varchar,
+
         input_lock_timeout -> BigInt,
     }
 }
@@ -64,9 +70,6 @@ diesel::table! {
 
         #[max_length = 255]
         program_id -> Varchar,
-
-        // // Determines if this group was provided to a prover
-        // input_was_reserved -> Bool,
 
         // last_reserved -> Timestamp,
         last_reserved -> Nullable<Datetime>,

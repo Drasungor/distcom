@@ -20,21 +20,25 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
 use super::db_models::specific_program_input::SpecificProgramInput;
+use super::model::PagedPrograms;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
+use crate::components::account::db_models::account::CompleteAccount;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
-use crate::schema::{program};
+use crate::schema::{program, account};
 
 pub struct ProgramMysqlDal;
 
 impl ProgramMysqlDal {
 
-    pub async fn add_organization_program(organization_id: String, program_id: String, input_lock_timeout: i64) -> Result<(), AppError> {
+    pub async fn add_organization_program(organization_id: String, program_id: String, name: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
 
         let stored_program = StoredProgram {
             organization_id,
             program_id,
+            name,
+            description,
             input_lock_timeout,
         };
 
@@ -216,6 +220,13 @@ impl ProgramMysqlDal {
             .first::<SpecificProgramInput>(connection);
 
         {
+            // println!("file_path: {}", file_path);
+
+            // TODO: change this so that the created folder comes from the parent directory of the file path
+            // stored in the variable "file_path"
+            std::fs::create_dir_all(format!("./aux_files/{}", input_group_id)).expect("Error while creating parent dir path");
+
+
             let file = File::create(file_path.clone()).expect("Error in file creation");
         }
         let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
@@ -245,7 +256,8 @@ impl ProgramMysqlDal {
 
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
 
-            let file_path = format!("./downloads/{}.csv", input_group_id);
+            // let file_path = format!("./aux_files/{}.csv", input_group_id);
+            let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
 
             return Ok((input_group_id, file_path));
@@ -263,4 +275,107 @@ impl ProgramMysqlDal {
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
         };
     }
+
+
+    pub async fn delete_input_group_reservation(input_group_id: &String) -> Result<(), AppError> {
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
+                .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
+                .execute(connection).expect("Error in input group update");
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(result_tuple)) => Ok(result_tuple),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                }
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
+
+    pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        // let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            
+            account::table
+                .filter(account::account_was_verified.eq(true))
+                .first::<CompleteAccount>(connection).expect("No verified account with that id was found");
+
+            let programs: Vec<StoredProgram> = program::table
+                .filter(program::organization_id.eq(&organization_id))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<StoredProgram>(connection)?;
+
+            let count_of_matched_elements: i64 = program::table
+                .filter(program::organization_id.eq(&organization_id))
+                .count()
+                .get_result(connection)
+                .expect("Error finding count of matched elements");
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
+    
+
+    pub async fn get_general_programs(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        // let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let mut programs_query = program::table.offset((page - 1) * limit).limit(limit).into_boxed();
+
+            let mut count_of_matched_elements_query = program::table.into_boxed();
+
+            if let Some(name_string) = name_filter {
+                programs_query = programs_query.filter(program::name.like(format!("{}%", name_string)));
+                count_of_matched_elements_query = count_of_matched_elements_query.filter(program::name.like(format!("{}%", name_string)))
+            }
+
+            let programs: Vec<StoredProgram> = programs_query.load::<StoredProgram>(connection)?;
+            let count_of_matched_elements = count_of_matched_elements_query.count().get_result(connection)?;
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
 }
