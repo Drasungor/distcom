@@ -130,12 +130,12 @@ async fn get_program_and_input_group(program_id: String) {
             let path_string = path.to_str().expect("Error in conversion from path to string");
 
 
-            println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-            println!("path_string: {}", path_string);
+            // println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            // println!("path_string: {}", path_string);
 
 
             if (entry_name.contains(".tar")) {
-                println!("path_string: {}", path_string);
+                println!("tar path_string: {}", path_string);
                 decompress_tar(path_string, "./src/runner/methods");
             }
 
