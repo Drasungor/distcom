@@ -16,7 +16,7 @@ pub struct PagedOrganizations {
 }
 
 // TODO: make itreturn a result that contains the struct instead of the array directly
-pub async fn get_organizations(limit: Option<u32>, page: Option<u32>) -> {
+pub async fn get_organizations(limit: Option<u32>, page: Option<u32>) -> EndpointResult<PagedOrganizations> {
     let mut params: Vec<(&str, u32)> = Vec::new();
 
     if (limit.is_some()) {
