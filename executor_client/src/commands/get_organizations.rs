@@ -1,6 +1,6 @@
 use clap::{crate_name, Parser, Subcommand};
 
-use crate::{common::communication::EndpointResult, service::server_requests::ReturnedOrganization};
+use crate::{common::communication::EndpointResult, services::server_requests::ReturnedOrganization, utils::process_inputs::process_user_input};
 
 
 
@@ -17,13 +17,10 @@ enum GetOrganizationsCommands {
         #[clap(index = 1)]
         page: u32,
     },
-    // OrganizationPrograms {
-    //     #[clap(short = 'l', long = "limit")]
-    //     limit: Option<u32>,
-
-    //     #[clap(short = 'p', long = "page")]
-    //     page: Option<u32>,
-    // },
+    OrganizationPrograms {
+        #[clap(index = 1)]
+        index: Option<u32>,
+    },
     // AllPrograms {
     //     #[clap(short = 'l', long = "limit")]
     //     limit: Option<u32>,
@@ -47,7 +44,7 @@ async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
 
         println!("Line value: {}", line);
 
-        let args = shlex::split(line).ok_or("error: Invalid quoting").unwrap();
+        let args = process_user_input();
 
         println!("{:?}" , args);
 
@@ -56,17 +53,12 @@ async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
                 match cli.cmd {
                     GetOrganizationsCommands::Page{page} => {
 
-
+                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
                         
                     },
-                    // Commands::OrganizationPrograms{limit, page} => {
-                    //     if (limit.is_some()) {
-                    //         println!("Get valuea: {}", limit.unwrap());
-                    //     }
-                    //     if (page.is_some()) {
-                    //         println!("Get valueb: {}", page.unwrap());
-                    //     }
-                    // },
+                    GetOrganizationsCommands::OrganizationPrograms{index} => {
+
+                    },
                     // Commands::AllPrograms{limit, page} => {
                     //     if (limit.is_some()) {
                     //         println!("Get valuea: {}", limit.unwrap());

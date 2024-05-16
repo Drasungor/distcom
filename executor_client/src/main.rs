@@ -9,14 +9,15 @@ use serde_derive::{Deserialize};
 use std::process::Command;
 
 use crate::commands::get_programs::{get_organization_programs, get_general_programs};
-use crate::service::server_requests::get_organizations;
+use crate::services::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
+use crate::utils::process_inputs::process_user_input;
 // use serde::de::{DeserializeOwned};
 
 mod common;
 mod commands;
 mod utils;
-mod service;
+mod services;
 
 
 
@@ -144,18 +145,8 @@ enum Commands {
 
 async fn run_commands_loop() {
     loop {
-
         println!("Please execute a command");
-
-        let mut buf = format!("{} ", crate_name!());
-        
-        std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
-        let line = buf.trim();
-
-        println!("Line value: {}", line);
-
-        let args = shlex::split(line).ok_or("error: Invalid quoting").unwrap();
-
+        let args = process_user_input();
         println!("{:?}" , args);
 
         match Args::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
