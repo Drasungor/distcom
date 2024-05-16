@@ -55,6 +55,9 @@ async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
             Ok(cli) => {
                 match cli.cmd {
                     GetOrganizationsCommands::Page{page} => {
+
+
+                        
                     },
                     // Commands::OrganizationPrograms{limit, page} => {
                     //     if (limit.is_some()) {
