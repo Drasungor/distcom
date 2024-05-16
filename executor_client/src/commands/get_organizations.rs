@@ -1,47 +1,83 @@
-use serde_derive::{Deserialize};
+use clap::{crate_name, Parser, Subcommand};
 
-use crate::common::communication::EndpointResult;
+use crate::{common::communication::EndpointResult, service::server_requests::ReturnedOrganization};
 
-#[derive(Debug, Deserialize)]
-pub struct ReturnedOrganization {
-    pub organization_id: String,
-    pub name: String,
-    pub description: String,
+
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct OrganizationsArgs {
+    #[command(subcommand)]
+    cmd: GetOrganizationsCommands
+}
+
+#[derive(Subcommand, Debug, Clone)]
+enum GetOrganizationsCommands {
+    Page {
+        #[clap(index = 1)]
+        page: u32,
+    },
+    // OrganizationPrograms {
+    //     #[clap(short = 'l', long = "limit")]
+    //     limit: Option<u32>,
+
+    //     #[clap(short = 'p', long = "page")]
+    //     page: Option<u32>,
+    // },
+    // AllPrograms {
+    //     #[clap(short = 'l', long = "limit")]
+    //     limit: Option<u32>,
+
+    //     #[clap(short = 'p', long = "page")]
+    //     page: Option<u32>,
+    // },
 }
 
 
-#[derive(Debug, Deserialize)]
-pub struct PagedOrganizations {
-    pub organizations: Vec<ReturnedOrganization>,
-    pub total_elements_amount: i64,
+
+async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
+    loop {
+
+        println!("Please execute a command");
+
+        let mut buf = format!("{} ", crate_name!());
+        
+        std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
+        let line = buf.trim();
+
+        println!("Line value: {}", line);
+
+        let args = shlex::split(line).ok_or("error: Invalid quoting").unwrap();
+
+        println!("{:?}" , args);
+
+        match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+            Ok(cli) => {
+                match cli.cmd {
+                    GetOrganizationsCommands::Page{page} => {
+                    },
+                    // Commands::OrganizationPrograms{limit, page} => {
+                    //     if (limit.is_some()) {
+                    //         println!("Get valuea: {}", limit.unwrap());
+                    //     }
+                    //     if (page.is_some()) {
+                    //         println!("Get valueb: {}", page.unwrap());
+                    //     }
+                    // },
+                    // Commands::AllPrograms{limit, page} => {
+                    //     if (limit.is_some()) {
+                    //         println!("Get valuea: {}", limit.unwrap());
+                    //     }
+                    //     if (page.is_some()) {
+                    //         println!("Get valueb: {}", page.unwrap());
+                    //     }
+                    // },
+               }
+            }
+            Err(_) => {
+                println!("That's not a valid command!");
+            }
+       };
+    }
 }
 
-pub async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
-
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
-
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let organizations: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organizations: {:?}", organizations);
-
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
-}

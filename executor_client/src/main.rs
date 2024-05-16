@@ -8,15 +8,15 @@ use reqwest::Client;
 use serde_derive::{Deserialize};
 use std::process::Command;
 
-use crate::commands::get_organizations::{get_organizations};
 use crate::commands::get_programs::{get_organization_programs, get_general_programs};
+use crate::service::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
 // use serde::de::{DeserializeOwned};
 
 mod common;
 mod commands;
 mod utils;
-// mod runner;
+mod service;
 
 
 
@@ -144,6 +144,9 @@ enum Commands {
 
 async fn run_commands_loop() {
     loop {
+
+        println!("Please execute a command");
+
         let mut buf = format!("{} ", crate_name!());
         
         std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
@@ -165,7 +168,7 @@ async fn run_commands_loop() {
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
                         }
-                        // get_organizations(limit, page).await;
+                        get_organizations(limit, page).await;
                     },
                     Commands::OrganizationPrograms{limit, page} => {
                         if (limit.is_some()) {
@@ -229,6 +232,6 @@ async fn main() {
 
     // get_general_programs(None, None).await;
 
-    run_commands_loop();
+    run_commands_loop().await;
 
 }
