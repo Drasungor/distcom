@@ -1,7 +1,5 @@
-use clap::{crate_name, Parser, Subcommand};
-
-use crate::{common::communication::EndpointResult, services::server_requests::ReturnedOrganization, utils::process_inputs::process_user_input};
-
+use clap::{Parser, Subcommand};
+use crate::{services::server_requests::ReturnedOrganization, utils::process_inputs::process_user_input};
 
 
 #[derive(Parser)]
@@ -21,13 +19,6 @@ enum GetOrganizationsCommands {
         #[clap(index = 1)]
         index: u32,
     },
-    // AllPrograms {
-    //     #[clap(short = 'l', long = "limit")]
-    //     limit: Option<u32>,
-
-    //     #[clap(short = 'p', long = "page")]
-    //     page: Option<u32>,
-    // },
 }
 
 

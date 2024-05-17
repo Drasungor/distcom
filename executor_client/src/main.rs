@@ -1,11 +1,12 @@
-use std::env;
+// use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::fs;
 // use clap::{crate_name};
-use clap::{crate_name, Parser, Subcommand};
-use reqwest::Client;
-use serde_derive::{Deserialize};
+// use clap::{crate_name, Parser, Subcommand};
+use clap::{Parser, Subcommand};
+// use reqwest::Client;
+// use serde_derive::{Deserialize};
 use std::process::Command;
 
 use crate::services::server_requests::get_organizations;
