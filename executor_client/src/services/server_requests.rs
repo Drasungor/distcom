@@ -1,5 +1,9 @@
-use crate::common::communication::EndpointResult;
 use serde_derive::{Deserialize};
+use std::fs;
+use std::fs::File;
+use std::io::Write;
+
+use crate::{common::communication::EndpointResult, utils::compression::decompress_tar};
 
 #[derive(Debug, Deserialize)]
 pub struct ReturnedOrganization {
@@ -85,15 +89,11 @@ pub async fn get_organization_programs(organization_id: &String, limit: Option<u
     }
 }
 
-pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) {
-
-    // let params: Vec<(&str, &str)> = Vec::new();
+pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) -> EndpointResult<PagedPrograms> {
     let mut params: Vec<(&str, u32)> = Vec::new();
-
     if (limit.is_some()) {
         params.push(("limit", limit.unwrap()))
     }
-
     if (page.is_some()) {
         params.push(("limit", page.unwrap()))
     }
@@ -109,8 +109,41 @@ pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) {
     // Ensure the request was successful (status code 200)
     if response.status().is_success() {
         let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
+        return programs;
+    } else {
+        panic!("Error in programs get");
+    }
+}
 
-        println!("get_organization_programs: {:?}", programs);
+pub async fn get_program_and_input_group(program_id: String) {
+    let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
+    let response = reqwest::get(request_url).await.expect("Error in get");
+
+    // Ensure the request was successful (status code 200)
+    if response.status().is_success() {
+        // Open a file to write the downloaded content
+        let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
+        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+        decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+
+        // We scan the folder for the program .tar file
+        let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
+        for entry in folder_contents {
+            let unwrapped_entry = entry.expect("Error in folder entry processing");
+            let path = unwrapped_entry.path();
+            let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
+            let path_string = path.to_str().expect("Error in conversion from path to string");
+            if (entry_name.contains(".tar")) {
+                println!("tar path_string: {}", path_string);
+                decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+            }
+        }
+
+        // let output = Command::new("cargo")
+        // .arg("run")
+        // .current_dir("./src/runner")
+        // .output()
+        // .expect("Failed to execute child program");
     } else {
         println!("Failed to download file: {}", response.status());
     }

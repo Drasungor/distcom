@@ -1,7 +1,6 @@
 // use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::fs;
 // use clap::{crate_name};
 // use clap::{crate_name, Parser, Subcommand};
 use clap::{Parser, Subcommand};
@@ -42,53 +41,7 @@ async fn run_program_get_example(program_id: String) {
     }
 }
 
-async fn get_program_and_input_group(program_id: String) {
 
-
-    let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
-
-    let response = reqwest::get(request_url).await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        // Open a file to write the downloaded content
-        let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
-        file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
-
-        decompress_tar("./downloaded_program_with_input.tar", "./program_with_input");
-        
-
-        // We scan the folder for the program .tar file
-        let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
-
-        for entry in folder_contents {
-            let unwrapped_entry = entry.expect("Error in folder entry processing");
-            let path = unwrapped_entry.path();
-            let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
-            let path_string = path.to_str().expect("Error in conversion from path to string");
-            if (entry_name.contains(".tar")) {
-                println!("tar path_string: {}", path_string);
-                decompress_tar(path_string, "./src/runner/methods");
-            }
-
-        }
-
-
-        // decompress_tar("./downloaded_program_with_input.tar", "./program_with_input");
-
-
-        let output = Command::new("cargo")
-        .arg("run")
-        .current_dir("./src/runner")
-        .output()
-        .expect("Failed to execute child program");
-
-
-        println!("File downloaded successfully!");
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
-}
 
 async fn get_program_template() {
     let request_url = "http://localhost:8080/program/template";
