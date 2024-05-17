@@ -8,7 +8,6 @@ use reqwest::Client;
 use serde_derive::{Deserialize};
 use std::process::Command;
 
-use crate::commands::get_programs::{get_organization_programs, get_general_programs};
 use crate::services::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
 use crate::utils::process_inputs::process_user_input;
