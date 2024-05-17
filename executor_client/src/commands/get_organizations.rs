@@ -19,7 +19,7 @@ enum GetOrganizationsCommands {
     },
     OrganizationPrograms {
         #[clap(index = 1)]
-        index: Option<u32>,
+        index: u32,
     },
     // AllPrograms {
     //     #[clap(short = 'l', long = "limit")]
@@ -34,20 +34,9 @@ enum GetOrganizationsCommands {
 
 async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
     loop {
-
         println!("Please execute a command");
-
-        let mut buf = format!("{} ", crate_name!());
-        
-        std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
-        let line = buf.trim();
-
-        println!("Line value: {}", line);
-
         let args = process_user_input();
-
         println!("{:?}" , args);
-
         match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
