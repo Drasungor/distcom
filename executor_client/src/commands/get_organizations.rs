@@ -22,40 +22,6 @@ enum GetOrganizationsCommands {
 }
 
 
-
-async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
-    loop {
-        println!("Please execute a command");
-        let args = process_user_input();
-        println!("{:?}" , args);
-        match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
-            Ok(cli) => {
-                match cli.cmd {
-                    GetOrganizationsCommands::Page{page} => {
-
-                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        
-                    },
-                    GetOrganizationsCommands::Choose{index} => {
-
-                    },
-                    // Commands::AllPrograms{limit, page} => {
-                    //     if (limit.is_some()) {
-                    //         println!("Get valuea: {}", limit.unwrap());
-                    //     }
-                    //     if (page.is_some()) {
-                    //         println!("Get valueb: {}", page.unwrap());
-                    //     }
-                    // },
-               }
-            }
-            Err(_) => {
-                println!("That's not a valid command!");
-            }
-       };
-    }
-}
-
 pub async fn select_organizations() {
     let mut organizations_page = get_organizations(Some(50), Some(1)).await;
     print_organizations_list(&organizations_page.data.organizations);

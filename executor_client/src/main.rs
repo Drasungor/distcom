@@ -81,13 +81,6 @@ enum Commands {
         #[clap(short = 'p', long = "page")]
         page: Option<u32>,
     },
-    OrganizationPrograms {
-        #[clap(short = 'l', long = "limit")]
-        limit: Option<u32>,
-
-        #[clap(short = 'p', long = "page")]
-        page: Option<u32>,
-    },
     AllPrograms {
         #[clap(short = 'l', long = "limit")]
         limit: Option<u32>,
@@ -113,14 +106,6 @@ async fn run_commands_loop() {
                             println!("Get valueb: {}", page.unwrap());
                         }
                         select_organizations().await;
-                    },
-                    Commands::OrganizationPrograms{limit, page} => {
-                        if (limit.is_some()) {
-                            println!("Get valuea: {}", limit.unwrap());
-                        }
-                        if (page.is_some()) {
-                            println!("Get valueb: {}", page.unwrap());
-                        }
                     },
                     Commands::AllPrograms{limit, page} => {
                         if (limit.is_some()) {

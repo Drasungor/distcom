@@ -22,6 +22,7 @@ enum GetProgramsCommands {
     },
 }
 
+
 pub async fn select_organization_programs(organization: &ReturnedOrganization) {
     let mut programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(1)).await;
     print_programs_list(&programs_page.data.programs);
