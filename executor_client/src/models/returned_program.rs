@@ -13,9 +13,12 @@ pub struct ReturnedProgram {
 pub fn print_programs_list(programs: &Vec<ReturnedProgram>) {
     let mut index = 0;
     for program in programs {
-        println!("Program {}", index);
-
-
+        println!("Program {}:", index);
+        println!("\torganization_id: {}", program.organization_id);
+        println!("\tprogram_id: {}", program.program_id);
+        println!("\tname: {}", program.name);
+        println!("\tdescription: {}", program.description);
+        println!("\tinput_lock_timeout: {}", program.input_lock_timeout);
         index += 1;
     }
 }
