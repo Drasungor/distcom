@@ -58,13 +58,13 @@ async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
 
 pub async fn select_organizations() {
     let mut organizations_page = get_organizations(Some(50), Some(1)).await;
+    print_organizations_list(&organizations_page.data.organizations);
 
     loop { 
         println!("Please execute a command");
         let args = process_user_input();
         println!("{:?}" , args);
 
-        print_organizations_list(&organizations_page.data.organizations);
 
         match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {

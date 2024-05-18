@@ -101,7 +101,6 @@ async fn run_commands_loop() {
     loop {
         println!("Please execute a command");
         let args = process_user_input();
-        println!("{:?}" , args);
 
         match Args::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
