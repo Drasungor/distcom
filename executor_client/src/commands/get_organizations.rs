@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{models::returned_organization::{print_organizations_list, ReturnedOrganization}, services::server_requests::get_organizations, utils::process_inputs::process_user_input};
+use crate::{commands::get_programs::select_organization_programs, models::returned_organization::{print_organizations_list, ReturnedOrganization}, services::server_requests::get_organizations, utils::process_inputs::process_user_input};
 
 
 #[derive(Parser)]
@@ -56,7 +56,7 @@ async fn print_organization(organizations: &Vec<ReturnedOrganization>) {
     }
 }
 
-async fn select_organizations() {
+pub async fn select_organizations() {
     let mut organizations_page = get_organizations(Some(50), Some(1)).await;
 
     loop { 
@@ -76,14 +76,14 @@ async fn select_organizations() {
                         
                     },
                     GetOrganizationsCommands::Choose{index} => {
-                        let chosen_program = &programs_page.data.programs[index];
-                        get_program_and_input_group(&chosen_program.program_id).await;
+                        let chosen_organization = &organizations_page.data.organizations[index];
+                        select_organization_programs(chosen_organization).await;
 
-                        let output = Command::new("cargo")
-                            .arg("run")
-                            .current_dir("./src/runner")
-                            .output()
-                            .expect("Failed to execute child program");
+                        // let output = Command::new("cargo")
+                        //     .arg("run")
+                        //     .current_dir("./src/runner")
+                        //     .output()
+                        //     .expect("Failed to execute child program");
 
                     },
                     // Commands::AllPrograms{limit, page} => {

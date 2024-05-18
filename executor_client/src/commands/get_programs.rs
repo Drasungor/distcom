@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use std::process::Command;
 
-use crate::{models::returned_program::{print_programs_list, ReturnedProgram}, services::server_requests::{get_organization_programs, get_program_and_input_group}, utils::process_inputs::process_user_input};
+use crate::{models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::server_requests::{get_organization_programs, get_program_and_input_group}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -56,7 +56,7 @@ enum GetProgramsCommands {
 //     }
 // }
 
-async fn select_organization_programs(organization: &ReturnedProgram) {
+pub async fn select_organization_programs(organization: &ReturnedOrganization) {
     let mut programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(1)).await;
     print_programs_list(&programs_page.data.programs);
 

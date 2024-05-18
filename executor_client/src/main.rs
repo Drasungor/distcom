@@ -7,6 +7,7 @@ use clap::{Parser, Subcommand};
 // use reqwest::Client;
 // use serde_derive::{Deserialize};
 
+use crate::commands::get_organizations::select_organizations;
 use crate::services::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
 use crate::utils::process_inputs::process_user_input;
@@ -112,7 +113,7 @@ async fn run_commands_loop() {
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
                         }
-                        get_organizations(limit, page).await;
+                        select_organizations().await;
                     },
                     Commands::OrganizationPrograms{limit, page} => {
                         if (limit.is_some()) {
