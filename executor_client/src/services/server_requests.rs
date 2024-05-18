@@ -3,14 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use crate::{common::communication::EndpointResult, utils::compression::decompress_tar};
-
-#[derive(Debug, Deserialize)]
-pub struct ReturnedOrganization {
-    pub organization_id: String,
-    pub name: String,
-    pub description: String,
-}
+use crate::{common::communication::EndpointResult, models::{returned_organization::ReturnedOrganization, returned_program::ReturnedProgram}, utils::compression::decompress_tar};
 
 
 #[derive(Debug, Deserialize)]
@@ -47,19 +40,11 @@ pub async fn get_organizations(limit: Option<u32>, page: Option<u32>) -> Endpoin
 
 
 #[derive(Debug, Deserialize)]
-pub struct ReturnedProgram {
-    pub organization_id: String,
-    pub program_id: String,
-    pub name: String,
-    pub description: String,
-    pub input_lock_timeout: i64,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct PagedPrograms {
     pub programs: Vec<ReturnedProgram>,
     pub total_elements_amount: i64,
 }
+
 pub async fn get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>) -> EndpointResult<PagedPrograms> {
     let mut params: Vec<(&str, u32)> = Vec::new();
 
@@ -115,7 +100,7 @@ pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) -> Endp
     }
 }
 
-pub async fn get_program_and_input_group(program_id: String) {
+pub async fn get_program_and_input_group(program_id: &String) {
     let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
     let response = reqwest::get(request_url).await.expect("Error in get");
 

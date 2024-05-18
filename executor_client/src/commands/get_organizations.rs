@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{services::server_requests::ReturnedOrganization, utils::process_inputs::process_user_input};
+use crate::{models::returned_organization::ReturnedOrganization, utils::process_inputs::process_user_input};
 
 
 #[derive(Parser)]
