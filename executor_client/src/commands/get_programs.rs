@@ -79,12 +79,18 @@ pub async fn select_organization_programs(organization: &ReturnedOrganization) {
 
                         let program_arguments = format!("run {}", input_file_name);
 
+                        let execution_args = vec![input_file_name];
+
+                        println!("program_arguments: {}", program_arguments);
+
                         let output = Command::new("cargo")
-                            // .arg("run")
-                            .arg(program_arguments)
+                            .arg("run")
+                            .args(execution_args)
                             .current_dir("./src/runner")
                             .output()
                             .expect("Failed to execute child program");
+
+                        println!("Program output: {:?}", output);
 
                         // fs::remove_dir_all("./program_with_input").expect("Error in program_with_input folder deletion");
 
