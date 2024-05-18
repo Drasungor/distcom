@@ -76,22 +76,7 @@ pub async fn select_organizations() {
                     GetOrganizationsCommands::Choose{index} => {
                         let chosen_organization = &organizations_page.data.organizations[index];
                         select_organization_programs(chosen_organization).await;
-
-                        // let output = Command::new("cargo")
-                        //     .arg("run")
-                        //     .current_dir("./src/runner")
-                        //     .output()
-                        //     .expect("Failed to execute child program");
-
                     },
-                    // Commands::AllPrograms{limit, page} => {
-                    //     if (limit.is_some()) {
-                    //         println!("Get valuea: {}", limit.unwrap());
-                    //     }
-                    //     if (page.is_some()) {
-                    //         println!("Get valueb: {}", page.unwrap());
-                    //     }
-                    // },
                }
             }
             Err(_) => {

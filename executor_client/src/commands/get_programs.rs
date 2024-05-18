@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
 use std::process::Command;
-use std::fs;
 
 use crate::{models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::server_requests::{get_organization_programs, get_program_and_input_group}, utils::process_inputs::process_user_input};
 
@@ -22,40 +21,6 @@ enum GetProgramsCommands {
         index: usize,
     },
 }
-
-
-// async fn select_organization_programs(organizations: &Vec<ReturnedProgram>) {
-//     loop { 
-//         println!("Please execute a command");
-//         let args = process_user_input();
-//         println!("{:?}" , args);
-//         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
-//             Ok(cli) => {
-//                 match cli.cmd {
-//                     GetProgramsCommands::Page{page} => {
-
-//                         // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        
-//                     },
-//                     GetProgramsCommands::Run{index} => {
-//                         get_program_and_input_group(program_id: String).await;
-//                     },
-//                     // Commands::AllPrograms{limit, page} => {
-//                     //     if (limit.is_some()) {
-//                     //         println!("Get valuea: {}", limit.unwrap());
-//                     //     }
-//                     //     if (page.is_some()) {
-//                     //         println!("Get valueb: {}", page.unwrap());
-//                     //     }
-//                     // },
-//                }
-//             }
-//             Err(_) => {
-//                 println!("That's not a valid command!");
-//             }
-//        };
-//     }
-// }
 
 pub async fn select_organization_programs(organization: &ReturnedOrganization) {
     let mut programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(1)).await;
@@ -91,18 +56,7 @@ pub async fn select_organization_programs(organization: &ReturnedOrganization) {
                             .expect("Failed to execute child program");
 
                         println!("Program output: {:?}", output);
-
-                        // fs::remove_dir_all("./program_with_input").expect("Error in program_with_input folder deletion");
-
                     },
-                    // Commands::AllPrograms{limit, page} => {
-                    //     if (limit.is_some()) {
-                    //         println!("Get valuea: {}", limit.unwrap());
-                    //     }
-                    //     if (page.is_some()) {
-                    //         println!("Get valueb: {}", page.unwrap());
-                    //     }
-                    // },
                }
             }
             Err(_) => {
