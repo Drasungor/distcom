@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use std::process::Command;
+use std::fs;
 
 use crate::{models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::server_requests::{get_organization_programs, get_program_and_input_group}, utils::process_inputs::process_user_input};
 
@@ -81,6 +82,8 @@ pub async fn select_organization_programs(organization: &ReturnedOrganization) {
                             .current_dir("./src/runner")
                             .output()
                             .expect("Failed to execute child program");
+
+                        fs::remove_dir_all("./program_with_input").expect("Error in program_with_input folder deletion");
 
                     },
                     // Commands::AllPrograms{limit, page} => {

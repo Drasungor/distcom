@@ -63,8 +63,6 @@ pub async fn select_organizations() {
     loop { 
         println!("Please execute a command");
         let args = process_user_input();
-        println!("{:?}" , args);
-
 
         match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
