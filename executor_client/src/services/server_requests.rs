@@ -100,7 +100,7 @@ pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) -> Endp
     }
 }
 
-pub async fn get_program_and_input_group(program_id: &String) {
+pub async fn get_program_and_input_group(program_id: &String) -> String {
     let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
     let response = reqwest::get(request_url).await.expect("Error in get");
 
@@ -110,6 +110,8 @@ pub async fn get_program_and_input_group(program_id: &String) {
         let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
         file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
         decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+
+        let mut csv_file_name: Option<String> = None;
 
         // We scan the folder for the program .tar file
         let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
@@ -122,14 +124,20 @@ pub async fn get_program_and_input_group(program_id: &String) {
                 println!("tar path_string: {}", path_string);
                 decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
             }
+            if (entry_name.contains(".csv")) {
+                csv_file_name = Some(entry_name);
+                // println!("tar path_string: {}", path_string);
+                // decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+            }
         }
 
+        return csv_file_name.expect("No csv file was received");
         // let output = Command::new("cargo")
         // .arg("run")
         // .current_dir("./src/runner")
         // .output()
         // .expect("Failed to execute child program");
     } else {
-        println!("Failed to download file: {}", response.status());
+        panic!("Failed to download file: {}", response.status());
     }
 }

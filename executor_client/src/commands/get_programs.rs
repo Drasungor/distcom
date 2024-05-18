@@ -75,15 +75,18 @@ pub async fn select_organization_programs(organization: &ReturnedOrganization) {
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.data.programs[index];
-                        get_program_and_input_group(&chosen_program.program_id).await;
+                        let input_file_name = get_program_and_input_group(&chosen_program.program_id).await;
+
+                        let program_arguments = format!("run {}", input_file_name);
 
                         let output = Command::new("cargo")
-                            .arg("run")
+                            // .arg("run")
+                            .arg(program_arguments)
                             .current_dir("./src/runner")
                             .output()
                             .expect("Failed to execute child program");
 
-                        fs::remove_dir_all("./program_with_input").expect("Error in program_with_input folder deletion");
+                        // fs::remove_dir_all("./program_with_input").expect("Error in program_with_input folder deletion");
 
                     },
                     // Commands::AllPrograms{limit, page} => {
