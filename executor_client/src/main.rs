@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 // use serde_derive::{Deserialize};
 
 use crate::commands::get_organizations::select_organizations;
+use crate::commands::get_programs::select_general_programs;
 use crate::services::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
 use crate::utils::process_inputs::process_user_input;
@@ -114,6 +115,7 @@ async fn run_commands_loop() {
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
                         }
+                        select_general_programs().await;
                     },
                }
             }
@@ -128,6 +130,10 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
+    let default_limit = &common::config::CONFIG_OBJECT.default_limit;
+
+    println!("default_limit: {}", default_limit);
+
     // run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
 
     // get_program_template().await;
