@@ -22,10 +22,6 @@ fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
     let mut file = File::open(path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
-
-    println!("content: {}", content);
-
     let config_object: Config = serde_json::from_str(&content)?;
-
     Ok(config_object)
 }

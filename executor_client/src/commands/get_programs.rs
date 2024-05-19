@@ -56,7 +56,7 @@ async fn select_program(organization_option: Option<&ReturnedOrganization>) {
     let mut programs_page = retrieve_programs(organization_option, Some(50), Some(1)).await;
     print_programs_list(&programs_page.data.programs);
 
-    loop { 
+    loop {
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
