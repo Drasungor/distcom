@@ -80,7 +80,7 @@ pub async fn get_general_programs(limit: Option<usize>, page: Option<usize>) -> 
         params.push(("limit", limit.unwrap()))
     }
     if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
+        params.push(("page", page.unwrap()))
     }
 
     // TODO: Check if the client should only be instanced once in the whole program execution
@@ -96,7 +96,7 @@ pub async fn get_general_programs(limit: Option<usize>, page: Option<usize>) -> 
         let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
         return programs;
     } else {
-        panic!("Error in programs get");
+        panic!("Error in programs get: {:?}", response);
     }
 }
 
