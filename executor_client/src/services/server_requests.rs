@@ -74,8 +74,8 @@ pub async fn get_organization_programs(organization_id: &String, limit: Option<u
     }
 }
 
-pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) -> EndpointResult<PagedPrograms> {
-    let mut params: Vec<(&str, u32)> = Vec::new();
+pub async fn get_general_programs(limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    let mut params: Vec<(&str, usize)> = Vec::new();
     if (limit.is_some()) {
         params.push(("limit", limit.unwrap()))
     }
