@@ -1,47 +1,54 @@
-use serde_derive::{Deserialize};
+use clap::{Parser, Subcommand};
+use crate::{commands::get_programs::select_organization_programs, models::returned_organization::{print_organizations_list, ReturnedOrganization}, services::server_requests::get_organizations, utils::process_inputs::process_user_input};
 
-use crate::common::communication::EndpointResult;
 
-#[derive(Debug, Deserialize)]
-pub struct ReturnedOrganization {
-    pub organization_id: String,
-    pub name: String,
-    pub description: String,
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct OrganizationsArgs {
+    #[command(subcommand)]
+    cmd: GetOrganizationsCommands
+}
+
+#[derive(Subcommand, Debug, Clone)]
+enum GetOrganizationsCommands {
+    Page {
+        #[clap(index = 1)]
+        page: usize,
+    },
+    Choose {
+        #[clap(index = 1)]
+        index: usize,
+    },
 }
 
 
-#[derive(Debug, Deserialize)]
-pub struct PagedOrganizations {
-    pub organizations: Vec<ReturnedOrganization>,
-    pub total_elements_amount: i64,
-}
+pub async fn select_organizations() {
+    let mut organizations_page = get_organizations(Some(50), Some(1)).await;
+    print_organizations_list(&organizations_page.data.organizations);
 
-pub async fn get_organizations(limit: Option<u32>, page: Option<u32>) {
+    loop { 
+        println!("Please execute a command");
+        let args = process_user_input();
 
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
+        match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+            Ok(cli) => {
+                match cli.cmd {
+                    GetOrganizationsCommands::Page{page} => {
 
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let organizations: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organizations: {:?}", organizations);
-
-    } else {
-        println!("Failed to download file: {}", response.status());
+                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
+                        organizations_page = get_organizations(Some(50), Some(page)).await;
+                        
+                    },
+                    GetOrganizationsCommands::Choose{index} => {
+                        let chosen_organization = &organizations_page.data.organizations[index];
+                        select_organization_programs(chosen_organization).await;
+                    },
+               }
+            }
+            Err(_) => {
+                println!("That's not a valid command!");
+            }
+       };
+       print_organizations_list(&organizations_page.data.organizations);
     }
 }

@@ -1,80 +1,94 @@
-use serde_derive::{Deserialize};
+use clap::{Parser, Subcommand};
+use std::process::Command;
 
-use crate::common::communication::EndpointResult;
+use crate::{common::communication::EndpointResult, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::server_requests::{get_general_programs, get_organization_programs, get_program_and_input_group, PagedPrograms}, utils::process_inputs::process_user_input};
 
-#[derive(Deserialize, Debug)]
-pub struct StoredProgram {
-    pub organization_id: String,
-    pub program_id: String,
-    pub name: String,
-    pub description: String,
-    pub input_lock_timeout: i64,
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct ProgramsArgs {
+    #[command(subcommand)]
+    cmd: GetProgramsCommands
 }
 
-#[derive(Deserialize, Debug)]
-pub struct PagedPrograms {
-    pub programs: Vec<StoredProgram>,
-    pub total_elements_amount: i64,
+#[derive(Subcommand, Debug, Clone)]
+enum GetProgramsCommands {
+    Page {
+        #[clap(index = 1)]
+        page: usize,
+    },
+    Run {
+        #[clap(index = 1)]
+        index: usize,
+    },
 }
 
-pub async fn get_organization_programs(organization_id: String, limit: Option<u32>, page: Option<u32>) {
 
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
+async fn download_and_run_program(program: &ReturnedProgram) {
+    let input_file_name = get_program_and_input_group(&program.program_id).await;
 
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
+    let program_arguments = format!("run {}", input_file_name);
 
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
+    let execution_args = vec![input_file_name];
 
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
+    println!("program_arguments: {}", program_arguments);
 
-    let get_organization_programs_url = format!("http://localhost:8080/program/organization/{}", organization_id);
+    let output = Command::new("cargo")
+        .arg("run")
+        .args(execution_args)
+        .current_dir("./src/runner")
+        .output()
+        .expect("Failed to execute child program");
 
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
+    println!("Program output: {:?}", output);
 
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
+}
 
-        println!("get_organization_programs: {:?}", programs);
+async fn retrieve_programs(organization_option: Option<&ReturnedOrganization>, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    if (organization_option.is_some()) {
+        let organization = organization_option.unwrap();
+        return get_organization_programs(&organization.organization_id, limit, page).await;
     } else {
-        println!("Failed to download file: {}", response.status());
+        return get_general_programs(limit, page).await;
     }
 }
 
-pub async fn get_general_programs(limit: Option<u32>, page: Option<u32>) {
+async fn select_program(organization_option: Option<&ReturnedOrganization>) {
+    let mut programs_page = retrieve_programs(organization_option, Some(50), Some(1)).await;
+    print_programs_list(&programs_page.data.programs);
 
-    // let params: Vec<(&str, &str)> = Vec::new();
-    let mut params: Vec<(&str, u32)> = Vec::new();
+    loop {
+        println!("Please execute a command:");
+        let args = process_user_input();
+        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+            Ok(cli) => {
+                match cli.cmd {
+                    GetProgramsCommands::Page{page} => {
+                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
+                        // programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(page)).await;
+                        programs_page = retrieve_programs(organization_option, Some(50), Some(page)).await;
+                    },
+                    GetProgramsCommands::Run{index} => {
+                        let chosen_program = &programs_page.data.programs[index];
+                        download_and_run_program(chosen_program).await;
+                    },
+               }
+            }
+            Err(_) => {
+                println!("That's not a valid command!");
+            }
+       };
+        print_programs_list(&programs_page.data.programs);
 
-    if (limit.is_some()) {
-        params.push(("limit", limit.unwrap()))
-    }
-
-    if (page.is_some()) {
-        params.push(("limit", page.unwrap()))
-    }
-
-    // TODO: Check if the client should only be instanced once in the whole program execution
-    let client = reqwest::Client::new();
-
-    let get_programs_url = format!("http://localhost:8080/program/all");
-
-    // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-    let response = client.get(get_programs_url).query(&params).send().await.expect("Error in get");
-
-    // Ensure the request was successful (status code 200)
-    if response.status().is_success() {
-        let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-
-        println!("get_organization_programs: {:?}", programs);
-    } else {
-        println!("Failed to download file: {}", response.status());
-    }
+    }    
 }
+
+
+pub async fn select_organization_programs(organization: &ReturnedOrganization) {
+    select_program(Some(organization)).await;
+}
+
+pub async fn select_general_programs() {
+    select_program(None).await;
+}
+
+
