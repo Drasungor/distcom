@@ -2,40 +2,43 @@ use serde_derive::{Deserialize};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::collections::HashMap;
+
+use crate::common::communication::EndpointResult;
 
 
+#[derive(Debug, Deserialize)]
+pub struct Token {
+    pub token_id: String,
+    pub token: String,
+}
 
-// #[derive(Debug, Deserialize)]
-// pub struct PagedOrganizations {
-//     pub organizations: Vec<ReturnedOrganization>,
-//     pub total_elements_amount: i64,
-// }
+#[derive(Debug, Deserialize)]
+pub struct ReceivedTokens {
+    basic_token: Token,
+    refresh_token: Token,
+}
 
-// // TODO: make itreturn a result that contains the struct instead of the array directly
-// pub async fn get_organizations(limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
-//     let mut params: Vec<(&str, usize)> = Vec::new();
+// TODO: make itreturn a result that contains the struct instead of the array directly
+pub async fn login(username: String, password: String) -> EndpointResult<ReceivedTokens> {
 
-//     if (limit.is_some()) {
-//         params.push(("limit", limit.unwrap()))
-//     }
-
-//     if (page.is_some()) {
-//         params.push(("page", page.unwrap()))
-//     }
-
-//     // TODO: Check if the client should only be instanced once in the whole program execution
-//     let client = reqwest::Client::new();
+    // TODO: Check if the client should only be instanced once in the whole program execution
+    let client = reqwest::Client::new();
     
-//     // TODO: Ensure the request was successful (status code 200)
-//     let response = client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
+    let mut data = HashMap::new();
+    data.insert("username", username);
+    data.insert("password", password);
+
+    // TODO: Ensure the request was successful (status code 200)
+    let response = client.post("http://localhost:8080/account/login").json(&data).send().await.expect("Error in get");
     
-//     if response.status().is_success() {
-//         let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-//         return get_organizations_response;
-//     } else {
-//         panic!("Error in organizations get");
-//     }
-// }
+    if response.status().is_success() {
+        let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
+        return login_response;
+    } else { 
+        panic!("Error in organizations get");
+    }
+}
 
 
 // #[derive(Debug, Deserialize)]
