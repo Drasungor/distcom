@@ -5,7 +5,7 @@ use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::utils::general_controller_helpers::{process_paging_inputs, PagingParameters};
 
 use super::service::AccountService;
-use super::model::{Credentials, GetPagedOrganizations, ReceivedNewAccount};
+use super::model::{Credentials, GetPagedOrganizations, ReceivedNewAccount, TokenId};
 
 pub struct AccountController;
 
@@ -21,6 +21,10 @@ impl AccountController {
         return AppHttpResponseBuilder::get_http_response(login_result);
     }
 
+    pub async fn delete_refresh_token(body: web::Json<TokenId>) -> impl Responder {
+        let login_result = AccountService::delete_refresh_token(body.token_id.clone()).await;
+        return AppHttpResponseBuilder::get_http_response(login_result);
+    }
     
     // pub async fn get_paged_organizations(query_params: web::Query<PagingParameters>) -> impl Responder {
     pub async fn get_paged_organizations(query_params: web::Query<GetPagedOrganizations>) -> impl Responder {

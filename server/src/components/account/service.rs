@@ -27,7 +27,6 @@ impl AccountService {
         };
 
         AccountMysqlDal::register_account(new_account).await?;
-        println!("ekisdeeeee");
         return Ok(())
     }
 
@@ -43,6 +42,11 @@ impl AccountService {
         };
         AccountMysqlDal::add_refresh_token(refresh_token_data).await?;
         return Ok(login_tokens);
+    }
+
+    pub async fn delete_refresh_token(refresh_token_id: String) -> Result<(), AppError> {
+        AccountMysqlDal::delete_refresh_token(refresh_token_id).await?;
+        return Ok(());
     }
 
     pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {

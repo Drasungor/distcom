@@ -25,6 +25,11 @@ pub struct GetPagedOrganizations {
     pub name_filter: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct TokenId {
+    pub token_id: String,
+}
+
 // Useful models
 
 #[derive(Serialize)]
