@@ -15,8 +15,8 @@ pub struct Token {
 
 #[derive(Debug, Deserialize)]
 pub struct ReceivedTokens {
-    basic_token: Token,
-    refresh_token: Token,
+    pub basic_token: Token,
+    pub refresh_token: Token,
 }
 
 // TODO: make itreturn a result that contains the struct instead of the array directly

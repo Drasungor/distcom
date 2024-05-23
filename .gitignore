@@ -16,3 +16,4 @@ program_with_input
 methods_test
 *dev.json
 server/.env
+local_files

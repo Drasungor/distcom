@@ -1,9 +1,9 @@
 use std::env;
 use std::fs::File;
-use std::io;
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
 use std::process::Command;
+use std::io::{self, Read, Write};
 
 use crate::services::server_requests::login;
 
@@ -98,8 +98,8 @@ fn get_input_string() -> String {
     return line.to_string();
 }
 
-#[tokio::main]
-async fn main() {
+
+async fn interactive_login() -> String {
     println!("Please enter your username:");
     let username = get_input_string();
     
@@ -108,6 +108,17 @@ async fn main() {
     
     let login_response = login(username, password).await;
 
-    println!("Login response: {:?}", login_response);
+    let mut refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
+    let received_refresh_token = login_response.data.refresh_token.token;
 
+    // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
+    // in cellphones
+    refresh_token_file.write_all(received_refresh_token.as_bytes()).expect("Error in refresh token storage");
+
+    return login_response.data.basic_token.token;
+}
+
+#[tokio::main]
+async fn main() {
+    let token = interactive_login().await;
 }
