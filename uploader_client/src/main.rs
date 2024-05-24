@@ -110,16 +110,10 @@ async fn interactive_login() -> String {
     let login_response = login(username, password).await;
 
     let mut refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
-    // let received_refresh_token = login_response.data.refresh_token.token;
 
     // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
     // in cellphones
-    
-    // refresh_token_file.write_all(received_refresh_token.as_bytes()).expect("Error in refresh token storage");
     serde_json::to_writer(refresh_token_file, &login_response.data.refresh_token).expect("Error while saving refresh token object");
-
-
-
     return login_response.data.basic_token.token;
 }
 
