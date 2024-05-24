@@ -40,7 +40,7 @@ pub async fn login(username: String, password: String) -> EndpointResult<Receive
     }
 }
 
-pub async fn token_refreshment(refresh_token: String) -> EndpointResult<Token> {
+pub async fn token_refreshment(refresh_token: String) -> Result<EndpointResult<Token>, ()> {
 
     // TODO: Check if the client should only be instanced once in the whole program execution
     let client = reqwest::Client::new();
@@ -53,9 +53,9 @@ pub async fn token_refreshment(refresh_token: String) -> EndpointResult<Token> {
     
     if response.status().is_success() {
         let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
-        return token_refreshment_response;
-    } else { 
-        panic!("Error in token refreshment");
+        return Ok(token_refreshment_response);
+    } else {
+        return Err(());
     }
 }
 

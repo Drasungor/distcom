@@ -120,30 +120,29 @@ async fn interactive_login() -> String {
 }
 
 async fn get_jwt() -> String {
+    let mut should_log_in = false;
     let path = Path::new("./refresh_token.bin");
-
-    let returned_token;
+    let mut returned_token: Option<String> = None;
 
     if path.exists() {
-
-        // println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-
-        let mut refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
-        
-        // let mut asd = "".to_string();
-        // refresh_token_file.read_to_string(&mut asd);
-
-        // println!("{}", asd);
-
+        let refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
         let refresh_token: Token = serde_json::from_reader(refresh_token_file).expect("Error in token object deserialization");
 
         // TODO: add error management to token_refreshment function and also call login if the token refreshment fails
-        let jwt = token_refreshment(refresh_token.token).await;
-        returned_token = jwt.data.token;
+        let jwt_result = token_refreshment(refresh_token.token).await;
+
+        if (jwt_result.is_ok()) {
+            returned_token = Some(jwt_result.unwrap().data.token);
+        } else {
+            should_log_in = true;
+        }
     } else {
-        returned_token = interactive_login().await;
+        should_log_in = true;
     }
-    return returned_token;
+    if (should_log_in) {
+        returned_token = Some(interactive_login().await);
+    }
+    return returned_token.unwrap();
 }
 
 #[tokio::main]
