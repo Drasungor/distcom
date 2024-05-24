@@ -110,6 +110,27 @@ impl AccountMysqlDal {
         };
     }
 
+    pub async fn user_refresh_token_exists(refresh_token_id: String, user_id: String) -> Result<bool, AppError> {
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let found_account_result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            let found_account = refresh_token::table
+                    .filter(refresh_token::token_id.eq(refresh_token_id).and(refresh_token::user_id.eq(user_id)))
+                    .first::<RefreshToken>(connection);
+            return Ok(found_account.is_ok());
+        })
+        }).await;
+        return match found_account_result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Ok(user_refresh_token_exists)) => Ok(user_refresh_token_exists),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                // TODO: handle correctly
+                Err(AppError::new(AppErrorType::InternalServerError))
+            },
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+        };
+    }
+
     // TODO: use this function in a "change password" endpoint, it still has not been used
     pub async fn delete_user_refresh_tokens(user_id: String) -> Result<(), AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");

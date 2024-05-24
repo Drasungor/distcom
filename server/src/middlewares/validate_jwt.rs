@@ -47,7 +47,6 @@ where
     forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        println!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Validate jwt Middleware executed before handling the request");
         let headers = req.headers().clone();
         
         // TODO: manage this errors correctly instead of using expect

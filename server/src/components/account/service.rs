@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::common::app_error::{AppError, AppErrorType};
 use super::account_mysql_dal::AccountMysqlDal;
 use super::db_models::refresh_token::RefreshToken;
-use super::model::{LoginTokens, PagedOrganizations, ReceivedNewAccount};
+use super::model::{LoginTokens, PagedOrganizations, ReceivedNewAccount, Token};
 use super::db_models::account::CompleteAccount;
 use super::utils::{generate_basic_token, generate_login_tokens, generate_password_hash, is_password_valid};
 
@@ -42,6 +42,17 @@ impl AccountService {
         };
         AccountMysqlDal::add_refresh_token(refresh_token_data).await?;
         return Ok(login_tokens);
+    }
+
+    pub async fn refresh_basic_token(refresh_token_id: String, user_id: String) -> Result<Token, AppError> {
+        let refresh_token_exists = AccountMysqlDal::user_refresh_token_exists(refresh_token_id, user_id.clone()).await?;
+        if (refresh_token_exists) {
+            return Ok(Token {
+                basic_token: generate_basic_token(&user_id),
+            })
+        } else {
+            return Err(AppError::new(AppErrorType::RefreshTokenNotfound));
+        }
     }
 
     pub async fn delete_refresh_token(refresh_token_id: String) -> Result<(), AppError> {
