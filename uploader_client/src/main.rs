@@ -1,6 +1,8 @@
 use std::env;
 use std::fs::File;
+use std::path::Path;
 use serde::Serialize;
+use services::server_requests::{token_refreshment, Token};
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
 use std::process::Command;
@@ -117,7 +119,36 @@ async fn interactive_login() -> String {
     return login_response.data.basic_token.token;
 }
 
+async fn get_jwt() -> String {
+    let path = Path::new("./refresh_token.bin");
+
+    let returned_token;
+
+    if path.exists() {
+
+        // println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+        let mut refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
+        
+        // let mut asd = "".to_string();
+        // refresh_token_file.read_to_string(&mut asd);
+
+        // println!("{}", asd);
+
+        let refresh_token: Token = serde_json::from_reader(refresh_token_file).expect("Error in token object deserialization");
+
+        // TODO: add error management to token_refreshment function and also call login if the token refreshment fails
+        let jwt = token_refreshment(refresh_token.token).await;
+        returned_token = jwt.data.token;
+    } else {
+        returned_token = interactive_login().await;
+    }
+    return returned_token;
+}
+
 #[tokio::main]
 async fn main() {
-    let token = interactive_login().await;
+    // let token = interactive_login().await;
+    get_jwt().await;
+    println!("Welcome");
 }

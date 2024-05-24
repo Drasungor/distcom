@@ -3,9 +3,11 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
 use crate::common::app_error::{AppError, AppErrorType};
+use crate::utils::jwt_helpers::GeneratedToken;
 use super::account_mysql_dal::AccountMysqlDal;
 use super::db_models::refresh_token::RefreshToken;
-use super::model::{LoginTokens, PagedOrganizations, ReceivedNewAccount, Token};
+// use super::model::{LoginTokens, PagedOrganizations, ReceivedNewAccount, Token};
+use super::model::{LoginTokens, PagedOrganizations, ReceivedNewAccount};
 use super::db_models::account::CompleteAccount;
 use super::utils::{generate_basic_token, generate_login_tokens, generate_password_hash, is_password_valid};
 
@@ -44,12 +46,13 @@ impl AccountService {
         return Ok(login_tokens);
     }
 
-    pub async fn refresh_basic_token(refresh_token_id: String, user_id: String) -> Result<Token, AppError> {
+    pub async fn refresh_basic_token(refresh_token_id: String, user_id: String) -> Result<GeneratedToken, AppError> {
         let refresh_token_exists = AccountMysqlDal::user_refresh_token_exists(refresh_token_id, user_id.clone()).await?;
         if (refresh_token_exists) {
-            return Ok(Token {
-                basic_token: generate_basic_token(&user_id),
-            })
+            // return Ok(Token {
+            //     basic_token: generate_basic_token(&user_id),
+            // })
+            return Ok(generate_basic_token(&user_id));
         } else {
             return Err(AppError::new(AppErrorType::RefreshTokenNotfound));
         }

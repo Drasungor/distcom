@@ -19,7 +19,7 @@ pub struct ReceivedTokens {
     pub refresh_token: Token,
 }
 
-// TODO: make itreturn a result that contains the struct instead of the array directly
+// TODO: make it return a result that contains the struct instead of the array directly
 pub async fn login(username: String, password: String) -> EndpointResult<ReceivedTokens> {
 
     // TODO: Check if the client should only be instanced once in the whole program execution
@@ -36,7 +36,26 @@ pub async fn login(username: String, password: String) -> EndpointResult<Receive
         let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
         return login_response;
     } else { 
-        panic!("Error in organizations get");
+        panic!("Error in login");
+    }
+}
+
+pub async fn token_refreshment(refresh_token: String) -> EndpointResult<Token> {
+
+    // TODO: Check if the client should only be instanced once in the whole program execution
+    let client = reqwest::Client::new();
+    
+    let mut data = HashMap::new();
+    data.insert("refresh_token", refresh_token);
+
+    // TODO: Ensure the request was successful (status code 200)
+    let response = client.post("http://localhost:8080/account/refresh-token").json(&data).send().await.expect("Error in get");
+    
+    if response.status().is_success() {
+        let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
+        return token_refreshment_response;
+    } else { 
+        panic!("Error in token refreshment");
     }
 }
 
