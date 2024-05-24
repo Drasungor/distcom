@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize};
+use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use crate::common::communication::EndpointResult;
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Token {
     pub token_id: String,
     pub token: String,
