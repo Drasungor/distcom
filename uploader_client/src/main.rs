@@ -1,14 +1,13 @@
 use std::env;
 use std::fs::File;
-use std::path::Path;
 use serde::Serialize;
-use services::server_requests::{token_refreshment, Token};
+// use services::program_distributor::{token_refreshment, Token};
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
 use std::process::Command;
 use std::io::{self, Read, Write};
 
-use crate::services::server_requests::login;
+// use crate::services::program_distributor::login;
 
 mod services;
 mod common;
@@ -94,56 +93,6 @@ enum GetProgramsCommands {
 //     }    
 // }
 
-fn get_input_string() -> String {
-    let mut buf = "".to_string();
-    std::io::stdin().read_line(&mut buf).expect("Couldn't parse stdin");
-    let line = buf.trim();
-    return line.to_string();
-}
-
-
-async fn interactive_login() -> String {
-    println!("Please enter your username:");
-    let username = get_input_string();
-    
-    println!("Please enter your password:");
-    let password = get_input_string();
-    
-    let login_response = login(username, password).await;
-
-    let mut refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
-
-    // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
-    // in cellphones
-    serde_json::to_writer(refresh_token_file, &login_response.data.refresh_token).expect("Error while saving refresh token object");
-    return login_response.data.basic_token.token;
-}
-
-async fn get_jwt() -> String {
-    let mut should_log_in = false;
-    let path = Path::new("./refresh_token.bin");
-    let mut returned_token: Option<String> = None;
-
-    if path.exists() {
-        let refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
-        let refresh_token: Token = serde_json::from_reader(refresh_token_file).expect("Error in token object deserialization");
-
-        // TODO: add error management to token_refreshment function and also call login if the token refreshment fails
-        let jwt_result = token_refreshment(refresh_token.token).await;
-
-        if (jwt_result.is_ok()) {
-            returned_token = Some(jwt_result.unwrap().data.token);
-        } else {
-            should_log_in = true;
-        }
-    } else {
-        should_log_in = true;
-    }
-    if (should_log_in) {
-        returned_token = Some(interactive_login().await);
-    }
-    return returned_token.unwrap();
-}
 
 #[tokio::main]
 async fn main() {
