@@ -7,6 +7,8 @@ use clap::{Parser, Subcommand};
 use std::process::Command;
 use std::io::{self, Read, Write};
 
+use crate::services::program_distributor::ProgramDistributorService;
+
 // use crate::services::program_distributor::login;
 
 mod services;
@@ -97,6 +99,12 @@ enum GetProgramsCommands {
 #[tokio::main]
 async fn main() {
     // let token = interactive_login().await;
-    get_jwt().await;
+    // get_jwt().await;
+    {
+        // We establish the connection to s3
+        let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+        write_guard.setup().await;
+    }
+
     println!("Welcome");
 }

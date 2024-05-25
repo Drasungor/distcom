@@ -8,6 +8,7 @@ use std::path::Path;
 use crate::common::communication::EndpointResult;
 use crate::common::user_interaction::get_input_string;
 
+// TODO: check if we should add an attribute that stores the server's ip
 pub struct ProgramDistributorService {
     jwt: Option<String>,
 }
@@ -28,10 +29,14 @@ pub struct ReceivedTokens {
 
 impl ProgramDistributorService {
 
-    pub async fn new() -> ProgramDistributorService {
+    pub fn new() -> ProgramDistributorService {
         ProgramDistributorService {
             jwt: None,
         }
+    }
+
+    pub async fn setup(&mut self) {
+        self.jwt = Some(Self::get_jwt().await);
     }
 
     async fn interactive_login() -> String {
@@ -43,7 +48,7 @@ impl ProgramDistributorService {
         
         let login_response = Self::login(username, password).await;
     
-        let mut refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
+        let refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
     
         // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
         // in cellphones
@@ -69,6 +74,25 @@ impl ProgramDistributorService {
             return login_response;
         } else { 
             panic!("Error in login");
+        }
+    }
+
+    async fn token_refreshment(refresh_token: String) -> Result<EndpointResult<Token>, ()> {
+    
+        // TODO: Check if the client should only be instanced once in the whole program execution
+        let client = reqwest::Client::new();
+        
+        let mut data = HashMap::new();
+        data.insert("refresh_token", refresh_token);
+    
+        // TODO: Ensure the request was successful (status code 200)
+        let response = client.post("http://localhost:8080/account/refresh-token").json(&data).send().await.expect("Error in get");
+        
+        if response.status().is_success() {
+            let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
+            return Ok(token_refreshment_response);
+        } else {
+            return Err(());
         }
     }
 
@@ -98,24 +122,6 @@ impl ProgramDistributorService {
         return returned_token.unwrap();
     }
 
-    async fn token_refreshment(refresh_token: String) -> Result<EndpointResult<Token>, ()> {
-    
-        // TODO: Check if the client should only be instanced once in the whole program execution
-        let client = reqwest::Client::new();
-        
-        let mut data = HashMap::new();
-        data.insert("refresh_token", refresh_token);
-    
-        // TODO: Ensure the request was successful (status code 200)
-        let response = client.post("http://localhost:8080/account/refresh-token").json(&data).send().await.expect("Error in get");
-        
-        if response.status().is_success() {
-            let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
-            return Ok(token_refreshment_response);
-        } else {
-            return Err(());
-        }
-    }
 
 }
 
