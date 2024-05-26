@@ -1,3 +1,4 @@
+use actix_web::body::BoxBody;
 use actix_web::{web, HttpResponse, HttpMessage};
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
@@ -5,6 +6,8 @@ use diesel::insert_into;
 use std::future::{ready, Ready};
 use std::pin::Pin;
 
+use crate::common::app_error::{AppError, AppErrorType};
+use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::{common, RequestExtension};
 use crate::utils::jwt_helpers::{validate_jwt, Claims};
 
@@ -51,8 +54,41 @@ where
         
         // TODO: manage this errors correctly instead of using expect
         let token = headers.get("token").expect("No token was received").to_str().expect("Error in token parsing");
-        let jwt_payload: Claims = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token).expect("Error in token decoding");
+        // let jwt_payload: Claims = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token).expect("Error in token decoding");
         
+        let jwt_payload_result = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token);
+        let jwt_payload;
+
+        if let Err(jwt_error) = jwt_payload_result {
+            println!("Error in jwt validation: {}", jwt_error);
+            let error = AppError::new(AppErrorType::InvalidToken);
+            // // // return Box::pin(async { Ok(req.into_response(AppHttpResponseBuilder::get_http_response(Err(error)))) });
+            // // let response = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
+            // let response: HttpResponse<BoxBody> = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
+            // return Box::pin(async { Ok(req.into_response(response)) });
+
+            let err = actix_web::error::ErrorInternalServerError("Something went wrong!");
+
+            // Create an actix_web::Error instance
+            let actix_error: actix_web::Error = err.into();
+
+            return Box::pin(async { Err(actix_error) });
+            // return Box::pin(async { Err(error) });
+
+        } else {
+            jwt_payload = jwt_payload_result.unwrap()
+        }
+
+
+        // let jwt_payload = match jwt_payload {
+        //     Ok(payload) => payload,
+        //     Err(_) => {
+        //         let response = HttpResponse::Unauthorized()
+        //             .json("Invalid token");
+        //         return Box::pin(async { Ok(req.into_response(response.into_body())) });
+        //     }
+        // };
+
         {
             let mut extensions = req.extensions_mut();
             let extensions_value = extensions.get::<RequestExtension>().expect("The extension was never initialized");

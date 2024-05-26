@@ -26,6 +26,7 @@ struct FailureResponse {
 
 impl AppHttpResponseBuilder {
     pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> impl Responder {
+    // pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> HttpResponse {
         return match app_result {
             Ok(successful_response) => HttpResponse::Ok().
                 json(SuccessfulResponse { 
