@@ -16,12 +16,14 @@ pub struct ValidateJwtMiddleware;
 
 impl<S, B> Transform<S, ServiceRequest> for ValidateJwtMiddleware
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = AppError>,
     S::Future: 'static,
     B: 'static,
 {
     type Response = ServiceResponse<B>;
-    type Error = Error;
+    // type Error = Error;
+    type Error = AppError;
     type InitError = ();
     type Transform = ValidateJwtMiddlewareMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
@@ -37,14 +39,25 @@ pub struct ValidateJwtMiddlewareMiddleware<S> {
     service: S,
 }
 
+
+impl From<actix_web::Error> for AppError {
+    fn from(err: actix_web::Error) -> Self {
+        // Convert actix_web::Error into your AppError
+        return AppError::new(AppErrorType::InvalidToken);
+    }
+}
+
+
 impl<S, B> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = AppError>,
     S::Future: 'static,
     B: 'static,
 {
     type Response = ServiceResponse<B>;
-    type Error = Error;
+    // type Error = Error;
+    type Error = AppError;
     type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + 'static>>;
 
     forward_ready!(service);
@@ -62,6 +75,10 @@ where
         if let Err(jwt_error) = jwt_payload_result {
             println!("Error in jwt validation: {}", jwt_error);
             let error = AppError::new(AppErrorType::InvalidToken);
+            let asdasd = AppHttpResponseBuilder::get_http_response::<()>(Err(error));
+
+            // let actix_error: actix_web::Error = asdasd.into();
+
             // // // return Box::pin(async { Ok(req.into_response(AppHttpResponseBuilder::get_http_response(Err(error)))) });
             // // let response = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
             // let response: HttpResponse<BoxBody> = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
@@ -72,8 +89,13 @@ where
             // Create an actix_web::Error instance
             let actix_error: actix_web::Error = err.into();
 
-            return Box::pin(async { Err(actix_error) });
-            // return Box::pin(async { Err(error) });
+            // return Box::pin({Ok(req.into_response(
+            //     HttpResponse::Unauthorized()
+            //         .finish().map_into_boxed_body()
+            // ))});
+
+            // return Box::pin(async { Err(actix_error) });
+            return Box::pin(async { Err(error) });
 
         } else {
             jwt_payload = jwt_payload_result.unwrap()
