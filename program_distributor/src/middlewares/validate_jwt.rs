@@ -8,7 +8,7 @@ use std::future::{ready, Ready};
 use std::pin::Pin;
 
 use crate::common::app_error::{AppError, AppErrorType};
-use crate::common::app_http_response_builder::AppHttpResponseBuilder;
+use crate::common::app_http_response_builder::{AppHttpResponseBuilder, FailureResponse};
 use crate::{common, RequestExtension};
 use crate::utils::jwt_helpers::{validate_jwt, Claims};
 
@@ -55,6 +55,7 @@ impl From<actix_web::Error> for AppError {
 // impl<S, B> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 impl<S> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 where
+    // S: Service<ServiceRequest, Response = ServiceResponse<FailureResponse>, Error = Error>,
     S: Service<ServiceRequest, Response = ServiceResponse<BoxBody>, Error = Error>,
     // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = AppError>,
@@ -63,6 +64,7 @@ where
 {
     // type Response = ServiceResponse<B>;
     type Response = ServiceResponse<BoxBody>;
+    // type Response = ServiceResponse<FailureResponse>;
     type Error = Error;
     // type Error = AppError;
     type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + 'static>>;
@@ -140,13 +142,30 @@ where
 
             // let response: HttpResponse<B> = HttpResponse::Found()
             // let response = HttpResponse::Found()
-            let response = HttpResponse::Found()
-            .insert_header((http::header::LOCATION, "/login"))
-            .finish()
-            // constructed responses map to "right" body
-            // .map_into_right_body()
-            ;
 
+
+
+            // let response = HttpResponse::Found()
+            // .insert_header((http::header::LOCATION, "/login"))
+            // .json(FailureResponse { 
+            //     status: "error".to_string(), 
+            //     error_code: "error".to_string(), 
+            //     error_message: "error".to_string(),
+            // }) 
+            // // .finish()
+            
+            // // constructed responses map to "right" body
+            // // .map_into_right_body()
+            // ;
+
+            // let response = AppHttpResponseBuilder::get_http_response(Err(AppError::new(AppErrorType::InternalServerError)));
+
+            let response = HttpResponse::build(StatusCode::NOT_FOUND).
+                json(FailureResponse { 
+                    status: "error".to_string(), 
+                    error_code: "error".to_string(), 
+                    error_message: "error".to_string(),
+            });
             
 
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });

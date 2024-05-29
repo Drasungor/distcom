@@ -17,10 +17,10 @@ struct SuccessfulResponse<T: Serialize> {
 }
 
 #[derive(Serialize)]
-struct FailureResponse {
-    status: String,
-    error_code: String,
-    error_message: String,
+pub struct FailureResponse {
+    pub status: String,
+    pub error_code: String,
+    pub error_message: String,
 }
 
 
