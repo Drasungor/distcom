@@ -83,126 +83,19 @@ where
 
         if let Err(jwt_error) = jwt_payload_result {
             println!("Error in jwt validation: {}", jwt_error);
-            // let error = AppError::new(AppErrorType::InvalidToken);
-            // let asdasd = AppHttpResponseBuilder::get_http_response::<()>(Err(error));
-
-            // let actix_error: actix_web::Error = asdasd.into();
-
-            // // // return Box::pin(async { Ok(req.into_response(AppHttpResponseBuilder::get_http_response(Err(error)))) });
-            // // let response = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
-            // let response: HttpResponse<BoxBody> = AppHttpResponseBuilder::get_http_response(Err(error)).map_into_boxed_body().map_into_right_body::<B>();
-            // return Box::pin(async { Ok(req.into_response(response)) });
-
-            let mut err = actix_web::error::ErrorInternalServerError("Something went wrong!");
-
-            let bb = err.as_response_error();
-
-            // Create an actix_web::Error instance
-            let actix_error: actix_web::Error = err.into();
-
-            // return Box::pin({Ok(req.into_response( 
-            //     HttpResponse::Unauthorized()
-            //         .finish().map_into_boxed_body()
-            // ))});
-
-            // let error = AppError::new(AppErrorType::InvalidToken);
-            // let response = AppHttpResponseBuilder::get_http_response::<B>(Err(error)).map_into_boxed_body();
-            // return Box::pin(async { Ok(ServiceResponse::new(req.request().clone(), response)) });
-        
-
-
-            // return Box::pin(async {Ok(ServiceResponse::new(
-			// 	req.request().clone(),
-			// 	HttpResponseBuilder::new(req.status()).body("body test"),
-			// ))})
-
-            // let early_response = HttpResponse::Ok()
-            // .content_type("text/plain")
-            // .body("Early response body");
-
-            // let early_response = HttpResponse::with_body(StatusCode::FORBIDDEN, B {a: "buenas"})
-
-            // if (true) {
-            //     let (request, _pl) = req.into_parts();
-
-            //     // let response: HttpResponse<B> = HttpResponse::Found()
-            //     let response = HttpResponse::Found()
-            //     .insert_header((http::header::LOCATION, "/login"))
-            //     .finish()
-            //     // constructed responses map to "right" body
-            //     // .map_into_right_body()
-            //     ;
-
-                
-
-            //     return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
-            // }
-
             let (request, _pl) = req.into_parts();
 
-            // let response: HttpResponse<B> = HttpResponse::Found()
-            // let response = HttpResponse::Found()
-
-
-
-            // let response = HttpResponse::Found()
-            // .insert_header((http::header::LOCATION, "/login"))
-            // .json(FailureResponse { 
-            //     status: "error".to_string(), 
-            //     error_code: "error".to_string(), 
-            //     error_message: "error".to_string(),
-            // }) 
-            // // .finish()
-            
-            // // constructed responses map to "right" body
-            // // .map_into_right_body()
-            // ;
-
             // let response = AppHttpResponseBuilder::get_http_response(Err(AppError::new(AppErrorType::InternalServerError)));
-
             let response = HttpResponse::build(StatusCode::NOT_FOUND).
                 json(FailureResponse { 
                     status: "error".to_string(), 
                     error_code: "error".to_string(), 
                     error_message: "error".to_string(),
             });
-            
-
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
-
-
-            // // Create a ServiceResponse instance with the early response
-            // // let service_response = ServiceResponse::new(req.into_parts().0, early_response.map_into_boxed_body());
-            // // let service_response = ServiceResponse::new(req.into_parts().0, early_response.map_into_boxed_body().map_into_right_body::<B>());
-            // // let aux_ekisde = early_response.map_into_right_body::<B>();
-            // let aux_ekisde = early_response.map_into_right_body::<B>();
-            // // let service_response = ServiceResponse::new(req.into_parts().0, early_response.map_into_right_body::<B>());
-            // let service_response = ServiceResponse::new(req.into_parts().0, early_response.map_into_right_body::<B>());
-
-            // let asasas = service_response.;
-
-            // return Box::pin(async move {
-            //     // Return the early ServiceResponse
-            //     Ok(service_response)
-            // });
-
-
-            // return Box::pin(async { Err(actix_error) });
-            // // return Box::pin(async { Err(error) });
-
         } else {
             jwt_payload = jwt_payload_result.unwrap()
         }
-
-
-        // let jwt_payload = match jwt_payload {
-        //     Ok(payload) => payload,
-        //     Err(_) => {
-        //         let response = HttpResponse::Unauthorized()
-        //             .json("Invalid token");
-        //         return Box::pin(async { Ok(req.into_response(response.into_body())) });
-        //     }
-        // };
 
         {
             let mut extensions = req.extensions_mut();
