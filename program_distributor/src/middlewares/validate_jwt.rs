@@ -3,7 +3,6 @@ use actix_web::http::{self, StatusCode};
 use actix_web::{web, HttpMessage, HttpResponse, HttpResponseBuilder};
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
-use diesel::insert_into;
 use std::future::{ready, Ready};
 use std::pin::Pin;
 
@@ -36,14 +35,6 @@ where
 pub struct ValidateJwtMiddlewareMiddleware<S> {
     service: S,
 }
-
-
-// impl From<actix_web::Error> for AppError {
-//     fn from(err: actix_web::Error) -> Self {
-//         // Convert actix_web::Error into your AppError
-//         return AppError::new(AppErrorType::InvalidToken);
-//     }
-// }
 
 impl<S> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 where
