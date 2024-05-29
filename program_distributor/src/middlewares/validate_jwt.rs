@@ -15,19 +15,13 @@ use crate::utils::jwt_helpers::{validate_jwt, Claims};
 
 pub struct ValidateJwtMiddleware;
 
-// impl<S, B> Transform<S, ServiceRequest> for ValidateJwtMiddleware
 impl<S> Transform<S, ServiceRequest> for ValidateJwtMiddleware
 where
     S: Service<ServiceRequest, Response = ServiceResponse<BoxBody>, Error = Error>,
-    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = AppError>,
     S::Future: 'static,
-    // B: 'static,
 {
     type Response = ServiceResponse<BoxBody>;
-    // type Response = ServiceResponse<B>;
     type Error = Error;
-    // type Error = AppError;
     type InitError = ();
     type Transform = ValidateJwtMiddlewareMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
@@ -44,29 +38,20 @@ pub struct ValidateJwtMiddlewareMiddleware<S> {
 }
 
 
-impl From<actix_web::Error> for AppError {
-    fn from(err: actix_web::Error) -> Self {
-        // Convert actix_web::Error into your AppError
-        return AppError::new(AppErrorType::InvalidToken);
-    }
-}
+// impl From<actix_web::Error> for AppError {
+//     fn from(err: actix_web::Error) -> Self {
+//         // Convert actix_web::Error into your AppError
+//         return AppError::new(AppErrorType::InvalidToken);
+//     }
+// }
 
-
-// impl<S, B> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 impl<S> Service<ServiceRequest> for ValidateJwtMiddlewareMiddleware<S>
 where
-    // S: Service<ServiceRequest, Response = ServiceResponse<FailureResponse>, Error = Error>,
     S: Service<ServiceRequest, Response = ServiceResponse<BoxBody>, Error = Error>,
-    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    // S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = AppError>,
     S::Future: 'static,
-    // B: 'static,
 {
-    // type Response = ServiceResponse<B>;
     type Response = ServiceResponse<BoxBody>;
-    // type Response = ServiceResponse<FailureResponse>;
     type Error = Error;
-    // type Error = AppError;
     type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + 'static>>;
 
     forward_ready!(service);
@@ -76,7 +61,6 @@ where
         
         // TODO: manage this errors correctly instead of using expect
         let token = headers.get("token").expect("No token was received").to_str().expect("Error in token parsing");
-        // let jwt_payload: Claims = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token).expect("Error in token decoding");
         
         let jwt_payload_result = validate_jwt(common::config::CONFIG_OBJECT.token.basic_token_secret.as_str(), token);
         let jwt_payload;
