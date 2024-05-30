@@ -24,6 +24,7 @@ pub struct FailureResponse {
 }
 
 
+
 impl AppHttpResponseBuilder {
     // pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> impl Responder {
     pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> HttpResponse {
@@ -34,13 +35,23 @@ impl AppHttpResponseBuilder {
                     data: successful_response,
                 }),
             Err(error) => {
-                HttpResponse::build(error.status_code()).
-                    json(FailureResponse { 
-                        status: "error".to_string(), 
-                        error_code: error.error_type(), 
-                        error_message: error.message().clone(),
-                })
+                Self::generate_app_error_body(error)
+                // HttpResponse::build(error.status_code()).
+                //     json(FailureResponse { 
+                //         status: "error".to_string(), 
+                //         error_code: error.error_type(), 
+                //         error_message: error.message().clone(),
+                // })
             },
         };
+    }
+
+    pub fn generate_app_error_body(app_error: AppError) -> HttpResponse {
+        HttpResponse::build(app_error.status_code()).
+            json(FailureResponse { 
+                status: "error".to_string(), 
+                error_code: app_error.error_type(), 
+                error_message: app_error.message().clone(),
+        })
     }
 }

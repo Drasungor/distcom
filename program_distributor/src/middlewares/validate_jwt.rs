@@ -61,12 +61,16 @@ where
             let (request, _pl) = req.into_parts();
 
             // let response = AppHttpResponseBuilder::get_http_response(Err(AppError::new(AppErrorType::InternalServerError)));
-            let response = HttpResponse::build(StatusCode::NOT_FOUND).
-                json(FailureResponse { 
-                    status: "error".to_string(), 
-                    error_code: "error".to_string(), 
-                    error_message: "error".to_string(),
-            });
+
+            // let response = HttpResponse::build(StatusCode::NOT_FOUND).
+            //     json(FailureResponse { 
+            //         status: "error".to_string(), 
+            //         error_code: "error".to_string(), 
+            //         error_message: "error".to_string(),
+            // });
+
+            let response = AppHttpResponseBuilder::generate_app_error_body(AppError::new(AppErrorType::InternalServerError));
+
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
         } else {
             jwt_payload = jwt_payload_result.unwrap()
