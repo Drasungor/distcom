@@ -69,7 +69,7 @@ where
             //         error_message: "error".to_string(),
             // });
 
-            let response = AppHttpResponseBuilder::generate_app_error_body(AppError::new(AppErrorType::InternalServerError));
+            let response = AppHttpResponseBuilder::generate_app_error_body(AppError::new(AppErrorType::InvalidToken));
 
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
         } else {
