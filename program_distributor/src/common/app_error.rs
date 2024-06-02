@@ -3,13 +3,28 @@ use serde::Serialize;
 use std::fmt;
 
 #[derive(Debug)]
+pub enum InternalServerErrorType {
+    TaskSchedulingError,
+    UnknownError(String),
+}
+
+impl InternalServerErrorType {
+    pub fn to_string(&self) -> String {
+        match self {
+            InternalServerErrorType::TaskSchedulingError => String::from("Error in task/thread scheduling"),
+            InternalServerErrorType::UnknownError(message) => message.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum AppErrorType {
     AccountNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
     RefreshTokenNotfound,
     InvalidToken,
-    InternalServerError,
+    InternalServerError(InternalServerErrorType),
 }
 
 impl AppErrorType {
@@ -20,7 +35,7 @@ impl AppErrorType {
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
             AppErrorType::InvalidToken => String::from("INVALID_TOKEN"),
-            AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
+            AppErrorType::InternalServerError(_) => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
 }
@@ -60,7 +75,7 @@ impl AppError {
                 message_text = "That user's token is not valid";
                 status_code = StatusCode::FORBIDDEN;
             },
-            AppErrorType::InternalServerError => {
+            AppErrorType::InternalServerError(_) => {
                 message_text = "Internal server error";
                 status_code = StatusCode::INTERNAL_SERVER_ERROR;
             },
@@ -80,6 +95,13 @@ impl AppError {
 
     pub fn error_type(&self) -> String {
         return self.error_type.to_string();
+    }
+
+    pub fn unexpected_error_message(&self) -> Option<String> {
+        if let AppErrorType::InternalServerError(internal_server_error_type) = self.error_type {
+            return Some(internal_server_error_type.to_string());
+        }
+        return None;
     }
 
     pub fn status_code(&self) -> StatusCode {

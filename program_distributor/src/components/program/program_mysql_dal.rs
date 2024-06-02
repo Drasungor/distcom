@@ -23,6 +23,7 @@ use super::db_models::specific_program_input::SpecificProgramInput;
 use super::model::PagedPrograms;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
+use crate::common::app_error::InternalServerErrorType;
 use crate::components::account::db_models::account::CompleteAccount;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
@@ -54,15 +55,15 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(_)) => Ok(()),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    _ => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown database error".to_string()))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         }
     }
 
@@ -124,16 +125,16 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(_)) => Ok(()),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-        };
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown error: ".to_string())))),
+        }; 
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -151,15 +152,15 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(organization_id)) => Ok(organization_id),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 
@@ -264,15 +265,15 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(result_tuple)) => Ok(result_tuple),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 
@@ -290,15 +291,15 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(result_tuple)) => Ok(result_tuple),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 
@@ -331,13 +332,12 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(paged_organizations)) => Ok(paged_organizations),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                // TODO: handle correctly
-                Err(AppError::new(AppErrorType::InternalServerError))
+                Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 
@@ -368,13 +368,12 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(paged_organizations)) => Ok(paged_organizations),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                // TODO: handle correctly
-                Err(AppError::new(AppErrorType::InternalServerError))
+                Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 

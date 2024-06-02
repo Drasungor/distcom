@@ -30,9 +30,7 @@ impl FileStorage for AwsS3Handler {
         Ok(())
     }
 
-    // async fn upload(&self, file_path: &Path) -> Result<(), AppError> {
     async fn upload(&self, file_path: &Path, new_object_name: &str) -> Result<(), AppError> {
-    // Path::new();
         if (!file_path.exists()) {
             println!("The path does not exist");
             return Err(AppError::new(AppErrorType::InternalServerError));
