@@ -1,7 +1,18 @@
 use std::env;
 use std::fs::File;
-use std::io;
+use serde::Serialize;
+// use services::program_distributor::{token_refreshment, Token};
 use tar::{Builder, Archive};
+use clap::{Parser, Subcommand};
+use std::process::Command;
+use std::io::{self, Read, Write};
+
+use crate::services::program_distributor::ProgramDistributorService;
+
+// use crate::services::program_distributor::login;
+
+mod services;
+mod common;
 
 fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
     let file = File::create(output_path)?;
@@ -35,28 +46,65 @@ fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn main() {
-    // Get command line arguments
-    let args: Vec<String> = env::args().collect();
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct ProgramsArgs {
+    #[command(subcommand)]
+    cmd: GetProgramsCommands
+}
 
-    println!("{}", args.len());
+#[derive(Subcommand, Debug, Clone)]
+enum GetProgramsCommands {
+    Page {
+        #[clap(index = 1)]
+        page: usize,
+    },
+    Run {
+        #[clap(index = 1)]
+        index: usize,
+    },
+}
 
-    // Check if the correct number of arguments is provided
-    if args.len() != 3 {
-        eprintln!("Usage: cargo run <folder_path> <output_path>");
-        std::process::exit(1);
-    }
-    let folder_path = &args[1];
-    let output_path = &args[2];
+// async fn select_program(organization_option: Option<&ReturnedOrganization>) {
+//     let mut programs_page = retrieve_programs(organization_option, Some(50), Some(1)).await;
+//     print_programs_list(&programs_page.data.programs);
 
-    // Call the function to compress the folder
-    match compress_folder(folder_path, output_path) {
-        Ok(_) => println!("Folder compressed successfully."),
-        Err(err) => eprintln!("Error: {}", err),
+//     loop {
+//         println!("Please execute a command:");
+//         let args = process_user_input();
+//         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+//             Ok(cli) => {
+//                 match cli.cmd {
+//                     GetProgramsCommands::Page{page} => {
+//                         // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
+//                         // programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(page)).await;
+//                         programs_page = retrieve_programs(organization_option, Some(50), Some(page)).await;
+//                     },
+//                     GetProgramsCommands::Run{index} => {
+//                         let chosen_program = &programs_page.data.programs[index];
+//                         download_and_run_program(chosen_program).await;
+//                     },
+//                }
+//             }
+//             Err(_) => {
+//                 println!("That's not a valid command!");
+//             }
+//        };
+//         print_programs_list(&programs_page.data.programs);
+
+//     }    
+// }
+
+
+#[tokio::main]
+async fn main() {
+    // let token = interactive_login().await;
+    // get_jwt().await;
+    {
+        // We establish the connection to s3
+        let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+        write_guard.setup().await;
     }
-    match decompress_tar(output_path, &format!("./test/{}.", output_path)) {
-    // match decompress_tar(output_path, output_path) {
-        Ok(_) => println!("Folder decompressed successfully."),
-        Err(err) => eprintln!("Error: {}", err),
-    }
+
+    println!("Welcome");
 }

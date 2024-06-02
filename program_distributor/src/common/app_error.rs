@@ -7,6 +7,8 @@ pub enum AppErrorType {
     AccountNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
+    RefreshTokenNotfound,
+    InvalidToken,
     InternalServerError,
 }
 
@@ -16,6 +18,8 @@ impl AppErrorType {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
+            AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
+            AppErrorType::InvalidToken => String::from("INVALID_TOKEN"),
             AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
@@ -47,6 +51,14 @@ impl AppError {
             AppErrorType::UsernameAlreadyExists => {
                 message_text = "Username already exists";
                 status_code = StatusCode::CONFLICT;
+            },
+            AppErrorType::RefreshTokenNotfound => {
+                message_text = "That user's refresh token does not exist";
+                status_code = StatusCode::NOT_FOUND;
+            },
+            AppErrorType::InvalidToken => {
+                message_text = "That user's token is not valid";
+                status_code = StatusCode::FORBIDDEN;
             },
             AppErrorType::InternalServerError => {
                 message_text = "Internal server error";
