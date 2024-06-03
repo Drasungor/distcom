@@ -1,10 +1,17 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use aws_sdk_s3::{primitives::ByteStreamError, types::Error};
 use serde::Serialize;
 use std::fmt;
 
 #[derive(Debug)]
 pub enum InternalServerErrorType {
     TaskSchedulingError,
+    UploadedFileNotFound,
+    PathToStringConversionError,
+    FileCreationError(std::io::Error),
+    ByteStreamGenerationError(ByteStreamError),
+    S3UploadFileError(String),
+    S3DownloadFileError(String),
     UnknownError(String),
 }
 
@@ -12,6 +19,12 @@ impl InternalServerErrorType {
     pub fn to_string(&self) -> String {
         match self {
             InternalServerErrorType::TaskSchedulingError => String::from("Error in task/thread scheduling"),
+            InternalServerErrorType::UploadedFileNotFound => String::from("The uploaded file was not found"),
+            InternalServerErrorType::PathToStringConversionError => String::from("Error in path to string conversion"),
+            InternalServerErrorType::ByteStreamGenerationError(byte_stream_error) => format!("Bytestream error: {:?}", byte_stream_error),
+            InternalServerErrorType::FileCreationError(file_creation_error) => format!("File creation error: {:?}", file_creation_error.clone()),
+            InternalServerErrorType::S3UploadFileError(upload_file_error) => format!("File upload error: {:?}", upload_file_error),
+            InternalServerErrorType::S3DownloadFileError(download_file_error) => format!("File download error: {:?}", download_file_error),
             InternalServerErrorType::UnknownError(message) => message.clone(),
         }
     }
@@ -98,7 +111,7 @@ impl AppError {
     }
 
     pub fn unexpected_error_message(&self) -> Option<String> {
-        if let AppErrorType::InternalServerError(internal_server_error_type) = self.error_type {
+        if let AppErrorType::InternalServerError(internal_server_error_type) = &self.error_type {
             return Some(internal_server_error_type.to_string());
         }
         return None;
