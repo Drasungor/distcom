@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use aws_sdk_s3 as s3;
 use aws_config::{self, meta::region::RegionProviderChain, Region};
 use s3::primitives::ByteStream;
+// use s3::primitives::ByteStream;
 // use std::path::Path;
 
 use crate::common::app_error::{AppError, AppErrorType, InternalServerErrorType};
@@ -56,41 +57,22 @@ impl FileStorage for AwsS3Handler {
         let content_type = mime_guess::from_path(file_path).first_or_octet_stream().to_string();
         let req = self.s3_client.as_ref().expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
                                             body(body).content_type(content_type);
-        match req.send().await {
-            Ok(_) => Ok(()),
-            Err(error) => {
-                Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::S3UploadFileError(error.to_string()))))
-            }
-        }
+        req.send().await?;
+        return Ok(());
     }
 
     async fn download(&self, object_name: &str, storage_path: &Path) -> Result<(), AppError> {
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
         let req = client_ref.get_object().bucket(self.bucket_name.clone()).key(object_name);
-        let response_result = req.send().await;
-        let res;
-        if let Err(err) = response_result {
-            return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::S3DownloadFileError(err.to_string()))));
-        } else {
-            res = response_result.unwrap();
-        }
+        let res = req.send().await?;
         let mut data: ByteStream = res.body;
-        // let file_path_str = storage_path.to_str().expect("Error in file download path generation");
         let file_path_str;
-
         if let Some(path_str) = storage_path.to_str() {
             file_path_str = path_str;
         } else {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
         }
-
-        let file;
-        let file_creation_result = File::create(file_path_str);
-        if let Err(file_creation_error) = file_creation_result {
-            return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::FileCreationError(file_creation_error))));
-        } else {
-            file = file_creation_result.unwrap();
-        }
+        let file = File::create(file_path_str)?;
         let mut buf_writer = BufWriter::new(file);
         while let Some(bytes) = data.try_next().await.expect("Error in received data stream chunk") {
             buf_writer.write(&bytes).expect("Error in chunch writing");
