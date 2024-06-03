@@ -1,5 +1,5 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
-use aws_sdk_s3::{error::SdkError, operation::get_object::GetObjectError, primitives::ByteStreamError, types::Error};
+use aws_sdk_s3::{error::SdkError, primitives::ByteStreamError, types::Error};
 use serde::Serialize;
 use std::fmt;
 
@@ -8,11 +8,8 @@ pub enum InternalServerErrorType {
     TaskSchedulingError,
     UploadedFileNotFound,
     PathToStringConversionError,
-    // FileCreationError(std::io::Error),
     IOError(std::io::Error),
     ByteStreamGenerationError(ByteStreamError),
-    // S3UploadFileError(String),
-    // S3DownloadFileError(String),
     S3Error(String),
     UnknownError(String),
 }
@@ -24,10 +21,7 @@ impl InternalServerErrorType {
             InternalServerErrorType::UploadedFileNotFound => String::from("The uploaded file was not found"),
             InternalServerErrorType::PathToStringConversionError => String::from("Error in path to string conversion"),
             InternalServerErrorType::ByteStreamGenerationError(byte_stream_error) => format!("Bytestream error: {:?}", byte_stream_error),
-            // InternalServerErrorType::FileCreationError(file_creation_error) => format!("File creation error: {:?}", file_creation_error.clone()),
             InternalServerErrorType::IOError(io_error) => format!("IO error: {:?}", io_error.to_string()),
-            // InternalServerErrorType::S3UploadFileError(upload_file_error) => format!("File upload error: {:?}", upload_file_error),
-            // InternalServerErrorType::S3DownloadFileError(download_file_error) => format!("File download error: {:?}", download_file_error),
             InternalServerErrorType::S3Error(s3_error) => format!("S3 error: {:?}", s3_error),
             InternalServerErrorType::UnknownError(message) => message.clone(),
         }
@@ -53,6 +47,12 @@ impl From<std::io::Error> for AppError {
 impl<U, T> From<SdkError<U, T>> for AppError {
     fn from(error: SdkError<U, T>) -> Self {
         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::S3Error(error.to_string())))
+    }
+}
+
+impl From<ByteStreamError> for AppError {
+    fn from(error: ByteStreamError) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
     }
 }
 

@@ -44,16 +44,7 @@ impl FileStorage for AwsS3Handler {
                 return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
             }
         }
-        let body: ByteStream;
-        match ByteStream::from_path(file_path).await {
-            Ok(generated_bytestream) => {
-                body = generated_bytestream;
-            },
-            Err(error) => { 
-                return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error))));
-            }
-        }
-
+        let body: ByteStream = ByteStream::from_path(file_path).await?;
         let content_type = mime_guess::from_path(file_path).first_or_octet_stream().to_string();
         let req = self.s3_client.as_ref().expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
                                             body(body).content_type(content_type);
