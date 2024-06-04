@@ -23,7 +23,7 @@ impl FileStorage for AwsS3Handler {
 
 
     async fn set_up_connection(&mut self) -> Result<(), AppError> {
-        let region = Region::new(self.region.clone()); // TODO: GET VALUES FROM THE CONFIG VALUE
+        let region = Region::new(self.region.clone());
         let cred = s3::config::Credentials::new(self.key_id.clone(), self.key_secret.clone(), None, None, "Loaded-from-custom-env");
         let conf_builder = s3::config::Builder::new().region(region).credentials_provider(cred);
         let conf = conf_builder.build();
