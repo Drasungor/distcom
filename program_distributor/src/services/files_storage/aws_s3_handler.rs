@@ -65,7 +65,7 @@ impl FileStorage for AwsS3Handler {
         }
         let file = File::create(file_path_str)?;
         let mut buf_writer = BufWriter::new(file);
-        while let Some(bytes) = data.try_next().await.expect("Error in received data stream chunk") {
+        while let Some(bytes) = data.try_next().await? {
             buf_writer.write(&bytes).expect("Error in chunch writing");
         }
         buf_writer.flush().expect("Error in file flushing");
