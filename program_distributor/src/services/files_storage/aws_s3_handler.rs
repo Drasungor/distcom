@@ -49,7 +49,22 @@ impl FileStorage for AwsS3Handler {
         let req = self.s3_client.as_ref().expect("S3 client not initialized").put_object().bucket(self.bucket_name.clone()).key(key).
                                             body(body).content_type(content_type);
         req.send().await?;
-        return Ok(());
+        Ok(())
+    }
+
+    async fn upload_program(&self, file_path: &Path, organization_id: &str, program_id: &str) -> Result<(), AppError> {
+        let file_extension: &str;
+        match file_path.to_str() {
+            Some(stringified_path) => {
+                let parts: Vec<&str> = stringified_path.split('.').collect();
+                file_extension = parts[parts.len() - 1];
+            },
+            None => {
+                return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
+            }
+        }
+        let program_key = format!("{organization_id}/{program_id}/program.{file_extension}");
+        self.upload(file_path, &program_key).await
     }
 
     async fn download(&self, object_name: &str, storage_path: &Path) -> Result<(), AppError> {
@@ -66,13 +81,29 @@ impl FileStorage for AwsS3Handler {
         let file = File::create(file_path_str)?;
         let mut buf_writer = BufWriter::new(file);
         while let Some(bytes) = data.try_next().await? {
-            buf_writer.write(&bytes).expect("Error in chunch writing");
+            buf_writer.write(&bytes)?;
         }
-        buf_writer.flush().expect("Error in file flushing");
+        buf_writer.flush()?;
         Ok(())
     }
 
+    async fn download_program(&self, file_path: &Path, organization_id: &str, program_id: &str) -> Result<(), AppError> {
+        let file_extension: &str;
+        match file_path.to_str() {
+            Some(stringified_path) => {
+                let parts: Vec<&str> = stringified_path.split('.').collect();
+                file_extension = parts[parts.len() - 1];
+            },
+            None => {
+                return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
+            }
+        }
+        let program_key = format!("{organization_id}/{program_id}/program.{file_extension}");
+        self.download(&program_key, file_path).await
+    }
+
     async fn delete(&self) -> Result<(), AppError> {
+        // TODO: code this function
         Ok(())
     }
 }

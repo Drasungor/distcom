@@ -56,8 +56,6 @@ impl From<ByteStreamError> for AppError {
     }
 }
 
-// SdkError<GetObjectError, Response>
-
 impl AppErrorType {
     pub fn to_string(&self) -> String {
         match self {

@@ -31,9 +31,11 @@ impl ProgramController {
         for file_name in files_names {
             let file_path = format!("./uploads/{}", file_name);
             let new_file_name = format!("{}/{}", jwt_payload.organization_id, file_name);
+            let program_id = get_filename_without_suffix(&file_name);
             {
                 let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-                read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
+                // read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
+                read_guard.upload_program(Path::new(&file_path), &jwt_payload.organization_id, &program_id).await.expect("File upload error");
             }
             fs::remove_file(file_path).expect("Error in file deletion");
         }
@@ -70,10 +72,12 @@ impl ProgramController {
             // return AppHttpResponseBuilder::get_http_response(file_path);
         }
 
-        let object_name = format!("{}/{}", organization_id.unwrap(), file_name);
+        let object_name = format!("{}/{}", organization_id.as_ref().unwrap(), file_name);
+        let program_id = get_filename_without_suffix(&file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.download(&object_name, Path::new(&download_file_path)).await.expect("File upload error");
+            // read_guard.download(&object_name, Path::new(&download_file_path)).await.expect("File upload error");
+            read_guard.download_program(Path::new(&download_file_path), &organization_id.as_ref().unwrap(), &program_id).await.expect("File upload error");
         }
         let program_file = File::open(download_file_path.clone()).expect("Error opening program file");
         let named_file = actix_files::NamedFile::from_file(program_file, download_file_path).expect("Error in NamedFile creation");
