@@ -103,6 +103,7 @@ impl ProgramMysqlDal {
             program_id: cloned_program_id.clone(),
             // input_was_reserved: false,
             last_reserved: None,
+            proven_datetime: None,
         };
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
