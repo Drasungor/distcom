@@ -28,6 +28,7 @@ use crate::components::account::db_models::account::CompleteAccount;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
 use crate::schema::{program, account};
+use crate::utils::datetime_helpers::get_current_naive_datetime;
 
 pub struct ProgramMysqlDal;
 
@@ -101,7 +102,6 @@ impl ProgramMysqlDal {
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
-            // input_was_reserved: false,
             last_reserved: None,
             proven_datetime: None,
         };
@@ -250,18 +250,10 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
-            let current_system_time = SystemTime::now();
-            let since_the_epoch = current_system_time.duration_since(UNIX_EPOCH).expect("Time went backwards");
-            let current_datetime = DateTime::from_timestamp_millis(since_the_epoch.as_millis().try_into().unwrap()).unwrap();
-            let now_naive_datetime = current_datetime.naive_utc();
-
+            let now_naive_datetime = get_current_naive_datetime();
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
-
-            // let file_path = format!("./aux_files/{}.csv", input_group_id);
             let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
-
             return Ok((input_group_id, file_path));
         })
         }).await;
@@ -271,6 +263,84 @@ impl ProgramMysqlDal {
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+    pub async fn set_input_group_as_proven(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            let now_naive_datetime = get_current_naive_datetime();
+            diesel::update(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                    .set(program_input_group::proven_datetime.eq(Some(now_naive_datetime)))
+                    .execute(connection).expect("Error in input group update");
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+    pub async fn delete_input_group_proven_mark(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            diesel::update(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                    .set(program_input_group::proven_datetime.eq(None::<NaiveDateTime>))
+                    .execute(connection).expect("Error in input group update");
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+    pub async fn delete_input_group_entry(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            diesel::delete(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                    .execute(connection).expect("Error in input group update");
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
                     unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
