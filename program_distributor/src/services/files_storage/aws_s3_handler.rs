@@ -67,6 +67,14 @@ impl FileStorage for AwsS3Handler {
         self.upload(file_path, &program_key).await
     }
 
+    async fn upload_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
+        if let None = file_path.to_str() {
+            return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
+        }
+        let program_key = format!("{organization_id}/{program_id}/{input_group_id}.bin");
+        self.upload(file_path, &program_key).await
+    }
+
     async fn download(&self, object_name: &str, storage_path: &Path) -> Result<(), AppError> {
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
         let req = client_ref.get_object().bucket(self.bucket_name.clone()).key(object_name);
@@ -102,10 +110,31 @@ impl FileStorage for AwsS3Handler {
         self.download(&program_key, file_path).await
     }
 
-    async fn delete(&self) -> Result<(), AppError> {
-        // TODO: code this function
+    async fn download_program_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
+        if let None = file_path.to_str() {
+            return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
+        }
+        let program_key = format!("{organization_id}/{program_id}/{input_group_id}.bin");
+        self.download(&program_key, file_path).await
+    }
+
+    async fn delete_object(&self, object_name: &str) -> Result<(), AppError> {
+        let client_ref = self.s3_client.as_ref().expect("Client was not set");
+        let req = client_ref.delete_object().bucket(self.bucket_name.clone()).key(object_name);
+        let res = req.send().await?;
         Ok(())
     }
+
+    async fn delete_program(&self, organization_id: &str, program_id: &str) -> Result<(), AppError> {
+        let program_key = format!("{organization_id}/{program_id}");
+        self.delete_object(&program_key).await
+    }
+
+    async fn delete_proof(&self, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
+        let program_key = format!("{organization_id}/{program_id}/{input_group_id}.bin");
+        self.delete_object(&program_key).await
+    }
+
 }
 
 impl AwsS3Handler {
