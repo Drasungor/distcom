@@ -1,4 +1,5 @@
 pub mod jwt_helpers;
+pub mod diesel_helpers;
 pub mod actix_helpers;
 pub mod datetime_helpers;
 pub mod file_helpers;

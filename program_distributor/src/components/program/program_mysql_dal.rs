@@ -29,13 +29,13 @@ use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
 use crate::schema::{program, account};
 use crate::utils::datetime_helpers::get_current_naive_datetime;
+use crate::utils::diesel_helpers::general_manage_diesel_task_result;
 
 pub struct ProgramMysqlDal;
 
 impl ProgramMysqlDal {
 
     pub async fn add_organization_program(organization_id: String, program_id: String, name: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
-
         let stored_program = StoredProgram {
             organization_id,
             program_id,
@@ -47,25 +47,14 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
-            let insertion_result = diesel::insert_into(program::table)
-                    .values(&stored_program)
-                    .execute(connection);
-            return insertion_result;
+            diesel::insert_into(program::table)
+                        .values(&stored_program)
+                        .execute(connection)?;
+            return Ok(());
 
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(_)) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown database error".to_string()))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        }
+        return general_manage_diesel_task_result(result);
     }
 
     fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), diesel::result::Error> {
@@ -135,7 +124,8 @@ impl ProgramMysqlDal {
                 }
             },
             Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown error: ".to_string())))),
-        }; 
+        };
+        // return general_manage_diesel_task_result(result);
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -163,6 +153,7 @@ impl ProgramMysqlDal {
             },
             Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
+        // return general_manage_diesel_task_result(result);
     }
 
 
@@ -285,16 +276,7 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        return general_manage_diesel_task_result(result);
     }
 
     pub async fn delete_input_group_proven_mark(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -311,16 +293,7 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        return general_manage_diesel_task_result(result);
     }
 
     pub async fn delete_input_group_entry(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -336,16 +309,7 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        return general_manage_diesel_task_result(result);
     }
 
 
@@ -372,6 +336,7 @@ impl ProgramMysqlDal {
             },
             Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
+        // return general_manage_diesel_task_result(result);
     }
 
 
@@ -402,14 +367,7 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        return general_manage_diesel_task_result(found_account_result);
     }
 
     
@@ -438,14 +396,7 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        return general_manage_diesel_task_result(found_account_result);
     }
 
 }
