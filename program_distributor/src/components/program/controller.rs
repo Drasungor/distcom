@@ -1,16 +1,12 @@
 use actix_multipart::Multipart;
-use actix_web::{dev::{Payload, ServiceRequest}, web, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
-use serde_derive::{Serialize, Deserialize};
-use std::{fs::{self, File}, path::Path, thread, time::Duration};
-use actix_files;
-use tar::{Builder, Archive};
-use fs2::FileExt;
+use actix_web::{web, HttpRequest, Responder};
+use std::{fs::{self}, path::Path};
 
-use crate::{common::{self, app_error::{AppError, AppErrorType, InternalServerErrorType}}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
+use crate::{common::{self}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService, utils::{manage_program_with_input_compression}};
+use super::{model::{GetPagedPrograms, UploadProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
