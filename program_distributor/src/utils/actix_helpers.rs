@@ -1,9 +1,7 @@
 use actix_web::{HttpMessage, HttpRequest, HttpResponse};
 
 use crate::{common::{app_error::{AppError, AppErrorType, InternalServerErrorType}, app_http_response_builder::AppHttpResponseBuilder}, RequestExtension};
-
 use super::jwt_helpers::Claims;
-
 
 pub fn extract_jwt_data(req: &HttpRequest) -> Result<Claims, HttpResponse> {
     let extensions = req.extensions();

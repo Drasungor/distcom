@@ -10,7 +10,7 @@ use crate::{common::{self, app_error::{AppError, AppErrorType, InternalServerErr
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService};
+use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService, utils::{manage_program_with_input_compression, open_named_file}};
 
 pub struct ProgramController;
 
@@ -53,7 +53,6 @@ impl ProgramController {
     pub async fn add_inputs_group(req: HttpRequest, path: web::Path<String>, form: Multipart) -> impl Responder {
         let program_id = path.as_str().to_string();
         let files_names = upload_file(form).await.expect("Failed file upload");
-
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
         match extract_jwt_data_result {
@@ -64,12 +63,14 @@ impl ProgramController {
                 return error_response;
             }
         }
-        
+
+        // TODO: make sure only one file is being uploaded
         for file_name in files_names {
             let file_path = format!("./uploads/{}", file_name);
             ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
             fs::remove_file(file_path).expect("Error in file deletion");
         }
+        
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
 
@@ -80,78 +81,101 @@ impl ProgramController {
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
 
         if (organization_id.is_err()) {
-            // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
-            // return AppHttpResponseBuilder::get_http_response(file_path);
+            return AppHttpResponseBuilder::get_http_response(organization_id);
         }
 
-        let object_name = format!("{}/{}", organization_id.as_ref().unwrap(), file_name);
         let program_id = get_filename_without_suffix(&file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            // read_guard.download(&object_name, Path::new(&download_file_path)).await.expect("File upload error");
             read_guard.download_program(Path::new(&download_file_path), &organization_id.as_ref().unwrap(), &program_id).await.expect("File upload error");
         }
-        let program_file = File::open(download_file_path.clone()).expect("Error opening program file");
-        let named_file = actix_files::NamedFile::from_file(program_file, download_file_path).expect("Error in NamedFile creation");
+
+        let named_file;
+        let open_named_file_result = open_named_file(&download_file_path);
+        match open_named_file_result {
+            Ok(ok_named_file) => {
+                named_file = ok_named_file;
+            }
+            Err(app_error) => {
+                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+            },
+        }
         return named_file.into_response(&req);
     }
 
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();
         let input_result = ProgramService::retrieve_input_group(&program_id).await;
-        if (input_result.is_err()) {
-            // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
-            // return AppHttpResponseBuilder::get_http_response(file_path);
+        let input_file_name;
+        match input_result {
+            Ok(ok_input) => {
+                input_file_name = ok_input.1;    
+            },
+            Err(error) => {
+                return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
+            }
         }
-        let input_file_name = input_result.unwrap().1;
-        let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
-        let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
+        let named_file;
+        let open_named_file_result = open_named_file(&input_file_name);
+        match open_named_file_result {
+            Ok(ok_named_file) => {
+                named_file = ok_named_file;
+            }
+            Err(app_error) => {
+                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+            },
+        }
         return named_file.into_response(&req);
     }
 
     pub async fn retrieve_program_template(req: HttpRequest) -> impl Responder {
         let input_file_name = "./proven_code_template/compressed_template.tar";
-        let input_file = File::open(input_file_name.clone()).expect("Error opening program file");
-        let named_file = actix_files::NamedFile::from_file(input_file, input_file_name).expect("Error in NamedFile creation");
+        let named_file;
+        let open_named_file_result = open_named_file(&input_file_name);
+        match open_named_file_result {
+            Ok(ok_named_file) => {
+                named_file = ok_named_file;
+            }
+            Err(app_error) => {
+                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+            },
+        }
         return named_file.into_response(&req);
     }
 
     pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
-
         let program_id = path.as_str().to_string();
         let program_file_name = format!("{}.tar", program_id);
-        // let downloaded_program_file_path = format!("./aux_files/{}", program_file_name);
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
-        
         if (organization_id.is_err()) {
-            // TODO: check how to return an error, the inferred return type fails when whe uncomment the line below this 
-            // return AppHttpResponseBuilder::get_http_response(file_path);
+            return AppHttpResponseBuilder::get_http_response(organization_id);
         }
 
         let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
-        
         let downloaded_program_file_path = format!("./aux_files/{}/{}", input_group_id, program_file_name);
-
         let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
             let download_result = read_guard.download(&object_name, Path::new(&downloaded_program_file_path)).await;
 
             if (download_result.is_err()) {
-                ProgramService::delete_input_group_reservation(&input_group_id).await.expect("Error in input group reservation cancellation");
-                panic!("Error in program download");
+                let input_group_reservation_deletion_result = ProgramService::delete_input_group_reservation(&input_group_id).await;
+                if input_group_reservation_deletion_result.is_err()  {
+                    return AppHttpResponseBuilder::get_http_response(input_group_reservation_deletion_result);
+                }
             }
-
         }
 
-        let tar_file_path = format!("./aux_files/{}/{}_{}.tar", input_group_id, program_id, input_group_id);
-        let tar_file = File::create(tar_file_path.clone()).unwrap();
-        let mut tar_file_builder = Builder::new(tar_file);
-        tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name).expect("Error in adding program to tar builder");
-        tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id)).expect("Error in adding input to tar builder");
-        tar_file_builder.finish().expect("Error in builder finish");
-        let tar_file = File::open(tar_file_path.clone()).expect("Error opening program file");
-        let named_file = actix_files::NamedFile::from_file(tar_file, tar_file_path).expect("Error in NamedFile creation");
+        let named_file;
+        let compression_result = manage_program_with_input_compression(&program_id, &input_group_id, &downloaded_program_file_path, &program_file_name, &input_file_path);
+        match compression_result {
+            Err(app_error) => {
+                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+            },
+            Ok(ok_named_file) => {
+                named_file = ok_named_file;
+            }
+        }
         return named_file.into_response(&req);
     }
 

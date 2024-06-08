@@ -1,41 +1,29 @@
-// use argon2::{
-//     password_hash::{
-//         rand_core::OsRng,
-//         PasswordHash, PasswordHasher, PasswordVerifier, SaltString
-//     },
-//     Argon2
-// };
+use std::{fs::{self, File}, path::Path, thread, time::Duration};
+use tar::{Builder, Archive};
 
-// use crate::utils::jwt_helpers::{generate_jwt, GeneratedToken};
-// use crate::common::config::CONFIG_OBJECT;
+use crate::common::app_error::AppError;
 
-// use super::model::LoginTokens;
+// Controller 
 
-// pub fn generate_password_hash(password: String) -> String {
-//     let salt = SaltString::generate(&mut OsRng);
-//     let argon2 = Argon2::default();
-//     let password_hash = argon2.hash_password(password.as_bytes(), &salt).expect("Error in password hash generation").to_string();
-//     return password_hash;
-// }
+fn compress_program_with_input(program_id: &str, input_group_id: &str, downloaded_program_file_path: &str, 
+                                   program_file_name: &str, input_file_path: &str) -> Result<String, AppError> {
+    let tar_file_path = format!("./aux_files/{}/{}_{}.tar", input_group_id, program_id, input_group_id);
+    let tar_file = File::create(tar_file_path.clone())?;
+    let mut tar_file_builder = Builder::new(tar_file);
+    tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name)?;
+    tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id))?;
+    tar_file_builder.finish().expect("Error in builder finish");
+    return Ok(tar_file_path);
+}
 
-// pub fn is_password_valid(password: String, password_hash: String) -> bool {
-//     let parsed_hash = PasswordHash::new(&password_hash).expect("Error in password hash object generation");
-//     return Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok();
-// }
+pub fn open_named_file(file_path: &str) ->  Result<actix_files::NamedFile, AppError> {
+    let tar_file = File::open(file_path)?;
+    let named_file = actix_files::NamedFile::from_file(tar_file, file_path)?;
+    return Ok(named_file);
+}
 
-// pub fn generate_basic_token(organization_id: &str) -> GeneratedToken {
-//     return generate_jwt(&CONFIG_OBJECT.token.basic_token_secret, organization_id, 
-//         &CONFIG_OBJECT.token.basic_token_minutes_duration * 60);
-// }
-
-// pub fn generate_refresh_token(organization_id: &str) -> GeneratedToken {
-//     return generate_jwt(&CONFIG_OBJECT.token.refresh_token_secret, organization_id, 
-//         &CONFIG_OBJECT.token.refresh_token_days_duration * 24 * 60 * 60);
-// }
-
-// pub fn generate_login_tokens(organization_id: &str) -> LoginTokens {
-//     return LoginTokens {
-//         basic_token: generate_basic_token(organization_id),
-//         refresh_token: generate_refresh_token(organization_id),
-//     };
-// }
+pub fn manage_program_with_input_compression(program_id: &str, input_group_id: &str, downloaded_program_file_path: &str, 
+                                             program_file_name: &str, input_file_path: &str) -> Result<actix_files::NamedFile, AppError> {
+    let tar_file_path = compress_program_with_input(program_id, input_group_id, downloaded_program_file_path, program_file_name, input_file_path)?;
+    return open_named_file(&tar_file_path);
+}
