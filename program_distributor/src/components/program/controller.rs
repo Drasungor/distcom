@@ -6,7 +6,7 @@ use actix_files;
 use tar::{Builder, Archive};
 use fs2::FileExt;
 
-use crate::{common, middlewares::callable_upload_file::upload_file_with_body, utils::{file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
+use crate::{common::{self, app_error::{AppError, AppErrorType, InternalServerErrorType}}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::extract_jwt_data, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
@@ -21,20 +21,24 @@ impl ProgramController {
         // TODO: use version that receives only one file
         let (files_names, uploaded_program) = upload_file_with_body::<UploadProgram>(form).await.expect("Failed file upload");
 
-        // TODO: Change expect calls to an internal server error handling
-        let extension_value = req.extensions().get::<RequestExtension>().expect("Extension should be initialized").clone();
-        let jwt_payload = extension_value.jwt_payload.clone().expect("The jwt payload does not exist");
-        
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+
         // TODO: check that only onefile is uploaded
         let file_id = get_filename_without_suffix(&files_names[0]);
-
         for file_name in files_names {
             let file_path = format!("./uploads/{}", file_name);
-            let new_file_name = format!("{}/{}", jwt_payload.organization_id, file_name);
             let program_id = get_filename_without_suffix(&file_name);
             {
                 let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-                // read_guard.upload(Path::new(&file_path), &new_file_name).await.expect("File upload error");
                 read_guard.upload_program(Path::new(&file_path), &jwt_payload.organization_id, &program_id).await.expect("File upload error");
             }
             fs::remove_file(file_path).expect("Error in file deletion");
@@ -50,9 +54,17 @@ impl ProgramController {
         let program_id = path.as_str().to_string();
         let files_names = upload_file(form).await.expect("Failed file upload");
 
-        // TODO: Change expect calls to an internal server error handling
-        let extension_value = req.extensions().get::<RequestExtension>().expect("Extension should be initialized").clone();
-        let jwt_payload = extension_value.jwt_payload.clone().expect("The jwt payload does not exist");
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+        
         for file_name in files_names {
             let file_path = format!("./uploads/{}", file_name);
             ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
@@ -135,18 +147,9 @@ impl ProgramController {
         let tar_file_path = format!("./aux_files/{}/{}_{}.tar", input_group_id, program_id, input_group_id);
         let tar_file = File::create(tar_file_path.clone()).unwrap();
         let mut tar_file_builder = Builder::new(tar_file);
-
-        // tar_file_builder.append_path(downloaded_program_file_path).expect("Error in adding program to tar builder");
-        // tar_file_builder.append_dir_all(, downloaded_program_file_path).expect("Error in adding program to tar builder");
         tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name).expect("Error in adding program to tar builder");
-        
-
-        // tar_file_builder.append_path(input_file_path).expect("Error in adding input to tar builder");
-        // tar_file_builder.append_dir_all(, input_file_path).expect("Error in adding input to tar builder");
         tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id)).expect("Error in adding input to tar builder");
-
         tar_file_builder.finish().expect("Error in builder finish");
-
         let tar_file = File::open(tar_file_path.clone()).expect("Error opening program file");
         let named_file = actix_files::NamedFile::from_file(tar_file, tar_file_path).expect("Error in NamedFile creation");
         return named_file.into_response(&req);

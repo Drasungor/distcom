@@ -36,12 +36,6 @@ impl AppHttpResponseBuilder {
                 }),
             Err(error) => {
                 Self::generate_app_error_body(error)
-                // HttpResponse::build(error.status_code()).
-                //     json(FailureResponse { 
-                //         status: "error".to_string(), 
-                //         error_code: error.error_type(), 
-                //         error_message: error.message().clone(),
-                // })
             },
         };
     }
