@@ -1,21 +1,16 @@
 use std::fs::File;
-use std::str::Bytes;
-use actix_web::error::BlockingError;
 use csv::Reader;
-use diesel::connection;
 use diesel::r2d2::PooledConnection;
 use diesel::result::DatabaseErrorKind;
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
-use diesel::r2d2::{ ConnectionManager, Pool };
+use diesel::r2d2::ConnectionManager;
 use actix_web::web;
 use uuid::Uuid;
 use base64::prelude::*;
 use csv;
-use chrono::{NaiveDateTime, NaiveDate, NaiveTime};
-use chrono::prelude::*;
-use std::time::{SystemTime, UNIX_EPOCH};
+use chrono::NaiveDateTime;
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
@@ -272,7 +267,7 @@ impl ProgramMysqlDal {
                                 program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
                                 and(program_input_group::program_id.eq(cloned_program_id.clone()))))
                     .set(program_input_group::proven_datetime.eq(Some(now_naive_datetime)))
-                    .execute(connection).expect("Error in input group update");
+                    .execute(connection)?;
             return Ok(());
         })
         }).await;
@@ -289,7 +284,7 @@ impl ProgramMysqlDal {
                                 program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
                                 and(program_input_group::program_id.eq(cloned_program_id.clone()))))
                     .set(program_input_group::proven_datetime.eq(None::<NaiveDateTime>))
-                    .execute(connection).expect("Error in input group update");
+                    .execute(connection)?;
             return Ok(());
         })
         }).await;
@@ -305,7 +300,7 @@ impl ProgramMysqlDal {
             diesel::delete(program_input_group::table.filter(
                                 program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
                                 and(program_input_group::program_id.eq(cloned_program_id.clone()))))
-                    .execute(connection).expect("Error in input group update");
+                    .execute(connection)?;
             return Ok(());
         })
         }).await;
@@ -321,7 +316,7 @@ impl ProgramMysqlDal {
 
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
                 .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
-                .execute(connection).expect("Error in input group update");
+                .execute(connection)?;
             return Ok(());
         })
         }).await;
@@ -341,14 +336,12 @@ impl ProgramMysqlDal {
 
 
     pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
-        // let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-            
             account::table
                 .filter(account::account_was_verified.eq(true))
-                .first::<CompleteAccount>(connection).expect("No verified account with that id was found");
+                .first::<CompleteAccount>(connection)?;
 
             let programs: Vec<StoredProgram> = program::table
                 .filter(program::organization_id.eq(&organization_id))
@@ -357,9 +350,7 @@ impl ProgramMysqlDal {
 
             let count_of_matched_elements: i64 = program::table
                 .filter(program::organization_id.eq(&organization_id))
-                .count()
-                .get_result(connection)
-                .expect("Error finding count of matched elements");
+                .count().get_result(connection)?;
  
             return Ok(PagedPrograms {
                 programs,
