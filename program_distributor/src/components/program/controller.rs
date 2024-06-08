@@ -6,11 +6,11 @@ use actix_files;
 use tar::{Builder, Archive};
 use fs2::FileExt;
 
-use crate::{common::{self, app_error::{AppError, AppErrorType, InternalServerErrorType}}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::extract_jwt_data, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
+use crate::{common::{self, app_error::{AppError, AppErrorType, InternalServerErrorType}}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}, RequestExtension};
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService, utils::{manage_program_with_input_compression, open_named_file}};
+use super::{model::{GetPagedPrograms, PagedPrograms, UploadProgram}, service::ProgramService, utils::{manage_program_with_input_compression}};
 
 pub struct ProgramController;
 
@@ -90,17 +90,19 @@ impl ProgramController {
             read_guard.download_program(Path::new(&download_file_path), &organization_id.as_ref().unwrap(), &program_id).await.expect("File upload error");
         }
 
-        let named_file;
-        let open_named_file_result = open_named_file(&download_file_path);
-        match open_named_file_result {
-            Ok(ok_named_file) => {
-                named_file = ok_named_file;
-            }
-            Err(app_error) => {
-                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
-            },
-        }
-        return named_file.into_response(&req);
+        // let named_file;
+        // let open_named_file_result = open_named_file(&download_file_path);
+        // match open_named_file_result {
+        //     Ok(ok_named_file) => {
+        //         named_file = ok_named_file;
+        //     }
+        //     Err(app_error) => {
+        //         return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+        //     },
+        // }
+        // return named_file.into_response(&req);
+
+        return generate_named_file_response(&req, &download_file_path);
     }
 
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
@@ -115,32 +117,37 @@ impl ProgramController {
                 return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
             }
         }
-        let named_file;
-        let open_named_file_result = open_named_file(&input_file_name);
-        match open_named_file_result {
-            Ok(ok_named_file) => {
-                named_file = ok_named_file;
-            }
-            Err(app_error) => {
-                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
-            },
-        }
-        return named_file.into_response(&req);
+        // let named_file;
+        // let open_named_file_result = open_named_file(&input_file_name);
+        // match open_named_file_result {
+        //     Ok(ok_named_file) => {
+        //         named_file = ok_named_file;
+        //     }
+        //     Err(app_error) => {
+        //         return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+        //     },
+        // }
+        // return named_file.into_response(&req);
+
+        return generate_named_file_response(&req, &input_file_name);
     }
 
     pub async fn retrieve_program_template(req: HttpRequest) -> impl Responder {
         let input_file_name = "./proven_code_template/compressed_template.tar";
-        let named_file;
-        let open_named_file_result = open_named_file(&input_file_name);
-        match open_named_file_result {
-            Ok(ok_named_file) => {
-                named_file = ok_named_file;
-            }
-            Err(app_error) => {
-                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
-            },
-        }
-        return named_file.into_response(&req);
+        // let named_file;
+        // let open_named_file_result = open_named_file(&input_file_name);
+        // match open_named_file_result {
+        //     Ok(ok_named_file) => {
+        //         named_file = ok_named_file;
+        //     }
+        //     Err(app_error) => {
+        //         return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+        //     },
+        // }
+        // return named_file.into_response(&req);
+
+        return generate_named_file_response(&req, &input_file_name);
+
     }
 
     pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
@@ -166,17 +173,21 @@ impl ProgramController {
             }
         }
 
-        let named_file;
-        let compression_result = manage_program_with_input_compression(&program_id, &input_group_id, &downloaded_program_file_path, &program_file_name, &input_file_path);
-        match compression_result {
-            Err(app_error) => {
-                return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
-            },
-            Ok(ok_named_file) => {
-                named_file = ok_named_file;
-            }
-        }
-        return named_file.into_response(&req);
+        // let named_file;
+        // let compression_result = manage_program_with_input_compression(&program_id, &input_group_id, &downloaded_program_file_path, &program_file_name, &input_file_path);
+        // match compression_result {
+        //     Err(app_error) => {
+        //         return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+        //     },
+        //     Ok(ok_named_file) => {
+        //         named_file = ok_named_file;
+        //     }
+        // }
+        // return named_file.into_response(&req);
+        
+        return manage_program_with_input_compression(&req, &program_id, &input_group_id, &downloaded_program_file_path, 
+                                                     &program_file_name, &input_file_path);
+        
     }
 
     pub async fn get_organization_programs(path: web::Path<String>, query_params: web::Query<PagingParameters>) -> impl Responder {

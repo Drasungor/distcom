@@ -1,7 +1,8 @@
 use std::{fs::{self, File}, path::Path, thread, time::Duration};
+use actix_web::{HttpRequest, HttpResponse, Responder};
 use tar::{Builder, Archive};
 
-use crate::common::app_error::AppError;
+use crate::{common::{app_error::AppError, app_http_response_builder::AppHttpResponseBuilder}, utils::actix_helpers::generate_named_file_response};
 
 // Controller 
 
@@ -12,18 +13,24 @@ fn compress_program_with_input(program_id: &str, input_group_id: &str, downloade
     let mut tar_file_builder = Builder::new(tar_file);
     tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name)?;
     tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id))?;
-    tar_file_builder.finish().expect("Error in builder finish");
+    tar_file_builder.finish()?;
     return Ok(tar_file_path);
 }
 
-pub fn open_named_file(file_path: &str) ->  Result<actix_files::NamedFile, AppError> {
-    let tar_file = File::open(file_path)?;
-    let named_file = actix_files::NamedFile::from_file(tar_file, file_path)?;
-    return Ok(named_file);
+
+
+pub fn manage_program_with_input_compression(req: &HttpRequest, program_id: &str, input_group_id: &str, downloaded_program_file_path: &str, 
+                                             program_file_name: &str, input_file_path: &str) -> HttpResponse {
+    let tar_file_path;
+    let tar_file_path_result = compress_program_with_input(program_id, input_group_id, downloaded_program_file_path, program_file_name, input_file_path);
+    match tar_file_path_result {
+        Ok(ok_tar_file_path) => {
+            tar_file_path = ok_tar_file_path;
+        }
+        Err(app_error) => {
+            return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
+        },
+    }
+    return generate_named_file_response(req, &tar_file_path)
 }
 
-pub fn manage_program_with_input_compression(program_id: &str, input_group_id: &str, downloaded_program_file_path: &str, 
-                                             program_file_name: &str, input_file_path: &str) -> Result<actix_files::NamedFile, AppError> {
-    let tar_file_path = compress_program_with_input(program_id, input_group_id, downloaded_program_file_path, program_file_name, input_file_path)?;
-    return open_named_file(&tar_file_path);
-}
