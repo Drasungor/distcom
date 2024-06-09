@@ -91,6 +91,8 @@ impl ProgramMysqlDal {
         };
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        // let mut connection: Result<PooledConnection<ConnectionManager<MysqlConnection>>, diesel::r2d2::Error> = crate::common::config::CONNECTION_POOL.get();
+        // // : r2d2::Error
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 

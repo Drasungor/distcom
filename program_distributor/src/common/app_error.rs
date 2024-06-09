@@ -60,6 +60,12 @@ impl From<ByteStreamError> for AppError {
     }
 }
 
+// impl From<std::error::Error> for AppError {
+//     fn from(error: ByteStreamError) -> Self {
+//         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
+//     }
+// }
+
 impl AppErrorType {
     pub fn to_string(&self) -> String {
         match self {

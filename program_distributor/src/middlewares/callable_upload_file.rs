@@ -1,13 +1,12 @@
-use std::{fs, io::Read}; // Add import for File
-use actix_web::{web, HttpResponse};
-use serde::{Serialize, Deserialize};
-use serde::de::{DeserializeOwned};
-use std::fs::File; // Add import for File
-use actix_multipart::Multipart;
+use std::fs;
+use actix_web::web;
+use serde;
+use serde::de::DeserializeOwned;
+use std::fs::File;
+use actix_multipart::{Field, Multipart};
 use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
 use uuid::Uuid;
-// use serde_derive::Deserialize;
 use serde_json;
 use bytes;
 
@@ -24,7 +23,7 @@ fn create_folder(path: &str) -> () {
 }
 
 
-pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> {
+pub async fn upload_files(mut payload: Multipart) -> Result<Vec<String>, String> {
     let mut files_names: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
@@ -53,7 +52,6 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
             let new_filename = format!("{}.{}", Uuid::new_v4(), file_suffix);
 
             // Define the file path where you want to save the uploaded file
-            // let file_path = format!("{}/{}.{}", uploads_folder, new_filename, file_suffix);
             let file_path = format!("{}/{}", uploads_folder, new_filename);
             let file_path_clone = file_path.clone();
             // Create a new file and write the field data to it
@@ -70,7 +68,7 @@ pub async fn upload_file(mut payload: Multipart) -> Result<Vec<String>, String> 
     return Ok(files_names);
 }
 
-pub async fn upload_file_with_body<T>(mut payload: Multipart) -> Result<(Vec<String>, T), String>
+pub async fn upload_files_with_body<T>(mut payload: Multipart) -> Result<(Vec<String>, T), String>
 where
 T: DeserializeOwned,
 {
@@ -103,7 +101,6 @@ T: DeserializeOwned,
             let new_filename = format!("{}.{}", Uuid::new_v4(), file_suffix);
 
             // Define the file path where you want to save the uploaded file
-            // let file_path = format!("{}/{}.{}", uploads_folder, new_filename, file_suffix);
             let file_path = format!("{}/{}", uploads_folder, new_filename);
             let file_path_clone = file_path.clone();
             // Create a new file and write the field data to it
@@ -131,4 +128,22 @@ T: DeserializeOwned,
         }
     }
     return Ok((files_names, received_object.expect("No body was received")));
+}
+
+async fn process_file_field(mut field: actix_multipart::Field, uploads_folder: &str, filename: &String) -> String {
+    let file_suffix = get_file_suffix(filename);
+    let new_filename = format!("{}.{}", Uuid::new_v4(), file_suffix);
+
+    // Define the file path where you want to save the uploaded file
+    let file_path = format!("{}/{}", uploads_folder, new_filename);
+    let file_path_clone = file_path.clone();
+    // Create a new file and write the field data to it
+    let f = web::block(|| File::create(file_path_clone)).await.
+                        expect("Error in file creation task").expect("Error in file creation");
+    while let Some(chunk) = field.try_next().await.expect("Error in file chunk get") {
+        let mut file_pointer_clone = f.try_clone().expect("Error in file pointer clone");
+        web::block(move || file_pointer_clone.write_all(&chunk)).await.
+                expect("Error chunk creation task").expect("Error in chunk creation");
+    }
+    return new_filename;
 }

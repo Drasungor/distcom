@@ -2,8 +2,8 @@ use actix_multipart::Multipart;
 use actix_web::{web, HttpRequest, Responder};
 use std::{fs::{self}, path::Path};
 
-use crate::{common::{self}, middlewares::callable_upload_file::upload_file_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
-use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_file};
+use crate::{common::{self}, middlewares::callable_upload_file::upload_files_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
+use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_files};
 use crate::services::files_storage::file_storage::FileStorage;
 
 use super::{model::{GetPagedPrograms, UploadProgram}, service::ProgramService, utils::manage_program_with_input_compression};
@@ -15,7 +15,7 @@ impl ProgramController {
     pub async fn upload_program(req: HttpRequest, form: Multipart) -> impl Responder {
 
         // TODO: use version that receives only one file
-        let (files_names, uploaded_program) = upload_file_with_body::<UploadProgram>(form).await.expect("Failed file upload");
+        let (files_names, uploaded_program) = upload_files_with_body::<UploadProgram>(form).await.expect("Failed file upload");
 
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
@@ -48,7 +48,7 @@ impl ProgramController {
 
     pub async fn add_inputs_group(req: HttpRequest, path: web::Path<String>, form: Multipart) -> impl Responder {
         let program_id = path.as_str().to_string();
-        let files_names = upload_file(form).await.expect("Failed file upload");
+        let files_names = upload_files(form).await.expect("Failed file upload");
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
         match extract_jwt_data_result {
