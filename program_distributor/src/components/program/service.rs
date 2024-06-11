@@ -32,6 +32,18 @@ impl ProgramService {
         return Ok((input_group_id, file_path));
     }
 
+    pub async fn set_input_group_as_proven(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::set_input_group_as_proven(program_id, input_group_id).await;
+    }
+
+    pub async fn delete_input_group_proven_mark(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::delete_input_group_proven_mark(program_id, input_group_id).await;
+    }
+    
+    pub async fn confirm_proof_validity(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::delete_input_group_entry(organization_id, program_id, input_group_id).await;
+    }
+
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
         let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
         return Ok(organization_id);

@@ -6,16 +6,13 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_files};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadProgram}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, UploadProgram, UploadProof}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
 impl ProgramController {
 
     pub async fn upload_program(req: HttpRequest, form: Multipart) -> impl Responder {
-
-        // // TODO: use version that receives only one file
-        // let (files_names, uploaded_program) = upload_files_with_body::<UploadProgram>(form).await.expect("Failed file upload");
         let (file_name, uploaded_program) = upload_one_file_with_body::<UploadProgram>(form).await.expect("Failed file upload");
 
 
@@ -29,18 +26,6 @@ impl ProgramController {
                 return error_response;
             }
         }
-
-        // // TODO: check that only one file is uploaded
-        // let file_id = get_filename_without_suffix(&files_names[0]);
-        // for file_name in files_names {
-        //     let file_path = format!("./uploads/{}", file_name);
-        //     let program_id = get_filename_without_suffix(&file_name);
-        //     {
-        //         let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-        //         read_guard.upload_program(Path::new(&file_path), &jwt_payload.organization_id, &program_id).await.expect("File upload error");
-        //     }
-        //     fs::remove_file(file_path).expect("Error in file deletion");
-        // }
 
         let file_id = get_filename_without_suffix(&file_name);
         let file_path = format!("./uploads/{}", file_name);
@@ -61,10 +46,24 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(program_storage_result);
     }
 
+    pub async fn upload_proof(form: Multipart) -> impl Responder {
+        let (file_name, uploaded_program) = upload_one_file_with_body::<UploadProof>(form).await.expect("Failed file upload");
+        let file_path = format!("./uploads/{}", file_name);
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+            read_guard.upload_proof(Path::new(&file_path), &uploaded_program.organization_id, &uploaded_program.program_id, &uploaded_program.input_group_id).await.expect("File upload error");
+        }
+        
+        if let Err(file_deletion_error) = fs::remove_file(file_path) {
+            return AppHttpResponseBuilder::get_http_response::<()>(Err(AppError::from(file_deletion_error)));
+        }
+
+        let set_as_proven_result = ProgramService::set_input_group_as_proven(&uploaded_program.program_id, &uploaded_program.input_group_id).await;
+        return AppHttpResponseBuilder::get_http_response(set_as_proven_result);
+    }
+
     pub async fn add_inputs_group(req: HttpRequest, path: web::Path<String>, form: Multipart) -> impl Responder {
         let program_id = path.as_str().to_string();
-
-        // let files_names = upload_files(form).await.expect("Failed file upload");
         let file_name = upload_one_file(form).await.expect("Failed file upload");
 
         let jwt_payload;
@@ -77,13 +76,6 @@ impl ProgramController {
                 return error_response;
             }
         }
-
-        // // TODO: make sure only one file is being uploaded
-        // for file_name in files_names {
-        //     let file_path = format!("./uploads/{}", file_name);
-        //     ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
-        //     fs::remove_file(file_path).expect("Error in file deletion");
-        // }
 
         let file_path = format!("./uploads/{}", file_name);
         let add_program_input_group_result = ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
@@ -116,13 +108,60 @@ impl ProgramController {
         return generate_named_file_response(&req, &download_file_path);
     }
 
+    pub async fn download_proof(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
+        let (program_id, input_group_id) = path.into_inner();
+        let file_name = format!("proof_{program_id}_{input_group_id}.bin");
+
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+
+        let download_file_path = format!("./aux_files/{}", file_name);
+        let organization_id = &jwt_payload.organization_id;
+
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+            read_guard.download_proof(Path::new(&download_file_path), organization_id, &program_id, &input_group_id).await.expect("File upload error");
+        }
+
+        return generate_named_file_response(&req, &download_file_path);
+    }
+
+    pub async fn confirm_proof_validity(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
+        let (program_id, input_group_id) = path.into_inner();
+
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+
+        let organization_id = &jwt_payload.organization_id;
+
+        let confirm_proof_validity_response = ProgramService::confirm_proof_validity(&organization_id, &program_id, &input_group_id).await;
+
+        return AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response);
+    }
+
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();
         let input_result = ProgramService::retrieve_input_group(&program_id).await;
         let input_file_name;
         match input_result {
             Ok(ok_input) => {
-                input_file_name = ok_input.1;    
+                input_file_name = ok_input.1;
             },
             Err(error) => {
                 return AppHttpResponseBuilder::get_http_response::<()>(Err(error));

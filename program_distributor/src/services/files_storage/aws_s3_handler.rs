@@ -110,7 +110,7 @@ impl FileStorage for AwsS3Handler {
         self.download(&program_key, file_path).await
     }
 
-    async fn download_program_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
+    async fn download_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
         if let None = file_path.to_str() {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
         }
