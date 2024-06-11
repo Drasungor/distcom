@@ -276,15 +276,22 @@ impl ProgramMysqlDal {
         return general_manage_diesel_task_result(result);
     }
 
-    pub async fn delete_input_group_proven_mark(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+    pub async fn delete_input_group_proven_mark(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
         let cloned_program_id = program_id.clone();
         let cloned_input_group_id = input_group_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let found_program = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection)?;
+
+
             diesel::update(program_input_group::table.filter(
-                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
-                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                                program_input_group::input_group_id.eq(&cloned_input_group_id).
+                                and(program_input_group::program_id.eq(&cloned_program_id))))
                     .set((
                         program_input_group::proven_datetime.eq(None::<NaiveDateTime>), 
                         program_input_group::last_reserved.eq(None::<NaiveDateTime>)

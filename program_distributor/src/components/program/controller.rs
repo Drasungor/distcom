@@ -155,6 +155,30 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response);
     }
 
+    pub async fn mark_proof_as_invalid(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
+        let (program_id, input_group_id) = path.into_inner();
+
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+
+        let organization_id = &jwt_payload.organization_id;
+
+        // delete_input_group_proven_mark(organization_id: &String, program_id: &String, input_group_id: &String)
+        let confirm_proof_validity_response = ProgramService::delete_input_group_proven_mark(&organization_id, &program_id, &input_group_id).await;
+
+        return AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response);
+    }
+
+    // delete_input_group_proven_mark(program_id: &String, input_group_id: &String)
+
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();
         let input_result = ProgramService::retrieve_input_group(&program_id).await;

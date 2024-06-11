@@ -13,10 +13,13 @@ pub fn program_router(path_prefix: &str) -> Scope {
         route("inputs/{program_id}", web::get().to(ProgramController::retrieve_input_group)).
         route("program-and-inputs/{program_id}", web::get().to(ProgramController::retrieve_program_and_input_group)).
         route("organization/{organization_id}", web::get().to(ProgramController::get_organization_programs)).
-        route("proof/{program_id}/{input_group_id}", web::get().to(ProgramController::download_proof)).
+        route("proof/{program_id}/{input_group_id}", web::get().to(ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
+
+        // patch
+        route("proof/{program_id}/{input_group_id}", web::patch().to(ProgramController::mark_proof_as_invalid).wrap(ValidateJwtMiddleware)).
 
         // delete
-        route("proof/{program_id}/{input_group_id}", web::delete().to(ProgramController::confirm_proof_validity)).
+        route("proof/{program_id}/{input_group_id}", web::delete().to(ProgramController::confirm_proof_validity).wrap(ValidateJwtMiddleware)).
 
         // post
         route("upload", web::post().to(ProgramController::upload_program).wrap(ValidateJwtMiddleware)).

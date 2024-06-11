@@ -36,8 +36,8 @@ impl ProgramService {
         return ProgramMysqlDal::set_input_group_as_proven(program_id, input_group_id).await;
     }
 
-    pub async fn delete_input_group_proven_mark(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
-        return ProgramMysqlDal::delete_input_group_proven_mark(program_id, input_group_id).await;
+    pub async fn delete_input_group_proven_mark(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        return ProgramMysqlDal::delete_input_group_proven_mark(organization_id, program_id, input_group_id).await;
     }
     
     pub async fn confirm_proof_validity(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
