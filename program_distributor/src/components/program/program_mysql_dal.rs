@@ -350,9 +350,48 @@ impl ProgramMysqlDal {
             },
             Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
-        // return general_manage_diesel_task_result(result);
     }
 
+    pub async fn get_programs_with_proven_executions(organization_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let results: Vec<String> = program_input_group::table
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(cloned_organization_id))
+                .select(program_input_group::program_id)
+                .distinct()
+                .load::<String>(connection)?;
+
+            println!("Results: {:?}", results);
+
+            // diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
+            //     .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
+            //     .execute(connection)?;
+            return Ok(());
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(result_tuple)) => Ok(result_tuple),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+
+
+    // let results = program_input_groups
+    //     .filter(proven_datetime.is_not_null())
+    //     .select(program_id)
+    //     .distinct()
+    //     .load::<String>(conn)?;
 
     pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
