@@ -10,17 +10,8 @@ use uuid::Uuid;
 use serde_json;
 use bytes;
 
-use crate::utils::file_helpers::get_file_suffix;
+use crate::utils::{file_helpers::get_file_suffix, local_storage_helpers::create_folder};
 
-fn folder_exists(path: &str) -> bool {
-    fs::metadata(path).is_ok()
-}
-
-fn create_folder(path: &str) -> () {
-    if !folder_exists(path) {
-        fs::create_dir(path).expect("Error in uploads folder creation")
-    }
-}
 
 async fn process_file_field(mut field: actix_multipart::Field, uploads_folder: &str, filename: &String) -> String {
     let file_suffix = get_file_suffix(filename);

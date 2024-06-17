@@ -4,6 +4,17 @@ use std::fs::File;
 use std::io::Write;
 use std::io;
 
+
+pub fn folder_exists(path: &str) -> bool {
+    fs::metadata(path).is_ok()
+}
+
+pub fn create_folder(path: &str) -> () {
+    if !folder_exists(path) {
+        fs::create_dir(path).expect("Error in uploads folder creation")
+    }
+}
+
 pub fn clear_directory(folder_path: &str) {
     // let downloads_folder_path = "./downloads";
 
@@ -27,8 +38,13 @@ pub fn clear_directory(folder_path: &str) {
 }
 
 pub fn clear_aux_directories() {
-    clear_directory("./downloads");
-    clear_directory("./aux_files");
+    let downloads_folder = "./downloads";
+    create_folder(downloads_folder);
+    clear_directory(downloads_folder);
+
+    let aux_files_folder = "./aux_files";
+    create_folder(aux_files_folder);
+    clear_directory(aux_files_folder);
 }
 
 

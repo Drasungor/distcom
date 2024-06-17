@@ -358,13 +358,13 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-            let results: Vec<String> = program_input_group::table
-                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(cloned_organization_id))
-                .select(program_input_group::program_id)
-                .distinct()
-                .load::<String>(connection)?;
+            // let results: Vec<String> = program_input_group::table
+            //     .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(cloned_organization_id))
+            //     .select(program_input_group::program_id)
+            //     .distinct()
+            //     .load::<String>(connection)?;
 
-            println!("Results: {:?}", results);
+            // println!("Results: {:?}", results);
 
             // diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
             //     .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
