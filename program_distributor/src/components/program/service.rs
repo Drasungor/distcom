@@ -8,6 +8,7 @@ use crate::common::app_error::{AppError, AppErrorType};
 use crate::components::program::program_mysql_dal::ProgramMysqlDal;
 
 use super::db_models::program::StoredProgram;
+use super::db_models::program_input_group::ProgramInputGroup;
 use super::model::PagedPrograms;
 
 
@@ -45,8 +46,12 @@ impl ProgramService {
         return ProgramMysqlDal::delete_input_group_entry(organization_id, program_id, input_group_id).await;
     }
 
-    pub async fn get_programs_with_proven_executions(organization_id: &String) -> Result<Vec<StoredProgram>, AppError> {
-        return ProgramMysqlDal::get_programs_with_proven_executions(organization_id).await;
+    pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        return ProgramMysqlDal::get_programs_with_proven_executions(organization_id, limit, page).await;
+    }
+
+    pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String) -> Result<Vec<ProgramInputGroup>, AppError> {
+        return ProgramMysqlDal::get_input_groups_with_proven_executions(organization_id, program_id).await;
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {

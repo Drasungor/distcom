@@ -176,7 +176,8 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response);
     }
 
-    pub async fn get_programs_with_proven_executions(req: HttpRequest) -> impl Responder {
+    pub async fn get_programs_with_proven_executions(req: HttpRequest, query_params: web::Query<PagingParameters>) -> impl Responder {
+        let paging_params = process_paging_inputs(query_params.into_inner());
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
         match extract_jwt_data_result {
@@ -190,9 +191,14 @@ impl ProgramController {
         let organization_id = &jwt_payload.organization_id;
 
         // get_programs_with_proven_executions(organization_id: &String) -> impl Responder {
-        ProgramService::get_programs_with_proven_executions(organization_id).await;
+        let found_programs_result = ProgramService::get_programs_with_proven_executions(organization_id, paging_params.limit, paging_params.page).await;
+        return AppHttpResponseBuilder::get_http_response(found_programs_result);
+    }
+
+    pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String) -> impl Responder {
         return AppHttpResponseBuilder::get_http_response(Ok(()));
     }
+
 
     pub async fn retrieve_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
         let program_id = path.as_str().to_string();

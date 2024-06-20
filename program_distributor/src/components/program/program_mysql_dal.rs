@@ -352,7 +352,7 @@ impl ProgramMysqlDal {
         };
     }
 
-    pub async fn get_programs_with_proven_executions(organization_id: &String) -> Result<Vec<StoredProgram>, AppError> {
+    pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
@@ -367,15 +367,25 @@ impl ProgramMysqlDal {
             println!("Results: {:?}", proven_programs);
 
             let programs: Vec<StoredProgram> = program::table
-                .filter(program::program_id.eq_any(proven_programs).and(program::organization_id.eq(cloned_organization_id)))
+                .filter(program::program_id.eq_any(&proven_programs).and(program::organization_id.eq(&cloned_organization_id)))
+                .offset((page - 1) * limit).limit(limit)
                 .load::<StoredProgram>(connection)?;
 
-            return Ok(programs);
+            let count_of_matched_elements: i64 = program::table
+                .filter(program::program_id.eq_any(proven_programs).and(program::organization_id.eq(cloned_organization_id)))
+                .count().get_result(connection)?;
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+
+            // return Ok(programs);
         })
         }).await;
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(result_array)) => Ok(result_array),
+            Ok(Ok(result)) => Ok(result),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
