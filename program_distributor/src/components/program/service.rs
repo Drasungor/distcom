@@ -7,6 +7,7 @@ use std::fs::File; // Add import for File
 use crate::common::app_error::{AppError, AppErrorType};
 use crate::components::program::program_mysql_dal::ProgramMysqlDal;
 
+use super::db_models::program::StoredProgram;
 use super::model::PagedPrograms;
 
 
@@ -44,7 +45,7 @@ impl ProgramService {
         return ProgramMysqlDal::delete_input_group_entry(organization_id, program_id, input_group_id).await;
     }
 
-    pub async fn get_programs_with_proven_executions(organization_id: &String) -> Result<(), AppError> {
+    pub async fn get_programs_with_proven_executions(organization_id: &String) -> Result<Vec<StoredProgram>, AppError> {
         return ProgramMysqlDal::get_programs_with_proven_executions(organization_id).await;
     }
 
