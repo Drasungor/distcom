@@ -47,8 +47,6 @@ impl ProgramDistributorService {
         self.get_jwt().await; 
     }
 
-
-
     async fn interactive_login(&self) -> String {
         print!("Please enter your username: ");
         io::stdout().flush().unwrap();
