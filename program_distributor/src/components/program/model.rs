@@ -41,6 +41,6 @@ pub struct PagedPrograms {
 
 #[derive(Serialize, Debug)]
 pub struct PagedProgramInputGroups {
-    pub programs: Vec<ProgramInputGroup>,
+    pub program_input_groups: Vec<ProgramInputGroup>,
     pub total_elements_amount: i64,
 }

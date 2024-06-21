@@ -15,6 +15,7 @@ use chrono::NaiveDateTime;
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
 use super::db_models::specific_program_input::SpecificProgramInput;
+use super::model::PagedProgramInputGroups;
 use super::model::PagedPrograms;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
@@ -358,13 +359,14 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
+            // TODO: check if we should ask first for the organization programs and then get the proven programs, or maybe 
+            // we could join the two queries into one
+
             let proven_programs: Vec<String> = program_input_group::table
                 .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>))
                 .select(program_input_group::program_id)
                 .distinct()
                 .load::<String>(connection)?;
-
-            println!("Results: {:?}", proven_programs);
 
             let programs: Vec<StoredProgram> = program::table
                 .filter(program::program_id.eq_any(&proven_programs).and(program::organization_id.eq(&cloned_organization_id)))
@@ -379,8 +381,6 @@ impl ProgramMysqlDal {
                 programs,
                 total_elements_amount: count_of_matched_elements,
             });
-
-            // return Ok(programs);
         })
         }).await;
         return match result {
@@ -396,7 +396,7 @@ impl ProgramMysqlDal {
         };
     }
 
-    pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String) -> Result<Vec<ProgramInputGroup>, AppError> {
+    pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
         let cloned_organization_id = organization_id.clone();
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
@@ -408,9 +408,20 @@ impl ProgramMysqlDal {
                 .first::<StoredProgram>(connection)?;
 
             let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
-                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(cloned_program_id)))
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(&cloned_program_id)))
+                .offset((page - 1) * limit).limit(limit)
                 .load::<ProgramInputGroup>(connection)?;
-            return Ok(proven_input_groups);
+
+            let count_of_matched_elements = program_input_group::table
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(cloned_program_id)))
+                .count().get_result(connection)?;
+                
+            return Ok(PagedProgramInputGroups {
+                program_input_groups: proven_input_groups,
+                total_elements_amount: count_of_matched_elements,
+            });
+
+            // return Ok(proven_input_groups);
         })
         }).await;
         return match result {
