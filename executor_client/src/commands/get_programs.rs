@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use std::process::Command;
 
-use crate::{common::communication::EndpointResult, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::server_requests::{get_general_programs, get_organization_programs, get_program_and_input_group, PagedPrograms}, utils::process_inputs::process_user_input};
+use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::PagedPrograms, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -24,7 +24,9 @@ enum GetProgramsCommands {
 
 
 async fn download_and_run_program(program: &ReturnedProgram) {
-    let input_file_name = get_program_and_input_group(&program.program_id).await;
+    let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
+
+    let input_file_name = read_guard.get_program_and_input_group(&program.program_id).await;
 
     let program_arguments = format!("run {}", input_file_name);
 
@@ -44,11 +46,12 @@ async fn download_and_run_program(program: &ReturnedProgram) {
 }
 
 async fn retrieve_programs(organization_option: Option<&ReturnedOrganization>, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     if (organization_option.is_some()) {
         let organization = organization_option.unwrap();
-        return get_organization_programs(&organization.organization_id, limit, page).await;
+        return read_guard.get_organization_programs(&organization.organization_id, limit, page).await;
     } else {
-        return get_general_programs(limit, page).await;
+        return read_guard.get_general_programs(limit, page).await;
     }
 }
 

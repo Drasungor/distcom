@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
-use crate::{commands::get_programs::select_organization_programs, models::returned_organization::{print_organizations_list, ReturnedOrganization}, services::server_requests::get_organizations, utils::process_inputs::process_user_input};
 
+use crate::{commands::get_programs::select_organization_programs, common, models::returned_organization::print_organizations_list, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -23,7 +23,8 @@ enum GetOrganizationsCommands {
 
 
 pub async fn select_organizations() {
-    let mut organizations_page = get_organizations(Some(50), Some(1)).await;
+    let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
+    let mut organizations_page = read_guard.get_organizations(Some(50), Some(1)).await;
     print_organizations_list(&organizations_page.data.organizations);
 
     loop { 
@@ -36,7 +37,7 @@ pub async fn select_organizations() {
                     GetOrganizationsCommands::Page{page} => {
 
                         // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        organizations_page = get_organizations(Some(50), Some(page)).await;
+                        organizations_page = read_guard.get_organizations(Some(50), Some(page)).await;
                         
                     },
                     GetOrganizationsCommands::Choose{index} => {
