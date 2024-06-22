@@ -16,6 +16,7 @@ use crate::common::user_interaction::get_input_string;
 
 // TODO: check if we should add an attribute that stores the server's ip
 pub struct ProgramDistributorService {
+    base_url: String,
     jwt: Option<String>,
     client: Client,
 }
@@ -36,8 +37,9 @@ pub struct ReceivedTokens {
 
 impl ProgramDistributorService {
 
-    pub fn new() -> ProgramDistributorService {
+    pub fn new(base_url: &str) -> ProgramDistributorService {
         ProgramDistributorService {
+            base_url: base_url.to_string(),
             jwt: None,
             client: reqwest::Client::new(),
         }
@@ -45,6 +47,17 @@ impl ProgramDistributorService {
 
     pub async fn setup(&mut self) {
         self.get_jwt().await; 
+    }
+
+    pub async fn download_template_methods(&mut self) -> Result<(), EndpointError> {
+        // make_request<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError>
+        let get_template_url = format!("{}/program/template", self.base_url);
+        let get_template_request_builder = self.client.get(get_template_url);
+        let request_result = self.make_request::<()>(get_template_request_builder).await;
+        return match request_result {
+            Ok(ok_result) => Ok(ok_result.data),
+            Err(err) => Err(err),
+        };
     }
 
     async fn interactive_login(&self) -> String {
