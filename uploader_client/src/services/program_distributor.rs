@@ -54,6 +54,11 @@ impl ProgramDistributorService {
         let get_template_url = format!("{}/program/template", self.base_url);
         let get_template_request_builder = self.client.get(get_template_url);
         let request_result = self.make_request::<()>(get_template_request_builder).await;
+
+        // let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
+        // file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+        // decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+
         return match request_result {
             Ok(ok_result) => Ok(ok_result.data),
             Err(err) => Err(err),
