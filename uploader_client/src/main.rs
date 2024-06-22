@@ -4,6 +4,7 @@ use serde::Serialize;
 // use services::program_distributor::{token_refreshment, Token};
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
+use utils::local_storage_helpers::create_folder;
 use utils::process_inputs::process_user_input;
 use std::process::Command;
 use std::io::{self, Read, Write};
@@ -100,6 +101,9 @@ async fn start_program_execution() {
 async fn main() {
     // let token = interactive_login().await;
     // get_jwt().await;
+
+    create_folder("./downloads");
+
     {
         // We establish the connection to s3
         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
