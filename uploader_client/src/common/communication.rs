@@ -1,12 +1,22 @@
+// use std::str::{Bytes, FromStr};
 use std::str::FromStr;
 use std::fmt;
 use serde_derive::{Deserialize};
+use reqwest::Response;
+use bytes::Bytes;
+// use shlex::bytes::Bytes;
 
 #[derive(Debug, Deserialize)]
 pub struct EndpointResult<T> {
     pub status: String,
     pub data: T,
 }
+
+// pub struct CompleteEndpointResponse<T> {
+//     pub response_body: EndpointResult<T>,
+//     // pub complete_response: Response,
+//     pub bytes: Bytes,
+// }
 
 #[derive(Debug, Deserialize)]
 pub struct EndpointError {

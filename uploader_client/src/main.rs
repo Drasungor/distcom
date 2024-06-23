@@ -1,5 +1,6 @@
 use std::env;
 use std::fs::File;
+use std::path::Path;
 use serde::Serialize;
 // use services::program_distributor::{token_refreshment, Token};
 use tar::{Builder, Archive};
@@ -17,37 +18,37 @@ mod services;
 mod common;
 mod utils;
 
-fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
-    let file = File::create(output_path)?;
-    let mut builder = Builder::new(file);
+// fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
+//     let file = File::create(output_path)?;
+//     let mut builder = Builder::new(file);
 
-    // // Recursively add all files in the folder to the tar file
-    // builder.append_dir_all(folder_path, folder_path)?;
+//     // // Recursively add all files in the folder to the tar file
+//     // builder.append_dir_all(folder_path, folder_path)?;
 
-    // // Recursively add all files in the folder to the tar file
-    // let _ = builder.append_dir_all(folder_path, folder_path);
+//     // // Recursively add all files in the folder to the tar file
+//     // let _ = builder.append_dir_all(folder_path, folder_path);
 
-    // Attempt to append all files in the folder to the tar file
-    // if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
-    if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
-        // If an error occurs, call finish to clean up resources and then propagate the error
-        let _ = builder.finish();
-        return Err(err);
-    }
+//     // Attempt to append all files in the folder to the tar file
+//     // if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
+//     if let Err(err) = builder.append_dir_all(folder_path, folder_path) {
+//         // If an error occurs, call finish to clean up resources and then propagate the error
+//         let _ = builder.finish();
+//         return Err(err);
+//     }
 
-    builder.finish()?;
-    Ok(())
-}
+//     builder.finish()?;
+//     Ok(())
+// }
 
-fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
-    let file = File::open(tar_path)?;
-    let mut archive = Archive::new(file);
+// fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
+//     let file = File::open(tar_path)?;
+//     let mut archive = Archive::new(file);
 
-    // archive.unpack(output_folder)?;
-    archive.unpack("./")?;
+//     // archive.unpack(output_folder)?;
+//     archive.unpack("./")?;
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -83,12 +84,15 @@ async fn start_program_execution() {
 
                     },
                     GetProgramsCommands::Template => {
+                        let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
 
+                        // TODO: manage this error correctly
+                        write_guard.download_template_methods(Path::new("./downloads/template")).await.expect("Error in template download");
                     },
                }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(err) => {
+                println!("That's not a valid command!: {}", err);
             }
        };
         // print_programs_list(&programs_page.data.programs);
@@ -103,6 +107,7 @@ async fn main() {
     // get_jwt().await;
 
     create_folder("./downloads");
+    create_folder("./aux_files");
 
     {
         // We establish the connection to s3
@@ -111,4 +116,6 @@ async fn main() {
     }
 
     println!("Welcome");
+
+    start_program_execution().await;
 }

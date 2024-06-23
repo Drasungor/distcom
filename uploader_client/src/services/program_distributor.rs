@@ -9,10 +9,12 @@ use std::collections::HashMap;
 use std::path::Path;
 use rpassword;
 use std::io;
+use bytes::Bytes;
 // use std::io::Write;
 
 use crate::common::communication::{EndpointError, EndpointResult, AppErrorType};
 use crate::common::user_interaction::get_input_string;
+use crate::utils::compression::decompress_tar;
 
 // TODO: check if we should add an attribute that stores the server's ip
 pub struct ProgramDistributorService {
@@ -49,20 +51,29 @@ impl ProgramDistributorService {
         self.get_jwt().await; 
     }
 
-    pub async fn download_template_methods(&mut self) -> Result<(), EndpointError> {
-        // make_request<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError>
+    pub async fn download_template_methods(&mut self, download_path: &Path) -> Result<(), EndpointError> {
         let get_template_url = format!("{}/program/template", self.base_url);
         let get_template_request_builder = self.client.get(get_template_url);
-        let request_result = self.make_request::<()>(get_template_request_builder).await;
 
-        // let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
-        // file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
-        // decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+        let request_result = self.make_request_with_file_response(get_template_request_builder).await;
 
-        return match request_result {
-            Ok(ok_result) => Ok(ok_result.data),
-            Err(err) => Err(err),
-        };
+        if let Err(error_result) = request_result {
+            return Err(error_result);
+        }
+
+        let bytes = request_result.unwrap();
+        
+        // "./downloads/template"
+
+        // TODO: handle this error correctly
+        let download_path_str = download_path.to_str().expect("Error in get download path string");
+
+        let downloaded_file_path = "./aux_files/downloaded_template.tar";
+        let mut file = File::create(downloaded_file_path).expect("Error in file creation");
+        file.write_all(bytes.as_ref()).expect("Errors in file write");
+        decompress_tar(downloaded_file_path, download_path_str).expect("Error in downloaded file decompression");
+
+        return Ok(());
     }
 
     async fn interactive_login(&self) -> String {
@@ -130,10 +141,10 @@ impl ProgramDistributorService {
         self.jwt = Some(returned_token.unwrap());
     }
 
-    async fn make_request<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+    async fn make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         let request_clone = request.try_clone().expect("Error while cloning request");
         let response = request.send().await.expect("Error in get");
-        let response_parse_result = Self::parse_response::<T>(response).await;
+        let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
             Err(error_response) => {
@@ -145,7 +156,7 @@ impl ProgramDistributorService {
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
                     let response = request_clone.send().await.expect("Error in get");
-                    return Self::parse_response::<T>(response).await;
+                    return Self::parse_response_with_response_body::<T>(response).await;
                 } else {
                     return Err(error_response);
                 }
@@ -153,10 +164,44 @@ impl ProgramDistributorService {
         }
     }
 
-    async fn parse_response<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
+    async fn parse_response_with_response_body<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
         if response.status().is_success() {
             let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing JSON");
             return Ok(endpoint_response);
+        } else {
+            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
+            return Err(endpoint_response);
+        }
+    }
+
+    async fn make_request_with_file_response(&mut self, request: RequestBuilder) -> Result<Bytes, EndpointError> {
+        let request_clone = request.try_clone().expect("Error while cloning request");
+        let response = request.send().await.expect("Error in get");
+        let response_parse_result = Self::parse_response_with_file_response(response).await;
+        return match response_parse_result {
+            Ok(good_response) => Ok(good_response),
+            Err(error_response) => {
+                let invalid_variant: Result<AppErrorType, String> = "InvalidVariant".parse();
+                let error_type = match invalid_variant {
+                    Ok(v) => v,
+                    Err(e) => panic!("Received unknown error type: \"{}\" with message \"{}\"", e, error_response.error_message),
+                };
+                if (error_type == AppErrorType::InvalidToken) {
+                    self.get_jwt().await;
+                    let response = request_clone.send().await.expect("Error in get");
+                    return Self::parse_response_with_file_response(response).await;
+                } else {
+                    return Err(error_response);
+                }
+            }
+        }
+    }
+
+    async fn parse_response_with_file_response(response: Response) -> Result<Bytes, EndpointError> {
+        if response.status().is_success() {
+            // TODO: change the expect to proper error management, investigate possible sources of errors
+            let bytes_response: Bytes = response.bytes().await.expect("Error while receiving bytes");
+            return Ok(bytes_response);
         } else {
             let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
             return Err(endpoint_response);
