@@ -136,8 +136,8 @@ T: DeserializeOwned,
 
     while let Ok(Some(field_result)) = payload.try_next().await {
 
-        // TODO: manage this with an error instead of an assert
-        assert!(counter < files_amount, "This endpoint expects {files_amount} files but more were sent");
+        // // TODO: manage this with an error instead of an assert
+        // assert!(counter < files_amount, "This endpoint expects {files_amount} files but more were sent");
 
         let mut field_is_file = true;
         let mut field = field_result;
@@ -149,19 +149,30 @@ T: DeserializeOwned,
             }
         };
 
+        println!("filename: {filename}");
+
         if (field_is_file) {
+
+
+            // TODO: manage this with an error instead of an assert
+            assert!(counter < files_amount, "This endpoint expects {files_amount} files but more ({counter}) were sent");
+
+
             let new_filename = process_file_field(field, uploads_folder, &filename).await;
             files_names.push(new_filename);
+
+            counter += 1;
+
         } else {
             // TODO: remove assert and manage the error properly
             assert!(received_object.is_none(), "More than one data attribute was received");
             received_object = Some(process_text_object_field::<T>(field).await);
         }
-        counter += 1;
+        // counter += 1;
     }
 
     // TODO: manage this with an error instead of an assert
-    assert!(counter == files_amount, "This endpoint expects {files_amount} files but less were sent");
+    assert!(counter == files_amount, "This endpoint expects {files_amount} files but less ({counter}) were sent");
 
     return Ok((files_names, received_object.expect("No body was received")));
 }
@@ -171,7 +182,7 @@ pub async fn upload_one_file_with_body<T: DeserializeOwned>(mut payload: Multipa
     let files_amount = files_array.len();
 
     // TODO: manage this with an error instead of an assert
-    assert!(files_amount != 1, "This endpoint expects 1 files but {files_amount} were sent");
+    assert!(files_amount == 1, "This endpoint expects 1 file but {files_amount} were sent");
 
     return Ok((files_array[0].clone(), returned_object));
 }
