@@ -97,6 +97,7 @@ impl ProgramDistributorService {
         .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
 
         let post_methods_request_builder = self.client.post(post_program_url).multipart(form);
+        
         let response = self.make_request_with_response_body::<()>(post_methods_request_builder).await;
 
         return match response {
@@ -175,6 +176,17 @@ impl ProgramDistributorService {
 
     async fn make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         let request_clone = request.try_clone().expect("Error while cloning request");
+        return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
+    }
+
+    // Since requests that are sending a stream cannot be cloned, and to repeat the request in case of a fail due to
+    // invalid jwt error we need to have another request builder instance (since the send method consumes the variable),
+    // we need the same request from request stored in request_clone but built without the try_clone function
+    async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+        return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
+    }
+
+    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         let response = request.send().await.expect("Error in get");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
         return match response_parse_result {
