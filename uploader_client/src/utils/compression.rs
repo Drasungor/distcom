@@ -50,7 +50,6 @@ pub fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Res
 }
 
 
-
 pub fn decompress_tar(tar_path: &str, output_folder: &str) -> io::Result<()> {
     fs::create_dir_all(output_folder)?;
     let file = File::open(tar_path)?;

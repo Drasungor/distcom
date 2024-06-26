@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use serde::Serialize;
+use services::program_distributor::UploadedProgram;
 // use services::program_distributor::{token_refreshment, Token};
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
@@ -59,13 +60,19 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
-    Page {
-        #[clap(index = 1)]
-        page: usize,
-    },
-    Run {
-        #[clap(index = 1)]
-        index: usize,
+    Upload {
+        #[clap(short = 'p', long = "path")]
+        folder_path: String,
+
+        #[clap(short = 'n', long = "name")]
+        name: String,
+
+        #[clap(short = 'd', long = "description")]
+        description: String,
+
+        #[clap(short = 't', long = "timeout")]
+        execution_timeout: i64,
+        
     },
     Template,
 }
@@ -77,11 +84,22 @@ async fn start_program_execution() {
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetProgramsCommands::Page{page} => {
+                    GetProgramsCommands::Upload{
+                        folder_path,
+                        name,
+                        description,
+                        execution_timeout,
+                    } => {
+                        let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
 
-                    },
-                    GetProgramsCommands::Run{index} => {
+                        let uploaded_program_args = UploadedProgram {
+                            name,
+                            description,
+                            execution_timeout,
+                        };
 
+                        // TODO: manage this error correctly
+                        write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
                     },
                     GetProgramsCommands::Template => {
                         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");

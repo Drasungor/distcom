@@ -1,10 +1,11 @@
 use reqwest::{Client, RequestBuilder, Response};
+use reqwest::multipart::{self, Part};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::collections::HashMap;
 use std::path::Path;
 use rpassword;
@@ -14,7 +15,7 @@ use bytes::Bytes;
 
 use crate::common::communication::{EndpointError, EndpointResult, AppErrorType};
 use crate::common::user_interaction::get_input_string;
-use crate::utils::compression::decompress_tar;
+use crate::utils::compression::{compress_folder_contents, decompress_tar};
 
 // TODO: check if we should add an attribute that stores the server's ip
 pub struct ProgramDistributorService {
@@ -37,6 +38,13 @@ pub struct ReceivedTokens {
 }
 
 
+#[derive(Debug, Serialize)]
+pub struct UploadedProgram {
+    pub name: String,
+    pub description: String,
+    pub execution_timeout: i64
+}
+
 impl ProgramDistributorService {
 
     pub fn new(base_url: &str) -> ProgramDistributorService {
@@ -54,17 +62,12 @@ impl ProgramDistributorService {
     pub async fn download_template_methods(&mut self, download_path: &Path) -> Result<(), EndpointError> {
         let get_template_url = format!("{}/program/template", self.base_url);
         let get_template_request_builder = self.client.get(get_template_url);
-
         let request_result = self.make_request_with_file_response(get_template_request_builder).await;
-
         if let Err(error_result) = request_result {
             return Err(error_result);
         }
-
         let bytes = request_result.unwrap();
         
-        // "./downloads/template"
-
         // TODO: handle this error correctly
         let download_path_str = download_path.to_str().expect("Error in get download path string");
 
@@ -72,8 +75,34 @@ impl ProgramDistributorService {
         let mut file = File::create(downloaded_file_path).expect("Error in file creation");
         file.write_all(bytes.as_ref()).expect("Errors in file write");
         decompress_tar(downloaded_file_path, download_path_str).expect("Error in downloaded file decompression");
-
         return Ok(());
+    }
+
+
+    pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<(), EndpointError> {
+        let post_program_url = format!("{}/program/upload", self.base_url);
+        let upload_folder_path_str = upload_folder_path.to_str().expect("Error in get download path string");
+        let compressed_folder_path = "./aux_files/uploaded_methods.tar";
+        compress_folder_contents(upload_folder_path_str, compressed_folder_path).expect("Error in methods folder compression");
+
+        // Read the compressed file content
+        let mut file = File::open(compressed_folder_path).expect("Error in opening compressed file");
+        let mut file_content = Vec::new();
+        file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
+
+        let serialized = serde_json::to_string(&uploaded_program).unwrap();
+
+        let form = multipart::Form::new()
+        .text("data", serialized)
+        .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
+
+        let post_methods_request_builder = self.client.post(post_program_url).multipart(form);
+        let response = self.make_request_with_response_body::<()>(post_methods_request_builder).await;
+
+        return match response {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
     async fn interactive_login(&self) -> String {
@@ -95,8 +124,10 @@ impl ProgramDistributorService {
         data.insert("username", username);
         data.insert("password", password);
     
+        let post_login_url = format!("{}/account/login", self.base_url);
+
         // TODO: Ensure the request was successful (status code 200)
-        let response = self.client.post("http://localhost:8080/account/login").json(&data).send().await.expect("Error in get");
+        let response = self.client.post(post_login_url).json(&data).send().await.expect("Error in get");
         
         if response.status().is_success() {
             let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
@@ -109,7 +140,8 @@ impl ProgramDistributorService {
     async fn token_refreshment(&self, refresh_token: String) -> Result<EndpointResult<Token>, ()> {
         let mut data = HashMap::new();
         data.insert("refresh_token", refresh_token);
-        let response = self.client.post("http://localhost:8080/account/refresh-token").json(&data).send().await.
+        let post_token_refreshment_url = format!("{}/account/refresh-token", self.base_url);
+        let response = self.client.post(post_token_refreshment_url).json(&data).send().await.
                                     expect("Error in token refreshment endpoint call");
         if response.status().is_success() {
             let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
@@ -155,6 +187,7 @@ impl ProgramDistributorService {
                 };
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
+                    // let response = request_clone.send().await.expect("Error in get");
                     let response = request_clone.send().await.expect("Error in get");
                     return Self::parse_response_with_response_body::<T>(response).await;
                 } else {
