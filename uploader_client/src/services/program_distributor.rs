@@ -93,12 +93,21 @@ impl ProgramDistributorService {
         let serialized = serde_json::to_string(&uploaded_program).unwrap();
 
         let form = multipart::Form::new()
+        .text("data", serialized.clone())
+        .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
+        let post_methods_request_builder = self.client.post(&post_program_url).multipart(form);
+        
+        let form_clone = multipart::Form::new()
         .text("data", serialized)
         .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
+        let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
-        let post_methods_request_builder = self.client.post(post_program_url).multipart(form);
-        
-        let response = self.make_request_with_response_body::<()>(post_methods_request_builder).await;
+        // let response = self.make_request_with_response_body::<()>(post_methods_request_builder).await;
+
+        // make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder)
+
+        let response = self.make_request_with_stream_upload_and_response_body::<()>(
+                                                                post_methods_request_builder, post_methods_request_builder_clone).await;
 
         return match response {
             Ok(_) => Ok(()),
@@ -182,7 +191,8 @@ impl ProgramDistributorService {
     // Since requests that are sending a stream cannot be cloned, and to repeat the request in case of a fail due to
     // invalid jwt error we need to have another request builder instance (since the send method consumes the variable),
     // we need the same request from request stored in request_clone but built without the try_clone function
-    async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+    async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, 
+                                                              request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
     }
 
