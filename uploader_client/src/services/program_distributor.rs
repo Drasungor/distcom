@@ -1,3 +1,4 @@
+use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client, RequestBuilder, Response};
 use reqwest::multipart::{self, Part};
 use serde::de::DeserializeOwned;
@@ -196,7 +197,12 @@ impl ProgramDistributorService {
         return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
     }
 
-    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&mut self, mut request: RequestBuilder, mut request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+        let mut jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+        let mut headers = HeaderMap::new();
+        headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+        request = request.headers(headers);
+
         let response = request.send().await.expect("Error in get");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
         return match response_parse_result {
@@ -210,6 +216,10 @@ impl ProgramDistributorService {
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
                     // let response = request_clone.send().await.expect("Error in get");
+                    jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+                    headers = HeaderMap::new();
+                    headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+                    request_clone = request_clone.headers(headers);
                     let response = request_clone.send().await.expect("Error in get");
                     return Self::parse_response_with_response_body::<T>(response).await;
                 } else {
