@@ -17,7 +17,7 @@ pub struct Config {
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
-    pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new());
+    pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new("http://localhost:8080".to_string()));
 }
 
 fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
