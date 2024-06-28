@@ -103,13 +103,8 @@ impl ProgramDistributorService {
         .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
         let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
-        // let response = self.make_request_with_response_body::<()>(post_methods_request_builder).await;
-
-        // make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, request_clone: RequestBuilder)
-
         let response = self.make_request_with_stream_upload_and_response_body::<()>(
                                                                 post_methods_request_builder, post_methods_request_builder_clone).await;
-
         return match response {
             Ok(_) => Ok(()),
             Err(error) => Err(error),
