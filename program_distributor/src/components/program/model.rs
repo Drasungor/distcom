@@ -16,7 +16,6 @@ pub struct UploadProgram {
 
 #[derive(Deserialize)]
 pub struct UploadProof {
-    // Amount of seconds that will be waited before considering a requested program-input duo as abandoned
     pub organization_id: String,
     pub program_id: String,
     pub input_group_id: String,
