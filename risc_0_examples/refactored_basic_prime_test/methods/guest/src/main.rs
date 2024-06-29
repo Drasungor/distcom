@@ -16,7 +16,15 @@ use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
 
 fn main() {
-    let number_to_test: u32 = env::read();
+    // let number_to_test: u32 = env::read();
+
+    // let byte_array: [u8; 5] = [1, 2, 3, 4, 5];
+
+    let input: [u8; 1024] = env::read();
+
+    let first_four_bytes = &input[0..4];
+    let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().unwrap());
+
     assert!(number_to_test % 2 != 0);
     let mut divisor = 3;
     let mut may_be_prime = true;
