@@ -119,12 +119,30 @@ impl ProgramDistributorService {
         .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
         let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
-        let response = self.make_request_with_stream_upload_and_response_body::<()>(
-                                                                post_methods_request_builder, post_methods_request_builder_clone).await;
-        return match response {
-            Ok(_) => Ok(()),
-            Err(error) => Err(error),
-        }
+        self.make_request_with_stream_upload_and_response_body::<()>(
+                                                                post_methods_request_builder, post_methods_request_builder_clone).await?;
+        return Ok(());
+    }
+
+    pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<(), EndpointError> {
+        let post_program_input_group_url = format!("{}/program/inputs/{}", self.base_url, program_id);
+        let uploaded_input_group_file_path_str = uploaded_input_group_file_path.to_str().expect("Error in get download path string");
+
+        let mut file = File::open(uploaded_input_group_file_path_str).expect("Error in opening compressed file");
+        let mut file_content = Vec::new();
+        file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
+
+        let form = multipart::Form::new()
+        .part("file", Part::bytes(file_content.clone()).file_name("prorgam_input_group.csv"));
+        let post_program_input_group_builder = self.client.post(&post_program_input_group_url).multipart(form);
+        
+        let form_clone = multipart::Form::new()
+        .part("file", Part::bytes(file_content).file_name("prorgam_input_group.csv"));
+        let post_program_input_group_builder_clone = self.client.post(&post_program_input_group_url).multipart(form_clone);
+
+        self.make_request_with_stream_upload_and_response_body::<()>(
+                                                post_program_input_group_builder, post_program_input_group_builder_clone).await?;
+        return Ok(());
     }
 
     async fn interactive_login(&self) -> String {

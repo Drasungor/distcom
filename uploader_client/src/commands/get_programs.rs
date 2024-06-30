@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use std::process::Command;
+use std::{path::Path, process::Command};
 
 use crate::{common::{self, communication::EndpointResult}, models::returned_program::{print_programs_list, ReturnedProgram}, services::program_distributor::PagedPrograms, utils::process_inputs::process_user_input};
 
@@ -25,32 +25,14 @@ enum GetProgramsCommands {
     },
 }
 
-
-// async fn download_and_run_program(program: &ReturnedProgram) {
-//     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
-
-//     let input_file_name = read_guard.get_program_and_input_group(&program.program_id).await;
-
-//     let program_arguments = format!("run {}", input_file_name);
-
-//     let execution_args = vec![input_file_name];
-
-//     println!("program_arguments: {}", program_arguments);
-
-//     let output = Command::new("cargo")
-//         .arg("run")
-//         .args(execution_args)
-//         .current_dir("./src/runner")
-//         .output()
-//         .expect("Failed to execute child program");
-
-//     println!("Program output: {:?}", output);
-
-// }
-
 async fn retrieve_my_programs(limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
     return write_guard.get_my_programs(limit, page).await.expect("Error while getting uploaded programs");
+}
+
+async fn post_input_group(program_id: &str, uploaded_input_group_file_path: &Path) {
+    let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+    write_guard.upload_input_group(program_id, uploaded_input_group_file_path).await.expect("Error while uploading program input group");
 }
 
 // TODO: Update this so that the page size is used
@@ -65,14 +47,13 @@ async fn select_program() {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Page{page} => {
-                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        // programs_page = get_organization_programs(&organization.organization_id, Some(50), Some(page)).await;
-                        programs_page = retrieve_my_programs(Some(50), Some(1)).await;
+                        programs_page = retrieve_my_programs(Some(50), Some(page)).await;
                     },
                     GetProgramsCommands::PostInput{index, input_file_path} => {
                         let chosen_program = &programs_page.programs[index];
-                        download_and_run_program(chosen_program).await;
+                        post_input_group(&chosen_program.program_id, Path::new(&input_file_path)).await;
                     },
+                    // TODO: add here commands for uploaded proofs manipulation
                }
             }
             Err(_) => {
@@ -83,11 +64,6 @@ async fn select_program() {
 
     }    
 }
-
-
-// pub async fn select_organization_programs(organization: &ReturnedOrganization) {
-//     select_program(Some(organization)).await;
-// }
 
 pub async fn select_my_programs() {
     select_program().await;
