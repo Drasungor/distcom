@@ -8,6 +8,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
     web::scope(path_prefix).
         // get
         route("all", web::get().to(ProgramController::get_general_programs)).
+        route("mine", web::get().to(ProgramController::get_my_programs).wrap(ValidateJwtMiddleware)).
         route("template", web::get().to(ProgramController::retrieve_program_template)).
         route("{program_id}", web::get().to(ProgramController::download_program)).
         route("inputs/{program_id}", web::get().to(ProgramController::retrieve_input_group)).
@@ -16,7 +17,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
         route("proof/{program_id}/{input_group_id}", web::get().to(ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
         route("proofs", web::get().to(ProgramController::get_programs_with_proven_executions).wrap(ValidateJwtMiddleware)).
         route("proofs/{program_id}", web::get().to(ProgramController::get_input_groups_with_proven_executions).wrap(ValidateJwtMiddleware)).
-        
+
         // patch
         route("proof/{program_id}/{input_group_id}", web::patch().to(ProgramController::mark_proof_as_invalid).wrap(ValidateJwtMiddleware)).
 

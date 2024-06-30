@@ -267,6 +267,23 @@ impl ProgramController {
         return AppHttpResponseBuilder::get_http_response(organization_programs)
     }
 
+    pub async fn get_my_programs(req: HttpRequest, query_params: web::Query<PagingParameters>) -> impl Responder {
+        let paging_params = process_paging_inputs(query_params.into_inner());
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+        let organization_id = &jwt_payload.organization_id;
+        let organization_programs = ProgramService::get_organization_programs(organization_id.clone(), paging_params.limit, paging_params.page).await;
+        return AppHttpResponseBuilder::get_http_response(organization_programs)
+    }
+
     pub async fn get_general_programs(query_params: web::Query<GetPagedPrograms>) -> impl Responder {
         let query_params = query_params.into_inner();
         let paging = PagingParameters {
