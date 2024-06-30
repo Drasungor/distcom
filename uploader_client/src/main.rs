@@ -18,6 +18,8 @@ use crate::services::program_distributor::ProgramDistributorService;
 mod services;
 mod common;
 mod utils;
+mod commands;
+mod models;
 
 // fn compress_folder(folder_path: &str, output_path: &str) -> io::Result<()> {
 //     let file = File::create(output_path)?;
@@ -75,6 +77,13 @@ enum GetProgramsCommands {
         
     },
     Template,
+    MyPrograms {
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<u32>,
+
+        #[clap(short = 'p', long = "page")]
+        page: Option<u32>,
+    },
 }
 
 async fn start_program_execution() {
@@ -106,6 +115,15 @@ async fn start_program_execution() {
 
                         // TODO: manage this error correctly
                         write_guard.download_template_methods(Path::new("./downloads/template")).await.expect("Error in template download");
+                    },
+                    GetProgramsCommands::MyPrograms{limit, page} => {
+                        if (limit.is_some()) {
+                            println!("Get valuea: {}", limit.unwrap());
+                        }
+                        if (page.is_some()) {
+                            println!("Get valueb: {}", page.unwrap());
+                        }
+                        select_my_programs().await;
                     },
                }
             }

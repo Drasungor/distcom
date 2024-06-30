@@ -70,17 +70,13 @@ impl ProgramDistributorService {
 
     pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-    
         if (limit.is_some()) {
             params.push(("limit", limit.unwrap()))
         }
-    
         if (page.is_some()) {
             params.push(("page", page.unwrap()))
         }
-    
         let url = format!("http://localhost:8080/program/organization/{}", organization_id);
-    
         let response = self.client.get(url).query(&params).send().await.expect("Error in get");
     
         // Ensure the request was successful (status code 200)
