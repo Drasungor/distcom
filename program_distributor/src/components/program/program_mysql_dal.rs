@@ -61,6 +61,7 @@ impl ProgramMysqlDal {
             let line_iterator = line_ok.into_iter();
             let mut counter = 0;
 
+
             for value in line_iterator {
                 let specific_input = SpecificProgramInput {
                     specific_input_id: Uuid::new_v4().to_string(),

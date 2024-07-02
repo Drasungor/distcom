@@ -10,7 +10,7 @@ def write_big_endian_to_csv(number, file_path):
     while len(byte_array) < 1024:
         byte_array.extend(b'\x00')
 
-    base64_data = base64.b64encode(byte_array)
+    base64_data = base64.b64encode(byte_array).decode('utf-8')
 
     # Write to CSV file
     with open(file_path, mode='w', newline='') as file:

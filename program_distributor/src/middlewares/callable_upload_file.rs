@@ -220,6 +220,7 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
         if (field_is_file) {
             let new_filename = process_file_field(field, uploads_folder, &filename).await;
             files_names.push(new_filename);
+            counter += 1;
         }
     }
 
@@ -229,12 +230,12 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
     return Ok(files_names);
 }
 
-pub async fn upload_one_file(mut payload: Multipart) -> Result<String, String> {
+pub async fn upload_one_file(payload: Multipart) -> Result<String, String> {
     let files_array = upload_exact_amount_files(payload, 1).await?;
     let files_amount = files_array.len();
 
     // TODO: manage this with an error instead of an assert
-    assert!(files_amount != 1, "This endpoint expects 1 files but {files_amount} were sent");
+    assert!(files_amount == 1, "This endpoint expects 1 files but {files_amount} were sent");
 
     return Ok(files_array[0].clone());
 }

@@ -132,12 +132,15 @@ impl ProgramDistributorService {
         let mut file_content = Vec::new();
         file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
 
+
+        println!("{:?}", file_content.clone());
+
         let form = multipart::Form::new()
-        .part("file", Part::bytes(file_content.clone()).file_name("prorgam_input_group.csv"));
+        .part("file", Part::bytes(file_content.clone()).file_name("program_input_group.csv"));
         let post_program_input_group_builder = self.client.post(&post_program_input_group_url).multipart(form);
         
         let form_clone = multipart::Form::new()
-        .part("file", Part::bytes(file_content).file_name("prorgam_input_group.csv"));
+        .part("file", Part::bytes(file_content).file_name("program_input_group_clone.csv"));
         let post_program_input_group_builder_clone = self.client.post(&post_program_input_group_url).multipart(form_clone);
 
         self.make_request_with_stream_upload_and_response_body::<()>(
@@ -270,7 +273,7 @@ impl ProgramDistributorService {
 
     async fn make_request_with_file_response(&mut self, request: RequestBuilder) -> Result<Bytes, EndpointError> {
         let request_clone = request.try_clone().expect("Error while cloning request");
-        let response = request.send().await.expect("Error in get");
+        let response = request.send().await.expect("Error in sent request");
         let response_parse_result = Self::parse_response_with_file_response(response).await;
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
