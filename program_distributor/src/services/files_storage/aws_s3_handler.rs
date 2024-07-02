@@ -86,6 +86,7 @@ impl FileStorage for AwsS3Handler {
         } else {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
         }
+
         let file = File::create(file_path_str)?;
         let mut buf_writer = BufWriter::new(file);
         while let Some(bytes) = data.try_next().await? {

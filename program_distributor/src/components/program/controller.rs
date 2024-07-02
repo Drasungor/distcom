@@ -242,7 +242,8 @@ impl ProgramController {
 
         let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
         let downloaded_program_file_path = format!("./aux_files/{}/{}", input_group_id, program_file_name);
-        let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
+        // let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
+        let object_name = format!("{}/{}/program.tar", organization_id.unwrap(), program_id);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
             let download_result = read_guard.download(&object_name, Path::new(&downloaded_program_file_path)).await;
