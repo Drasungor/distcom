@@ -132,9 +132,6 @@ impl ProgramDistributorService {
         let mut file_content = Vec::new();
         file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
 
-
-        println!("{:?}", file_content.clone());
-
         let form = multipart::Form::new()
         .part("file", Part::bytes(file_content.clone()).file_name("program_input_group.csv"));
         let post_program_input_group_builder = self.client.post(&post_program_input_group_url).multipart(form);
