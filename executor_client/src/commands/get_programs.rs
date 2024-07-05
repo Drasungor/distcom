@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
-use std::process::Command;
+use std::{fs, path::Path, process::Command};
 
-use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::PagedPrograms, utils::process_inputs::process_user_input};
+use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -26,13 +26,11 @@ enum GetProgramsCommands {
 async fn download_and_run_program(program: &ReturnedProgram) {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
 
-    let input_file_name = read_guard.get_program_and_input_group(&program.program_id).await;
+    let downloaded_files_names = read_guard.get_program_and_input_group(&program.program_id).await;
 
-    let program_arguments = format!("run {}", input_file_name);
+    let csv_file_name = downloaded_files_names.input_file_name;
 
-    let execution_args = vec![input_file_name];
-
-    println!("program_arguments: {}", program_arguments);
+    let execution_args = vec![csv_file_name.clone()];
 
     let output = Command::new("cargo")
         .arg("run")
@@ -42,6 +40,18 @@ async fn download_and_run_program(program: &ReturnedProgram) {
         .expect("Failed to execute child program");
 
     println!("Program output: {:?}", output);
+
+    let input_group_id = csv_file_name.split(".").collect::<Vec<&str>>()[0];
+    let _ = fs::remove_file(format!("./program_input_group/{csv_file_name}"));
+    let _ = fs::remove_file(format!("./program_input_group/{}", downloaded_files_names.program_file_name));
+
+    let uploaded_proof_data = UploadedProof {
+        organization_id: program.organization_id.clone(),
+        program_id: program.program_id.clone(),
+        input_group_id: input_group_id.to_string(),
+    };
+
+    read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
 
 }
 

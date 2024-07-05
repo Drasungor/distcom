@@ -36,6 +36,11 @@ pub struct UploadedProof {
     pub input_group_id: String,
 }
 
+pub struct ProgramWithInputFiles {
+    pub program_file_name: String,
+    pub input_file_name: String,
+}
+
 impl ProgramDistributorService {
 
     pub fn new(base_url: String) -> ProgramDistributorService {
@@ -114,7 +119,8 @@ impl ProgramDistributorService {
         }
     }
     
-    pub async fn get_program_and_input_group(&self, program_id: &String) -> String {
+    // pub async fn get_program_and_input_group(&self, program_id: &String) -> String {
+    pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
         let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
         let response = reqwest::get(request_url).await.expect("Error in get");
     
@@ -126,6 +132,7 @@ impl ProgramDistributorService {
             decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
     
             let mut csv_file_name: Option<String> = None;
+            let mut tar_file_name: Option<String> = None;
     
             // We scan the folder for the program .tar file
             let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
@@ -137,27 +144,23 @@ impl ProgramDistributorService {
                 if (entry_name.contains(".tar")) {
                     println!("tar path_string: {}", path_string);
                     decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+                    tar_file_name = Some(entry_name.clone());
                 }
                 if (entry_name.contains(".csv")) {
-                    csv_file_name = Some(entry_name);
-                    // println!("tar path_string: {}", path_string);
-                    // decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+                    csv_file_name = Some(entry_name.clone());
                 }
             }
-    
-            return csv_file_name.expect("No csv file was received");
-            // let output = Command::new("cargo")
-            // .arg("run")
-            // .current_dir("./src/runner")
-            // .output()
-            // .expect("Failed to execute child program");
+            return ProgramWithInputFiles {
+                input_file_name: csv_file_name.expect("No csv input file was received"),
+                program_file_name: tar_file_name.expect("No tar program file was received"),
+            }
         } else {
             panic!("Failed to download file: {}", response.status());
         }
     }
 
-    pub async fn upload_proof(&mut self, proof_file_path: &Path, uploaded_proof_data: UploadedProof) -> Result<(), EndpointError> {
-        let upload_proof_url = format!("{}/program/upload", self.base_url);
+    pub async fn upload_proof(&self, proof_file_path: &Path, uploaded_proof_data: UploadedProof) -> Result<(), EndpointError> {
+        let upload_proof_url = format!("{}/program/proof", self.base_url);
         let proof_file_path_str = proof_file_path.to_str().expect("Error in get proof path string");
 
         // Read the proof file content
@@ -171,29 +174,23 @@ impl ProgramDistributorService {
         .text("data", serialized_proof_args.clone())
         .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
         let post_methods_request_builder = self.client.post(&upload_proof_url).multipart(form);
-        
-        let form_clone = multipart::Form::new()
-        .text("data", serialized_proof_args)
-        .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
-        let post_methods_request_builder_clone = self.client.post(&upload_proof_url).multipart(form_clone);
 
-        let response = self.make_request_with_stream_upload_and_response_body::<()>(
-                                                                post_methods_request_builder, post_methods_request_builder_clone).await;
+        let response = self.make_request_with_stream_upload_and_response_body::<()>(post_methods_request_builder).await;
         return match response {
             Ok(_) => Ok(()),
             Err(error) => Err(error),
         }
     }
 
-        // Since requests that are sending a stream cannot be cloned, and to repeat the request in case of a fail due to
+    // Since requests that are sending a stream cannot be cloned, and to repeat the request in case of a fail due to
     // invalid jwt error we need to have another request builder instance (since the send method consumes the variable),
     // we need the same request from request stored in request_clone but built without the try_clone function
-    async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, 
-                                                              request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
-        return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
+    async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&self, request: RequestBuilder
+                ) -> Result<EndpointResult<T>, EndpointError> {
+        return self.wrapper_make_request_with_response_body::<T>(request).await;
     }
 
-    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&mut self, mut request: RequestBuilder, mut request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
 
         let response = request.send().await.expect("Error in get");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;

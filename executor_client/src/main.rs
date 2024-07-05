@@ -107,7 +107,7 @@ async fn run_commands_loop() {
                         }
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
-                        }
+                        } 
                         select_general_programs().await;
                     },
                }
