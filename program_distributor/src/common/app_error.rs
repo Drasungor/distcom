@@ -1,6 +1,36 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use aws_sdk_s3::{error::SdkError, primitives::ByteStreamError, types::Error};
 use serde::Serialize;
 use std::fmt;
+
+#[derive(Debug)]
+pub enum InternalServerErrorType {
+    TaskSchedulingError,
+    UploadedFileNotFound,
+    PathToStringConversionError,
+    QueryExtensionNotSet,
+    JwtValuesNotSet,
+    IOError(std::io::Error),
+    ByteStreamGenerationError(ByteStreamError),
+    S3Error(String),
+    UnknownError(String),
+}
+
+impl InternalServerErrorType {
+    pub fn to_string(&self) -> String {
+        match self {
+            InternalServerErrorType::TaskSchedulingError => String::from("Error in task/thread scheduling"),
+            InternalServerErrorType::UploadedFileNotFound => String::from("The uploaded file was not found"),
+            InternalServerErrorType::PathToStringConversionError => String::from("Error in path to string conversion"),
+            InternalServerErrorType::QueryExtensionNotSet => String::from("Query extension was not initialized"),
+            InternalServerErrorType::JwtValuesNotSet => String::from("Jwt extension value was not initialized"),
+            InternalServerErrorType::ByteStreamGenerationError(byte_stream_error) => format!("Bytestream error: {:?}", byte_stream_error),
+            InternalServerErrorType::IOError(io_error) => format!("IO error: {:?}", io_error.to_string()),
+            InternalServerErrorType::S3Error(s3_error) => format!("S3 error: {:?}", s3_error),
+            InternalServerErrorType::UnknownError(message) => message.clone(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum AppErrorType {
@@ -9,8 +39,32 @@ pub enum AppErrorType {
     UsernameAlreadyExists,
     RefreshTokenNotfound,
     InvalidToken,
-    InternalServerError,
+    InternalServerError(InternalServerErrorType),
 }
+
+impl From<std::io::Error> for AppError {
+    fn from(error: std::io::Error) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::IOError(error)))
+    }
+}
+
+impl<U, T> From<SdkError<U, T>> for AppError {
+    fn from(error: SdkError<U, T>) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::S3Error(error.to_string())))
+    }
+}
+
+impl From<ByteStreamError> for AppError {
+    fn from(error: ByteStreamError) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
+    }
+}
+
+// impl From<std::error::Error> for AppError {
+//     fn from(error: ByteStreamError) -> Self {
+//         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
+//     }
+// }
 
 impl AppErrorType {
     pub fn to_string(&self) -> String {
@@ -20,7 +74,7 @@ impl AppErrorType {
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
             AppErrorType::InvalidToken => String::from("INVALID_TOKEN"),
-            AppErrorType::InternalServerError => String::from("INTERNAL_SERVER_ERROR"),
+            AppErrorType::InternalServerError(_) => String::from("INTERNAL_SERVER_ERROR"),
         }
     }
 }
@@ -60,7 +114,7 @@ impl AppError {
                 message_text = "That user's token is not valid";
                 status_code = StatusCode::FORBIDDEN;
             },
-            AppErrorType::InternalServerError => {
+            AppErrorType::InternalServerError(_) => {
                 message_text = "Internal server error";
                 status_code = StatusCode::INTERNAL_SERVER_ERROR;
             },
@@ -80,6 +134,13 @@ impl AppError {
 
     pub fn error_type(&self) -> String {
         return self.error_type.to_string();
+    }
+
+    pub fn unexpected_error_message(&self) -> Option<String> {
+        if let AppErrorType::InternalServerError(internal_server_error_type) = &self.error_type {
+            return Some(internal_server_error_type.to_string());
+        }
+        return None;
     }
 
     pub fn status_code(&self) -> StatusCode {

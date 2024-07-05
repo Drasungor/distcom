@@ -45,9 +45,12 @@ fn main() {
 
             let decoded_bytes = decoded_value.as_bytes();
 
+            let bytes_vector = decoded_bytes.to_vec();
 
-            // env_bulder_ref = env_bulder_ref.write(decoded_value.as_bytes()).unwrap();
-            env_bulder_ref = env_bulder_ref.write(&decoded_bytes).unwrap();
+            // // env_bulder_ref = env_bulder_ref.write(decoded_value.as_bytes()).unwrap();
+            // env_bulder_ref = env_bulder_ref.write(&decoded_bytes).unwrap();
+            env_bulder_ref = env_bulder_ref.write(&bytes_vector).unwrap();
+
             counter += 1;
         }
         assert!(counter == 1, "There is more than one element per line");
@@ -61,7 +64,8 @@ fn main() {
         .prove(executor_env, DOWNLOADED_GUEST_ELF)
         .unwrap();
 
-    let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
+    // let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
+    let serialized_proof = bincode::serialize(&receipt.receipt).expect("Error in proof serialization");
 
     // println!("serialized_proof: {}", serialized_proof);
 

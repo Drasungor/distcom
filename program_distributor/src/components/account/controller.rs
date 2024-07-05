@@ -37,7 +37,6 @@ impl AccountController {
         return AppHttpResponseBuilder::get_http_response(login_result);
     }
     
-    // pub async fn get_paged_organizations(query_params: web::Query<PagingParameters>) -> impl Responder {
     pub async fn get_paged_organizations(query_params: web::Query<GetPagedOrganizations>) -> impl Responder {
         let query_params = query_params.into_inner();
         let paging = PagingParameters {

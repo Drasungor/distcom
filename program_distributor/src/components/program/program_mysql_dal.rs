@@ -1,39 +1,37 @@
 use std::fs::File;
-use std::str::Bytes;
-use actix_web::error::BlockingError;
 use csv::Reader;
-use diesel::connection;
 use diesel::r2d2::PooledConnection;
 use diesel::result::DatabaseErrorKind;
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
-use diesel::r2d2::{ ConnectionManager, Pool };
+use diesel::r2d2::ConnectionManager;
 use actix_web::web;
 use uuid::Uuid;
 use base64::prelude::*;
 use csv;
-use chrono::{NaiveDateTime, NaiveDate, NaiveTime};
-use chrono::prelude::*;
-use std::time::{SystemTime, UNIX_EPOCH};
+use chrono::NaiveDateTime;
 
 use super::db_models::program::StoredProgram;
 use super::db_models::program_input_group::ProgramInputGroup;
 use super::db_models::specific_program_input::SpecificProgramInput;
+use super::model::PagedProgramInputGroups;
 use super::model::PagedPrograms;
 use crate::common::app_error::AppError;
 use crate::common::app_error::AppErrorType;
+use crate::common::app_error::InternalServerErrorType;
 use crate::components::account::db_models::account::CompleteAccount;
 use crate::schema::program_input_group;
 use crate::schema::specific_program_input;
 use crate::schema::{program, account};
+use crate::utils::datetime_helpers::get_current_naive_datetime;
+use crate::utils::diesel_helpers::general_manage_diesel_task_result;
 
 pub struct ProgramMysqlDal;
 
 impl ProgramMysqlDal {
 
     pub async fn add_organization_program(organization_id: String, program_id: String, name: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
-
         let stored_program = StoredProgram {
             organization_id,
             program_id,
@@ -45,25 +43,14 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
-            let insertion_result = diesel::insert_into(program::table)
-                    .values(&stored_program)
-                    .execute(connection);
-            return insertion_result;
+            diesel::insert_into(program::table)
+                        .values(&stored_program)
+                        .execute(connection)?;
+            return Ok(());
 
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-            Ok(Ok(_)) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
-                }
-            },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-        }
+        return general_manage_diesel_task_result(result);
     }
 
     fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), diesel::result::Error> {
@@ -73,6 +60,7 @@ impl ProgramMysqlDal {
             let line_ok = line.expect("Error in line reading");
             let line_iterator = line_ok.into_iter();
             let mut counter = 0;
+
 
             for value in line_iterator {
                 let specific_input = SpecificProgramInput {
@@ -100,11 +88,13 @@ impl ProgramMysqlDal {
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
-            // input_was_reserved: false,
             last_reserved: None,
+            proven_datetime: None,
         };
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        // let mut connection: Result<PooledConnection<ConnectionManager<MysqlConnection>>, diesel::r2d2::Error> = crate::common::config::CONNECTION_POOL.get();
+        // // : r2d2::Error
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
@@ -124,16 +114,17 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(_)) => Ok(()),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown error: ".to_string())))),
         };
+        // return general_manage_diesel_task_result(result);
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -151,16 +142,17 @@ impl ProgramMysqlDal {
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(organization_id)) => Ok(organization_id),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
+        // return general_manage_diesel_task_result(result);
     }
 
 
@@ -248,32 +240,92 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
-            let current_system_time = SystemTime::now();
-            let since_the_epoch = current_system_time.duration_since(UNIX_EPOCH).expect("Time went backwards");
-            let current_datetime = DateTime::from_timestamp_millis(since_the_epoch.as_millis().try_into().unwrap()).unwrap();
-            let now_naive_datetime = current_datetime.naive_utc();
-
+            let now_naive_datetime = get_current_naive_datetime();
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
-
-            // let file_path = format!("./aux_files/{}.csv", input_group_id);
             let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
-
             return Ok((input_group_id, file_path));
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(result_tuple)) => Ok(result_tuple),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
+    }
+
+    pub async fn set_input_group_as_proven(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+            let now_naive_datetime = get_current_naive_datetime();
+            diesel::update(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                    .set(program_input_group::proven_datetime.eq(Some(now_naive_datetime)))
+                    .execute(connection)?;
+            return Ok(());
+        })
+        }).await;
+        return general_manage_diesel_task_result(result);
+    }
+
+    pub async fn delete_input_group_proven_mark(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let found_program = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection)?;
+
+
+            diesel::update(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(&cloned_input_group_id).
+                                and(program_input_group::program_id.eq(&cloned_program_id))))
+                    .set((
+                        program_input_group::proven_datetime.eq(None::<NaiveDateTime>), 
+                        program_input_group::last_reserved.eq(None::<NaiveDateTime>)
+                    ))
+                    .execute(connection)?;
+            return Ok(());
+        })
+        }).await;
+        return general_manage_diesel_task_result(result);
+    }
+
+    pub async fn delete_input_group_entry(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            let found_program = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection)?;
+
+
+            diesel::delete(program_input_group::table.filter(
+                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                    .execute(connection)?;
+            return Ok(());
+        })
+        }).await;
+        return general_manage_diesel_task_result(result);
     }
 
 
@@ -285,33 +337,115 @@ impl ProgramMysqlDal {
 
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
                 .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
-                .execute(connection).expect("Error in input group update");
+                .execute(connection)?;
             return Ok(());
         })
         }).await;
         return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(result_tuple)) => Ok(result_tuple),
             Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
                 match db_err_kind {
                     DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    _ => Err(AppError::new(AppErrorType::InternalServerError))
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
                 }
             },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+    pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            // TODO: check if we should ask first for the organization programs and then get the proven programs, or maybe 
+            // we could join the two queries into one
+
+            let proven_programs: Vec<String> = program_input_group::table
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>))
+                .select(program_input_group::program_id)
+                .distinct()
+                .load::<String>(connection)?;
+
+            let programs: Vec<StoredProgram> = program::table
+                .filter(program::program_id.eq_any(&proven_programs).and(program::organization_id.eq(&cloned_organization_id)))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<StoredProgram>(connection)?;
+
+            let count_of_matched_elements: i64 = program::table
+                .filter(program::program_id.eq_any(proven_programs).and(program::organization_id.eq(cloned_organization_id)))
+                .count().get_result(connection)?;
+ 
+            return Ok(PagedPrograms {
+                programs,
+                total_elements_amount: count_of_matched_elements,
+            });
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(result)) => Ok(result),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        };
+    }
+
+    pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+
+            program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection)?;
+
+            let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(&cloned_program_id)))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<ProgramInputGroup>(connection)?;
+
+            let count_of_matched_elements = program_input_group::table
+                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(cloned_program_id)))
+                .count().get_result(connection)?;
+                
+            return Ok(PagedProgramInputGroups {
+                program_input_groups: proven_input_groups,
+                total_elements_amount: count_of_matched_elements,
+            });
+
+            // return Ok(proven_input_groups);
+        })
+        }).await;
+        return match result {
+            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+            Ok(Ok(result_array)) => Ok(result_array),
+            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+                match db_err_kind {
+                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+                }
+            },
+            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
         };
     }
 
 
     pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
-        // let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-            
             account::table
                 .filter(account::account_was_verified.eq(true))
-                .first::<CompleteAccount>(connection).expect("No verified account with that id was found");
+                .first::<CompleteAccount>(connection)?;
 
             let programs: Vec<StoredProgram> = program::table
                 .filter(program::organization_id.eq(&organization_id))
@@ -320,9 +454,7 @@ impl ProgramMysqlDal {
 
             let count_of_matched_elements: i64 = program::table
                 .filter(program::organization_id.eq(&organization_id))
-                .count()
-                .get_result(connection)
-                .expect("Error finding count of matched elements");
+                .count().get_result(connection)?;
  
             return Ok(PagedPrograms {
                 programs,
@@ -330,15 +462,7 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                // TODO: handle correctly
-                Err(AppError::new(AppErrorType::InternalServerError))
-            },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-        };
+        return general_manage_diesel_task_result(found_account_result);
     }
 
     
@@ -367,15 +491,7 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match found_account_result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError)),
-            Ok(Ok(paged_organizations)) => Ok(paged_organizations),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                // TODO: handle correctly
-                Err(AppError::new(AppErrorType::InternalServerError))
-            },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError)),
-        };
+        return general_manage_diesel_task_result(found_account_result);
     }
 
 }

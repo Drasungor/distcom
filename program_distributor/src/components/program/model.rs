@@ -2,7 +2,7 @@ use serde_derive::{Serialize, Deserialize};
 
 use crate::utils::jwt_helpers::GeneratedToken;
 
-use super::db_models::program::StoredProgram;
+use super::db_models::{program::StoredProgram, program_input_group::ProgramInputGroup};
 
 // Controller input models
 
@@ -12,6 +12,13 @@ pub struct UploadProgram {
     pub name: String,
     pub description: String,
     pub execution_timeout: i64,
+}
+
+#[derive(Deserialize)]
+pub struct UploadProof {
+    pub organization_id: String,
+    pub program_id: String,
+    pub input_group_id: String,
 }
 
 #[derive(Deserialize)]
@@ -28,5 +35,11 @@ pub struct GetPagedPrograms {
 #[derive(Serialize, Debug)]
 pub struct PagedPrograms {
     pub programs: Vec<StoredProgram>,
+    pub total_elements_amount: i64,
+}
+
+#[derive(Serialize, Debug)]
+pub struct PagedProgramInputGroups {
+    pub program_input_groups: Vec<ProgramInputGroup>,
     pub total_elements_amount: i64,
 }

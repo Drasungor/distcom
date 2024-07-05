@@ -73,6 +73,8 @@ diesel::table! {
 
         // last_reserved -> Timestamp,
         last_reserved -> Nullable<Datetime>,
+
+        proven_datetime -> Nullable<Datetime>,
     }
 }
 

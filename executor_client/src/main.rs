@@ -1,18 +1,11 @@
-// use std::env;
 use std::fs::File;
 use std::io::Write;
-// use clap::{crate_name};
-// use clap::{crate_name, Parser, Subcommand};
 use clap::{Parser, Subcommand};
-// use reqwest::Client;
-// use serde_derive::{Deserialize};
 
 use crate::commands::get_organizations::select_organizations;
 use crate::commands::get_programs::select_general_programs;
-use crate::services::server_requests::get_organizations;
 use crate::utils::compression::decompress_tar;
 use crate::utils::process_inputs::process_user_input;
-// use serde::de::{DeserializeOwned};
 
 mod common;
 mod commands;
@@ -114,7 +107,7 @@ async fn run_commands_loop() {
                         }
                         if (page.is_some()) {
                             println!("Get valueb: {}", page.unwrap());
-                        }
+                        } 
                         select_general_programs().await;
                     },
                }
