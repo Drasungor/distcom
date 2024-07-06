@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use commands::get_programs::select_my_programs;
+use commands::get_proofs::select_my_proven_programs;
 use serde::Serialize;
 use services::program_distributor::UploadedProgram;
 // use services::program_distributor::{token_refreshment, Token};
@@ -85,6 +86,13 @@ enum GetProgramsCommands {
         #[clap(short = 'p', long = "page")]
         page: Option<u32>,
     },
+    ProvenPrograms {
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<u32>,
+
+        #[clap(short = 'p', long = "page")]
+        page: Option<u32>,
+    },
 }
 
 async fn start_program_execution() {
@@ -126,6 +134,17 @@ async fn start_program_execution() {
                         }
                         select_my_programs().await;
                     },
+                    GetProgramsCommands::ProvenPrograms{limit, page} => {
+                        if (limit.is_some()) {
+                            println!("Get valuea: {}", limit.unwrap());
+                        }
+                        if (page.is_some()) {
+                            println!("Get valueb: {}", page.unwrap());
+                        }
+                        select_my_proven_programs().await;
+                    },
+                    // pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
+
                }
             }
             Err(err) => {

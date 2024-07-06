@@ -16,6 +16,7 @@ use bytes::Bytes;
 
 use crate::common::communication::{EndpointError, EndpointResult, AppErrorType};
 use crate::common::user_interaction::get_input_string;
+use crate::models::returned_input_group::ReturnedInputGroup;
 use crate::models::returned_program::ReturnedProgram;
 use crate::utils::compression::{compress_folder_contents, decompress_tar};
 
@@ -31,6 +32,18 @@ pub struct PagedPrograms {
     pub programs: Vec<ReturnedProgram>,
     pub total_elements_amount: i64,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct PagedProgramInputGroups {
+    pub program_input_groups: Vec<ReturnedInputGroup>,
+    pub total_elements_amount: i64,
+}
+
+// #[derive(Debug, Deserialize)]
+// pub struct PagedProofs {
+//     pub proofs: Vec<ReturnedProof>,
+//     pub total_elements_amount: i64,
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Token {
@@ -81,6 +94,21 @@ impl ProgramDistributorService {
         return Ok(());
     }
 
+    // pub async fn download_proof(&mut self, download_path: &Path) -> Result<(), EndpointError> {
+    //     let get_template_url = format!("{}/program/template", self.base_url);
+    //     let get_template_request_builder = self.client.get(get_template_url);
+    //     let bytes = self.make_request_with_file_response(get_template_request_builder).await?;
+
+    //     // TODO: handle this error correctly
+    //     let download_path_str = download_path.to_str().expect("Error in get download path string");
+
+    //     let downloaded_file_path = "./aux_files/downloaded_template.tar";
+    //     let mut file = File::create(downloaded_file_path).expect("Error in file creation");
+    //     file.write_all(bytes.as_ref()).expect("Errors in file write");
+    //     decompress_tar(downloaded_file_path, download_path_str).expect("Error in downloaded file decompression");
+    //     return Ok(());
+    // }
+
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
@@ -95,6 +123,33 @@ impl ProgramDistributorService {
         return Ok(get_my_programs_response.data);
     }
 
+    pub async fn get_program_proven_inputs(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
+        let mut params: Vec<(&str, usize)> = Vec::new();
+        if (limit.is_some()) {
+            params.push(("limit", limit.unwrap()))
+        }
+        if (page.is_some()) {
+            params.push(("page", page.unwrap()))
+        }
+        let get_my_programs_url = format!("{}/program/proofs/{program_id}", self.base_url);
+        let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
+        let get_my_programs_response = self.make_request_with_response_body::<PagedProgramInputGroups>(get_my_programs_request_builder).await?;
+        return Ok(get_my_programs_response.data);
+    }
+
+    pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
+        let mut params: Vec<(&str, usize)> = Vec::new();
+        if (limit.is_some()) {
+            params.push(("limit", limit.unwrap()))
+        }
+        if (page.is_some()) {
+            params.push(("page", page.unwrap()))
+        }
+        let get_my_proven_programs_url = format!("{}/program/proofs", self.base_url);
+        let get_my_proven_programs_request_builder = self.client.get(get_my_proven_programs_url).query(&params);
+        let get_my_proven_programs_response = self.make_request_with_response_body::<PagedPrograms>(get_my_proven_programs_request_builder).await?;
+        return Ok(get_my_proven_programs_response.data);
+    }
 
     pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<(), EndpointError> {
         let post_program_url = format!("{}/program/upload", self.base_url);
