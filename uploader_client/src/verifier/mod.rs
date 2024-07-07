@@ -1,4 +1,5 @@
 pub fn proof_verification() {
+    // let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
 
     std::fs::write("./proof.bin", serialized_proof);
