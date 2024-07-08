@@ -8,11 +8,11 @@ use crate::{common, models::returned_program::print_programs_list, services::pro
 #[command(author, version, about, long_about = None)]
 struct ProgramsArgs {
     #[command(subcommand)]
-    cmd: GetProofsCommands
+    cmd: GetProvenProgramsCommands
 }
 
 #[derive(Subcommand, Debug, Clone)]
-enum GetProofsCommands {
+enum GetProvenProgramsCommands {
     Page {
         #[clap(index = 1)]
         page: usize,
@@ -39,10 +39,10 @@ async fn select_proven_program() {
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetProofsCommands::Page{page} => {
+                    GetProvenProgramsCommands::Page{page} => {
                         programs_page = retrieve_my_proven_programs(Some(50), Some(page)).await;
                     },
-                    GetProofsCommands::Verify{index} => {
+                    GetProvenProgramsCommands::Verify{index} => {
                         let chosen_program = &programs_page.programs[index];
                     },
                     // TODO: add here commands for uploaded proofs manipulation

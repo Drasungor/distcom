@@ -180,7 +180,7 @@ impl ProgramDistributorService {
     }
 
     pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<(), EndpointError> {
-        let post_program_input_group_url = format!("{}/program/inputs/{}", self.base_url, program_id);
+        let post_program_input_group_url = format!("{}/program/{}", self.base_url, program_id);
         let uploaded_input_group_file_path_str = uploaded_input_group_file_path.to_str().expect("Error in get download path string");
 
         let mut file = File::open(uploaded_input_group_file_path_str).expect("Error in opening compressed file");
@@ -198,6 +198,46 @@ impl ProgramDistributorService {
         self.make_request_with_stream_upload_and_response_body::<()>(
                                                 post_program_input_group_builder, post_program_input_group_builder_clone).await?;
         return Ok(());
+    }
+
+    pub async fn get_program(&self, program_id: &String, download_path: &Path) {
+        // let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
+        let get_program_url = format!("{}/program/inputs/{}", self.base_url, program_id);
+        let response = reqwest::get(get_program_url).await.expect("Error in get");
+    
+        // Ensure the request was successful (status code 200)
+        if response.status().is_success() {
+            // Open a file to write the downloaded content
+            let mut file = File::create("downloaded_program.tar").expect("Error in file creation");
+            file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+            decompress_tar("./downloaded_program.tar", "./program_with_input").expect("Error in downloaded file decompression");
+    
+            let mut csv_file_name: Option<String> = None;
+            let mut tar_file_name: Option<String> = None;
+    
+            // We scan the folder for the program .tar file
+            let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
+            for entry in folder_contents {
+                let unwrapped_entry = entry.expect("Error in folder entry processing");
+                let path = unwrapped_entry.path();
+                let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
+                let path_string = path.to_str().expect("Error in conversion from path to string");
+                if (entry_name.contains(".tar")) {
+                    println!("tar path_string: {}", path_string);
+                    decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+                    tar_file_name = Some(entry_name.clone());
+                }
+                if (entry_name.contains(".csv")) {
+                    csv_file_name = Some(entry_name.clone());
+                }
+            }
+            return ProgramWithInputFiles {
+                input_file_name: csv_file_name.expect("No csv input file was received"),
+                program_file_name: tar_file_name.expect("No tar program file was received"),
+            }
+        } else {
+            panic!("Failed to download file: {}", response.status());
+        }
     }
 
     async fn interactive_login(&self) -> String {

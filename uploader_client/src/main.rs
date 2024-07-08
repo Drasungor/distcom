@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use commands::get_programs::select_my_programs;
-use commands::get_proofs::select_my_proven_programs;
+use commands::get_proven_programs::select_my_proven_programs;
 use serde::Serialize;
 use services::program_distributor::UploadedProgram;
 // use services::program_distributor::{token_refreshment, Token};
