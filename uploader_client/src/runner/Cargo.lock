@@ -957,18 +957,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prover"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "csv",
- "methods",
- "risc0-zkvm",
- "serde",
- "tracing-subscriber 0.3.18",
-]
-
-[[package]]
 name = "quinn"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1824,6 +1812,18 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
+
+[[package]]
+name = "verifier"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "csv",
+ "methods",
+ "risc0-zkvm",
+ "serde",
+ "tracing-subscriber 0.3.18",
+]
 
 [[package]]
 name = "version_check"
