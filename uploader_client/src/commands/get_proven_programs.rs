@@ -2,7 +2,7 @@ use std::path::Path;
 
 use clap::{Parser, Subcommand};
 
-use crate::{common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::process_inputs::process_user_input};
+use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -44,6 +44,7 @@ async fn select_proven_program() {
                     },
                     GetProvenProgramsCommands::Verify{index} => {
                         let chosen_program = &programs_page.programs[index];
+                        select_proven_inputs(&chosen_program.program_id, Some(50), Some(1)).await;
                     },
                     // TODO: add here commands for uploaded proofs manipulation
                }

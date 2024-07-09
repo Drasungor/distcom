@@ -24,7 +24,7 @@ fn main() {
     // let mut env_builder = ExecutorEnv::builder();
     // let mut env_bulder_ref = &mut env_builder;
     // let program_input_path = format!("../../program_with_input/{}", program_input_file_name);
-    let proof_file_path = format!("../../aux_files/proof.bin");
+    let proof_file_path = format!("../../downloads/proof.bin");
 
     let mut proof_file = File::open(proof_file_path).expect("Error while reading file");
 

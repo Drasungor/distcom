@@ -94,20 +94,18 @@ impl ProgramDistributorService {
         return Ok(());
     }
 
-    // pub async fn download_proof(&mut self, download_path: &Path) -> Result<(), EndpointError> {
-    //     let get_template_url = format!("{}/program/template", self.base_url);
-    //     let get_template_request_builder = self.client.get(get_template_url);
-    //     let bytes = self.make_request_with_file_response(get_template_request_builder).await?;
+    pub async fn download_proof(&mut self, program_id: &str, input_group_id: &str, download_path: &Path) -> Result<(), EndpointError> {
+        let get_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let get_proof_request_builder = self.client.get(get_proof_url);
+        let bytes = self.make_request_with_file_response(get_proof_request_builder).await?;
 
-    //     // TODO: handle this error correctly
-    //     let download_path_str = download_path.to_str().expect("Error in get download path string");
+        // TODO: handle this error correctly
+        let download_path_str = download_path.to_str().expect("Error in get download path string");
 
-    //     let downloaded_file_path = "./aux_files/downloaded_template.tar";
-    //     let mut file = File::create(downloaded_file_path).expect("Error in file creation");
-    //     file.write_all(bytes.as_ref()).expect("Errors in file write");
-    //     decompress_tar(downloaded_file_path, download_path_str).expect("Error in downloaded file decompression");
-    //     return Ok(());
-    // }
+        let mut file = File::create(download_path_str).expect("Error in file creation");
+        file.write_all(bytes.as_ref()).expect("Errors in file write");
+        return Ok(());
+    }
 
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
@@ -200,7 +198,7 @@ impl ProgramDistributorService {
         return Ok(());
     }
 
-    pub async fn get_program(&self, program_id: &str, download_path: &Path) {
+    pub async fn download_program(&self, program_id: &str, download_path: &Path) {
         let get_program_url = format!("{}/program/{}", self.base_url, program_id);
         let response = reqwest::get(get_program_url).await.expect("Error in get");
     
