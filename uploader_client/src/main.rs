@@ -143,7 +143,7 @@ async fn start_program_execution() {
                         }
                         select_my_proven_programs().await;
                     },
-                    // pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
+                    // pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError>
 
                }
             }

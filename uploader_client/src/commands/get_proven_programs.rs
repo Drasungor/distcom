@@ -30,7 +30,11 @@ async fn retrieve_my_proven_programs(limit: Option<usize>, page: Option<usize>) 
 
 // TODO: Update this so that the page size is used
 async fn select_proven_program() {
+    println!("before select_proven_program");
+    
     let mut programs_page = retrieve_my_proven_programs(Some(50), Some(1)).await;
+    
+    println!("after select_proven_program");
     print_programs_list(&programs_page.programs);
 
     loop {
@@ -40,6 +44,7 @@ async fn select_proven_program() {
             Ok(cli) => {
                 match cli.cmd {
                     GetProvenProgramsCommands::Page{page} => {
+                        println!("retrieve_my_proven_programs");
                         programs_page = retrieve_my_proven_programs(Some(50), Some(page)).await;
                     },
                     GetProvenProgramsCommands::Verify{index} => {

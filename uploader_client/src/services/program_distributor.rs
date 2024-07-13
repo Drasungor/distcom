@@ -304,6 +304,7 @@ impl ProgramDistributorService {
 
         let response = request.send().await.expect("Error in get");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
+        
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
             Err(error_response) => {

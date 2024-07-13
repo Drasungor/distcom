@@ -47,6 +47,7 @@ impl ProgramService {
     }
 
     pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
+        println!("Service de get_programs_with_proven_executions");
         return ProgramMysqlDal::get_programs_with_proven_executions(organization_id, limit, page).await;
     }
 
