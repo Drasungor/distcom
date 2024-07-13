@@ -355,12 +355,6 @@ impl ProgramMysqlDal {
     }
 
     pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
-        println!("get_programs_with_proven_executions");
-        println!("get_programs_with_proven_executions");
-        println!("get_programs_with_proven_executions");
-        println!("get_programs_with_proven_executions");
-        println!("get_programs_with_proven_executions");
-        
         let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
@@ -368,29 +362,20 @@ impl ProgramMysqlDal {
 
             // TODO: check if we should ask first for the organization programs and then get the proven programs, or maybe 
             // we could join the two queries into one
-
-            println!("Antes de proven_programs");
-
             let proven_programs: Vec<String> = program_input_group::table
-                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>))
+                .filter(program_input_group::proven_datetime.is_not_null())
                 .select(program_input_group::program_id)
                 .distinct()
                 .load::<String>(connection)?;
-
-            println!("Antes de programs");
 
             let programs: Vec<StoredProgram> = program::table
                 .filter(program::program_id.eq_any(&proven_programs).and(program::organization_id.eq(&cloned_organization_id)))
                 .offset((page - 1) * limit).limit(limit)
                 .load::<StoredProgram>(connection)?;
 
-            println!("Antes de count_of_matched_elements");
-
             let count_of_matched_elements: i64 = program::table
                 .filter(program::program_id.eq_any(proven_programs).and(program::organization_id.eq(cloned_organization_id)))
                 .count().get_result(connection)?;
- 
-            println!("Antes de return");
             
             return Ok(PagedPrograms {
                 programs,
@@ -418,36 +403,23 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
 
-            println!("111111111111111111111111111111111111111111111111111111111");
-
             program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
                 .first::<StoredProgram>(connection)?;
-
-            println!("2222222222222222222222222222222222222222222222222222222222");
-
 
             let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
                 .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(&cloned_program_id)))
                 .offset((page - 1) * limit).limit(limit)
                 .load::<ProgramInputGroup>(connection)?;
 
-            println!("3333333333333333333333333333333333333333333333333333333333");
-
-
             let count_of_matched_elements = program_input_group::table
                 .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(cloned_program_id)))
                 .count().get_result(connection)?;
                 
-            println!("4444444444444444444444444444444444444444444444444444444444");
-
-
             return Ok(PagedProgramInputGroups {
                 program_input_groups: proven_input_groups,
                 total_elements_amount: count_of_matched_elements,
             });
-
-            // return Ok(proven_input_groups);
         })
         }).await;
         return match result {

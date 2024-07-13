@@ -177,7 +177,6 @@ impl ProgramController {
     }
 
     pub async fn get_programs_with_proven_executions(req: HttpRequest, query_params: web::Query<PagingParameters>) -> impl Responder {
-        println!("asdasdasdasd");
         let paging_params = process_paging_inputs(query_params.into_inner());
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
@@ -190,9 +189,6 @@ impl ProgramController {
             }
         }
         let organization_id = &jwt_payload.organization_id;
-
-        println!("get_programs_with_proven_executions");
-
         let found_programs_result = ProgramService::get_programs_with_proven_executions(organization_id, paging_params.limit, paging_params.page).await;
         return AppHttpResponseBuilder::get_http_response(found_programs_result);
     }
