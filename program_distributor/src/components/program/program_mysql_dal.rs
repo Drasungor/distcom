@@ -402,18 +402,17 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, diesel::result::Error, _>(|connection| {
-
             program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
                 .first::<StoredProgram>(connection)?;
 
             let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
-                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(&cloned_program_id)))
+                .filter(program_input_group::proven_datetime.is_not_null().and(program_input_group::program_id.eq(&cloned_program_id)))
                 .offset((page - 1) * limit).limit(limit)
                 .load::<ProgramInputGroup>(connection)?;
 
             let count_of_matched_elements = program_input_group::table
-                .filter(program_input_group::proven_datetime.ne(None::<NaiveDateTime>).and(program_input_group::program_id.eq(cloned_program_id)))
+                .filter(program_input_group::proven_datetime.is_not_null().and(program_input_group::program_id.eq(cloned_program_id)))
                 .count().get_result(connection)?;
                 
             return Ok(PagedProgramInputGroups {
