@@ -339,8 +339,14 @@ impl ProgramDistributorService {
         }
     }
 
-    async fn make_request_with_file_response(&mut self, request: RequestBuilder) -> Result<Bytes, EndpointError> {
-        let request_clone = request.try_clone().expect("Error while cloning request");
+    async fn make_request_with_file_response(&mut self, mut request: RequestBuilder) -> Result<Bytes, EndpointError> {
+        let mut request_clone = request.try_clone().expect("Error while cloning request");
+        
+        let mut jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+        let mut headers = HeaderMap::new();
+        headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+        request = request.headers(headers);
+
         let response = request.send().await.expect("Error in sent request");
         let response_parse_result = Self::parse_response_with_file_response(response).await;
         return match response_parse_result {
@@ -353,6 +359,10 @@ impl ProgramDistributorService {
                 };
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
+                    jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+                    headers = HeaderMap::new();
+                    headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+                    request_clone = request_clone.headers(headers);
                     let response = request_clone.send().await.expect("Error in get");
                     return Self::parse_response_with_file_response(response).await;
                 } else {

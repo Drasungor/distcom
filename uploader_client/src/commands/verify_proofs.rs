@@ -31,9 +31,15 @@ async fn retrieve_proven_inputs(program_id: &str, limit: Option<usize>, page: Op
 
 async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    write_guard.download_program(program_id, Path::new("./src/runner")).await;
-    write_guard.download_proof(program_id, input_group_id, Path::new("../downloads/proof.bin")).await.expect("Error while downloading proof");
+    write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
+
+    // let download_path = "../downloads/proof.bin";
+    let download_path = "./downloads/proof.bin";
+    write_guard.download_proof(program_id, input_group_id, Path::new(download_path)).await.expect("Error while downloading proof");
     // pub async fn download_proof(&mut self, program_id: &str, input_group_id: &str, download_path: &Path) -> Result<(), EndpointError> {
+
+
+    println!("antes de correr el comando de verificacion");
 
     let output = Command::new("cargo")
         .arg("run")
@@ -48,11 +54,13 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
 
 // TODO: Update this so that the page size is used, do this also with the first page and limit values
 async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Option<usize>) {
-
     let mut should_continue_looping = true;
     let mut input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
     print_input_groups_list(&input_groups_page.program_input_groups);
 
+    println!("&input_groups_page.program_input_groups.len(): {}", &input_groups_page.program_input_groups.len());
+
+    // TODO: change for while should_continue_looping
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
@@ -63,6 +71,7 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
                         input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(page)).await;
                     },
                     GetProofsCommands::Verify{index} => {
+                        println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                         let chosen_input_group = &input_groups_page.program_input_groups[index];
                         verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await
                     },

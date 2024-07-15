@@ -15,6 +15,7 @@ struct ProgramsArgs {
 enum GetProvenProgramsCommands {
     Page {
         #[clap(index = 1)]
+        // #[clap(index = 1, parse(try_from_str = parse_positive_integer))]
         page: usize,
     },
     Verify {
@@ -38,21 +39,28 @@ async fn select_proven_program() {
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
+
+        println!("args: {:?}", args);
+
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProvenProgramsCommands::Page{page} => {
+                        println!("page {page}");
                         programs_page = retrieve_my_proven_programs(Some(50), Some(page)).await;
                     },
                     GetProvenProgramsCommands::Verify{index} => {
+
+                        println!("Verify command");
+
                         let chosen_program = &programs_page.programs[index];
                         select_proven_inputs(&chosen_program.program_id, Some(50), Some(1)).await;
                     },
                     // TODO: add here commands for uploaded proofs manipulation
                }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(error) => {
+                println!("That's not a valid command!: {error}");
             }
        };
         print_programs_list(&programs_page.programs);
