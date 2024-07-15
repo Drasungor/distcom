@@ -50,6 +50,14 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
 
     println!("Program output: {:?}", output);
 
+    if output.status.success() {
+        println!("Process executed successfully.");
+        println!("Output: {}", String::from_utf8(output.stdout).unwrap());
+        println!("Stderr: {}", String::from_utf8(output.stderr).unwrap())
+    } else {
+        println!("Process failed.");
+    }
+
 }
 
 // TODO: Update this so that the page size is used, do this also with the first page and limit values
