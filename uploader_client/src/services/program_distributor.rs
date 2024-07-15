@@ -16,6 +16,7 @@ use bytes::Bytes;
 
 use crate::common::communication::{EndpointError, EndpointResult, AppErrorType};
 use crate::common::user_interaction::get_input_string;
+use crate::models::returned_input_group::ReturnedInputGroup;
 use crate::models::returned_program::ReturnedProgram;
 use crate::utils::compression::{compress_folder_contents, decompress_tar};
 
@@ -31,6 +32,18 @@ pub struct PagedPrograms {
     pub programs: Vec<ReturnedProgram>,
     pub total_elements_amount: i64,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct PagedProgramInputGroups {
+    pub program_input_groups: Vec<ReturnedInputGroup>,
+    pub total_elements_amount: i64,
+}
+
+// #[derive(Debug, Deserialize)]
+// pub struct PagedProofs {
+//     pub proofs: Vec<ReturnedProof>,
+//     pub total_elements_amount: i64,
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Token {
@@ -81,6 +94,19 @@ impl ProgramDistributorService {
         return Ok(());
     }
 
+    pub async fn download_proof(&mut self, program_id: &str, input_group_id: &str, download_path: &Path) -> Result<(), EndpointError> {
+        let get_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let get_proof_request_builder = self.client.get(get_proof_url);
+        let bytes = self.make_request_with_file_response(get_proof_request_builder).await?;
+
+        // TODO: handle this error correctly
+        let download_path_str = download_path.to_str().expect("Error in get download path string");
+
+        let mut file = File::create(download_path_str).expect("Error in file creation");
+        file.write_all(bytes.as_ref()).expect("Errors in file write");
+        return Ok(());
+    }
+
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
@@ -95,6 +121,33 @@ impl ProgramDistributorService {
         return Ok(get_my_programs_response.data);
     }
 
+    pub async fn get_program_proven_inputs(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
+        let mut params: Vec<(&str, usize)> = Vec::new();
+        if (limit.is_some()) {
+            params.push(("limit", limit.unwrap()))
+        }
+        if (page.is_some()) {
+            params.push(("page", page.unwrap()))
+        }
+        let get_my_programs_url = format!("{}/program/proofs/{program_id}", self.base_url);
+        let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
+        let get_my_programs_response = self.make_request_with_response_body::<PagedProgramInputGroups>(get_my_programs_request_builder).await?;
+        return Ok(get_my_programs_response.data);
+    }
+
+    pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
+        let mut params: Vec<(&str, usize)> = Vec::new();
+        if (limit.is_some()) {
+            params.push(("limit", limit.unwrap()))
+        }
+        if (page.is_some()) {
+            params.push(("page", page.unwrap()))
+        }
+        let get_my_proven_programs_url = format!("{}/program/proofs", self.base_url);
+        let get_my_proven_programs_request_builder = self.client.get(get_my_proven_programs_url).query(&params);
+        let get_my_proven_programs_response = self.make_request_with_response_body::<PagedPrograms>(get_my_proven_programs_request_builder).await?;
+        return Ok(get_my_proven_programs_response.data);
+    }
 
     pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<(), EndpointError> {
         let post_program_url = format!("{}/program/upload", self.base_url);
@@ -142,6 +195,37 @@ impl ProgramDistributorService {
 
         self.make_request_with_stream_upload_and_response_body::<()>(
                                                 post_program_input_group_builder, post_program_input_group_builder_clone).await?;
+        return Ok(());
+    }
+
+    pub async fn download_program(&self, program_id: &str, download_path: &Path) {
+        let get_program_url = format!("{}/program/{}", self.base_url, program_id);
+        let response = reqwest::get(get_program_url).await.expect("Error in get");
+    
+        // Ensure the request was successful (status code 200)
+        if response.status().is_success() {
+            let file_path = "./aux_files/downloaded_program.tar";
+
+            // Open a file to write the downloaded content
+            let mut file = File::create(file_path).expect("Error in file creation");
+            file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+            decompress_tar(file_path, download_path.to_str().unwrap()).expect("Error in downloaded file decompression");
+        } else {
+            panic!("Failed to download file: {}", response.status());
+        }
+    }
+
+    pub async fn mark_proof_as_invalid(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
+        let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let patch_program_input_group_proof_request_builder = self.client.patch(patch_program_input_group_proof_url);
+        self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
+        return Ok(());
+    }
+
+    pub async fn confirm_proof_validity(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
+        let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let patch_program_input_group_proof_request_builder = self.client.delete(patch_program_input_group_proof_url);
+        self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
         return Ok(());
     }
 
@@ -234,6 +318,7 @@ impl ProgramDistributorService {
 
         let response = request.send().await.expect("Error in get");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
+        
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
             Err(error_response) => {
@@ -268,8 +353,14 @@ impl ProgramDistributorService {
         }
     }
 
-    async fn make_request_with_file_response(&mut self, request: RequestBuilder) -> Result<Bytes, EndpointError> {
-        let request_clone = request.try_clone().expect("Error while cloning request");
+    async fn make_request_with_file_response(&mut self, mut request: RequestBuilder) -> Result<Bytes, EndpointError> {
+        let mut request_clone = request.try_clone().expect("Error while cloning request");
+        
+        let mut jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+        let mut headers = HeaderMap::new();
+        headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+        request = request.headers(headers);
+
         let response = request.send().await.expect("Error in sent request");
         let response_parse_result = Self::parse_response_with_file_response(response).await;
         return match response_parse_result {
@@ -282,6 +373,10 @@ impl ProgramDistributorService {
                 };
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
+                    jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
+                    headers = HeaderMap::new();
+                    headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
+                    request_clone = request_clone.headers(headers);
                     let response = request_clone.send().await.expect("Error in get");
                     return Self::parse_response_with_file_response(response).await;
                 } else {

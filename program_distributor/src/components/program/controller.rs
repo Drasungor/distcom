@@ -189,7 +189,6 @@ impl ProgramController {
             }
         }
         let organization_id = &jwt_payload.organization_id;
-
         let found_programs_result = ProgramService::get_programs_with_proven_executions(organization_id, paging_params.limit, paging_params.page).await;
         return AppHttpResponseBuilder::get_http_response(found_programs_result);
     }

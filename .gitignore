@@ -12,6 +12,7 @@ db.sql
 *.csv
 *.bin
 executor_client/src/runner/methods
+uploader_client/src/runner/methods
 program_with_input
 methods_test
 *dev.json

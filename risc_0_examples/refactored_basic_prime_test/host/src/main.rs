@@ -1,5 +1,5 @@
 use methods::{
-    BASIC_PRIME_TEST_GUEST_ELF, BASIC_PRIME_TEST_GUEST_ID
+    DOWNLOADED_GUEST_ELF, DOWNLOADED_GUEST_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use std::env;
@@ -28,7 +28,7 @@ fn main() {
 
     let prover = default_prover();
     let receipt = prover
-        .prove(env, BASIC_PRIME_TEST_GUEST_ELF)
+        .prove(env, DOWNLOADED_GUEST_ELF)
         .unwrap();
 
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
@@ -41,7 +41,7 @@ fn main() {
     println!("The output of the journal is {:?}", _output);
 
     receipt
-        .verify(BASIC_PRIME_TEST_GUEST_ID)
+        .verify(DOWNLOADED_GUEST_ID)
         .expect("Proof verification failed");
     println!("Successful verification");
 }

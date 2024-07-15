@@ -1,0 +1,24 @@
+use serde_derive::{Deserialize};
+
+
+#[derive(Debug, Deserialize)]
+pub struct ReturnedProof {
+    pub organization_id: String,
+    pub program_id: String,
+    pub name: String,
+    pub description: String,
+    pub input_lock_timeout: i64,
+}
+
+pub fn print_programs_list(programs: &Vec<ReturnedProof>) {
+    let mut index = 0;
+    for program in programs {
+        println!("Proof {}:", index);
+        println!("\torganization_id: {}", program.organization_id);
+        println!("\tprogram_id: {}", program.program_id);
+        println!("\tname: {}", program.name);
+        println!("\tdescription: {}", program.description);
+        println!("\tinput_lock_timeout: {}", program.input_lock_timeout);
+        index += 1;
+    }
+}

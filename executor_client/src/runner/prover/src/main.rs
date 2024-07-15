@@ -60,12 +60,14 @@ fn main() {
     let executor_env = env_bulder_ref.build().unwrap();
 
     let prover = default_prover();
-    let receipt = prover
+    let prove_info = prover
         .prove(executor_env, DOWNLOADED_GUEST_ELF)
         .unwrap();
 
+    // let receipt = &prove_info.receipt;
+
     // let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
-    let serialized_proof = bincode::serialize(&receipt.receipt).expect("Error in proof serialization");
+    let serialized_proof = bincode::serialize(receipt).expect("Error in proof serialization");
 
     // println!("serialized_proof: {}", serialized_proof);
 
@@ -76,7 +78,7 @@ fn main() {
     // println!("The output of the journal is {:?}", _output);
 
     // receipt
-    //     .verify(BASIC_PRIME_TEST_GUEST_ID)
+    //     .verify(DOWNLOADED_GUEST_ID)
     //     .expect("Proof verification failed");
     // println!("Successful verification");
 }
