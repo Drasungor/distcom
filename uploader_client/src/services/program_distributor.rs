@@ -215,6 +215,20 @@ impl ProgramDistributorService {
         }
     }
 
+    pub async fn mark_proof_as_invalid(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
+        let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let patch_program_input_group_proof_request_builder = self.client.patch(patch_program_input_group_proof_url);
+        self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
+        return Ok(());
+    }
+
+    pub async fn confirm_proof_validity(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
+        let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
+        let patch_program_input_group_proof_request_builder = self.client.delete(patch_program_input_group_proof_url);
+        self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
+        return Ok(());
+    }
+
     async fn interactive_login(&self) -> String {
         print!("Please enter your username: ");
         io::stdout().flush().unwrap();

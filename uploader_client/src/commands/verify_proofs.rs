@@ -53,9 +53,11 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
     if output.status.success() {
         println!("Process executed successfully.");
         println!("Output: {}", String::from_utf8(output.stdout).unwrap());
-        println!("Stderr: {}", String::from_utf8(output.stderr).unwrap())
+        println!("Stderr: {}", String::from_utf8(output.stderr).unwrap());
+        write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
     } else {
         println!("Process failed.");
+        write_guard.mark_proof_as_invalid(program_id, input_group_id).await.expect("Error while marking proof as invalid");
     }
 
 }
