@@ -165,6 +165,9 @@ async fn main() {
     create_folder("./downloads");
     create_folder("./aux_files");
 
+    // We create the folder that will store the programs' inputs and outputs
+    create_folder("./programs_data");
+
     {
         // We establish the connection to s3
         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");

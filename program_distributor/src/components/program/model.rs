@@ -43,3 +43,8 @@ pub struct PagedProgramInputGroups {
     pub program_input_groups: Vec<ProgramInputGroup>,
     pub total_elements_amount: i64,
 }
+
+#[derive(Serialize, Debug)]
+pub struct UploadedProgram {
+    pub program_id: String,
+}
