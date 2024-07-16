@@ -48,3 +48,8 @@ pub struct PagedProgramInputGroups {
 pub struct UploadedProgram {
     pub program_id: String,
 }
+
+#[derive(Serialize, Debug)]
+pub struct UploadedInputGroup {
+    pub input_group_id: String,
+}

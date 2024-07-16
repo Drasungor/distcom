@@ -6,7 +6,7 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_files};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadProgram, UploadProof, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
@@ -94,7 +94,11 @@ impl ProgramController {
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
             return AppHttpResponseBuilder::get_http_response::<()>(Err(AppError::from(file_deletion_error)));
         } else {
-            return AppHttpResponseBuilder::get_http_response(Ok(()));
+
+            let uploaded_input_group_data = UploadedInputGroup {
+                input_group_id: add_program_input_group_result.unwrap(),
+            };
+            return AppHttpResponseBuilder::get_http_response(Ok(uploaded_input_group_data));
         }
     }
 
