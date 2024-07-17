@@ -117,7 +117,9 @@ async fn start_program_execution() {
                         };
 
                         // TODO: manage this error correctly
-                        write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
+                        let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
+                        let program_folder = format!("./programs_data/{program_id}");
+                        create_folder(&program_folder);
                     },
                     GetProgramsCommands::Template => {
                         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
