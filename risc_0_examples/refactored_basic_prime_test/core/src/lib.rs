@@ -1,4 +1,4 @@
-#![no_std]  // std support is experimental
+// #![no_std]  // std support is experimental
 
 use serde::{Deserialize, Serialize};
 

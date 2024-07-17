@@ -19,7 +19,7 @@ fn main() {
     let input: Vec<u8> = env::read();
 
     let first_four_bytes = &input[0..4];
-    let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().unwrap());
+    let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
 
     assert!(number_to_test % 2 != 0);
     let mut divisor = 3;
@@ -37,6 +37,6 @@ fn main() {
 
     // env::commit(&outputs);
     
-    let serialized_outputs = to_string(&outputs).unwrap();
+    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
     env::commit(&serialized_outputs);
 }

@@ -27,16 +27,20 @@ fn main() {
         .unwrap();
 
     let prover = default_prover();
-    let receipt = prover
+    // let receipt = prover
+    let proof_info = prover
         .prove(env, DOWNLOADED_GUEST_ELF)
         .unwrap();
+
+    let receipt = proof_info.receipt;
 
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
 
     std::fs::write("./proof.bin", serialized_proof);
 
 
-    let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
+    // let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
+    let _output: String = receipt.journal.decode().expect("Error in program output get");
 
     println!("The output of the journal is {:?}", _output);
 
