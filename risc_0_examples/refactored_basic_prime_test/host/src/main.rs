@@ -20,8 +20,11 @@ fn main() {
 
     let tested_number = args[1].parse::<u32>().expect("The received input is not a positive integer");
 
+    let be_number_bytes = tested_number.to_be_bytes().to_vec();
+
     let env = ExecutorEnv::builder()
-        .write(&tested_number)
+        // .write(&tested_number)
+        .write(&be_number_bytes)
         .unwrap()
         .build()
         .unwrap();
