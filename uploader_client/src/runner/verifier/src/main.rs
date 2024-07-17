@@ -48,7 +48,11 @@ fn main() {
         .verify(DOWNLOADED_GUEST_ID)
         .expect("Proof verification failed");
 
+    let output: String = receipt.journal.decode().unwrap();
+    
     println!("Proof verification successful");
+
+    println!("output: {output}")
 
     // let receipt = &prove_info.receipt;
     // receipt

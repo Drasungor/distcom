@@ -3,6 +3,7 @@
 // #![no_std]  // std support is experimental
 
 use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Outputs {
@@ -29,10 +30,13 @@ fn main() {
         divisor += 2;
     }
 
-    let ouputs: Outputs = Outputs {
+    let outputs: Outputs = Outputs {
         tested_number: number_to_test,
         is_prime: may_be_prime && (divisor == number_to_test),
     }; 
 
-    env::commit(&ouputs);
+    // env::commit(&outputs);
+    
+    let serialized_outputs = to_string(&outputs).unwrap();
+    env::commit(&serialized_outputs);
 }
