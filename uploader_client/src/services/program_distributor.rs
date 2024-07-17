@@ -190,9 +190,6 @@ impl ProgramDistributorService {
         return Ok(uploaded_program_data.data.program_id);
     }
 
-    // UploadedProgramReturnedData, UploadedInputGroupReturnedData
-
-
     pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<String, EndpointError> {
         let post_program_input_group_url = format!("{}/program/inputs/{}", self.base_url, program_id);
         let uploaded_input_group_file_path_str = uploaded_input_group_file_path.to_str().expect("Error in get download path string");
