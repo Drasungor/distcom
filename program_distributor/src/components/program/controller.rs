@@ -94,7 +94,6 @@ impl ProgramController {
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
             return AppHttpResponseBuilder::get_http_response::<()>(Err(AppError::from(file_deletion_error)));
         } else {
-
             let uploaded_input_group_data = UploadedInputGroup {
                 input_group_id: add_program_input_group_result.unwrap(),
             };

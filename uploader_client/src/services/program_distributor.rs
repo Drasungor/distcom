@@ -57,6 +57,18 @@ pub struct ReceivedTokens {
     pub refresh_token: Token,
 }
 
+#[derive(Deserialize, Debug)]
+struct UploadedProgramReturnedData {
+    pub program_id: String,
+}
+
+// UploadedProgramReturnedData, UploadedInputGroupReturnedData
+
+#[derive(Deserialize, Debug)]
+struct UploadedInputGroupReturnedData {
+    pub input_group_id: String,
+}
+
 
 #[derive(Debug, Serialize)]
 pub struct UploadedProgram {
@@ -149,7 +161,7 @@ impl ProgramDistributorService {
         return Ok(get_my_proven_programs_response.data);
     }
 
-    pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<(), EndpointError> {
+    pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<String, EndpointError> {
         let post_program_url = format!("{}/program/upload", self.base_url);
         let upload_folder_path_str = upload_folder_path.to_str().expect("Error in get download path string");
         let compressed_folder_path = "./aux_files/uploaded_methods.tar";
@@ -172,12 +184,16 @@ impl ProgramDistributorService {
         .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
         let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
-        self.make_request_with_stream_upload_and_response_body::<()>(
+        // self.make_request_with_stream_upload_and_response_body::<()>(
+        let uploaded_program_data = self.make_request_with_stream_upload_and_response_body::<UploadedProgramReturnedData>(
                                                                 post_methods_request_builder, post_methods_request_builder_clone).await?;
-        return Ok(());
+        return Ok(uploaded_program_data.data.program_id);
     }
 
-    pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<(), EndpointError> {
+    // UploadedProgramReturnedData, UploadedInputGroupReturnedData
+
+
+    pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<String, EndpointError> {
         let post_program_input_group_url = format!("{}/program/inputs/{}", self.base_url, program_id);
         let uploaded_input_group_file_path_str = uploaded_input_group_file_path.to_str().expect("Error in get download path string");
 
@@ -193,9 +209,10 @@ impl ProgramDistributorService {
         .part("file", Part::bytes(file_content).file_name("program_input_group_clone.csv"));
         let post_program_input_group_builder_clone = self.client.post(&post_program_input_group_url).multipart(form_clone);
 
-        self.make_request_with_stream_upload_and_response_body::<()>(
+        // self.make_request_with_stream_upload_and_response_body::<()>(
+        let uploaded_input_group_data = self.make_request_with_stream_upload_and_response_body::<UploadedInputGroupReturnedData>(
                                                 post_program_input_group_builder, post_program_input_group_builder_clone).await?;
-        return Ok(());
+        return Ok(uploaded_input_group_data.data.input_group_id);
     }
 
     pub async fn download_program(&self, program_id: &str, download_path: &Path) {
