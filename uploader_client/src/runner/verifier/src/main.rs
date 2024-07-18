@@ -52,7 +52,7 @@ fn main() {
 
     let output: String = receipt.journal.decode().unwrap();
     
-    let output_file_path = format!("../../programs_data/{program_id}/{input_group_id}/output.text");
+    let output_file_path = format!("../../programs_data/{program_id}/{input_group_id}/output.json");
     
     let mut file = File::create(output_file_path).expect("Error in output file creation");
     file.write_all(output.as_bytes()).expect("Errors in file write");
