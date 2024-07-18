@@ -53,6 +53,8 @@ async fn download_and_run_program(program: &ReturnedProgram) {
 
     read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
 
+    println!("Proof was uploaded");
+
 }
 
 async fn retrieve_programs(organization_option: Option<&ReturnedOrganization>, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
