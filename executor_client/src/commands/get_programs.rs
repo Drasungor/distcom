@@ -42,8 +42,9 @@ async fn download_and_run_program(program: &ReturnedProgram) {
     println!("Program output: {:?}", output);
 
     let input_group_id = csv_file_name.split(".").collect::<Vec<&str>>()[0];
-    let _ = fs::remove_file(format!("./program_input_group/{csv_file_name}"));
-    let _ = fs::remove_file(format!("./program_input_group/{}", downloaded_files_names.program_file_name));
+
+    let _ = fs::remove_file(format!("./program_with_input/{csv_file_name}"));
+    let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names.program_file_name));
 
     let uploaded_proof_data = UploadedProof {
         organization_id: program.organization_id.clone(),
