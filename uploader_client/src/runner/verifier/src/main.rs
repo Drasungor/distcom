@@ -6,7 +6,7 @@ use methods::{
 use risc0_zkvm::ExecutorEnv;
 use std::env;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use bincode;
 
 // use basic_prime_test_core;
@@ -16,9 +16,10 @@ fn main() {
         .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
         .init();
 
-    // let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().collect();
 
-    // let program_input_file_name = args[1].parse::<String>().expect("The received input is not a positive integer");
+    let program_id = args[1].parse::<String>().expect("Must receive the program id");
+    let input_group_id = args[2].parse::<String>().expect("Must receive the input group id");
 
 
     // let mut env_builder = ExecutorEnv::builder();
@@ -44,12 +45,19 @@ fn main() {
     // let serialized_proof = bincode::serialize(&receipt.receipt).expect("Error in proof serialization");
 
     // let verifier = default_verifier();
+
     receipt
         .verify(DOWNLOADED_GUEST_ID)
         .expect("Proof verification failed");
 
     let output: String = receipt.journal.decode().unwrap();
     
+    let output_file_path = format!("../../programs_data/{program_id}/{input_group_id}/output.text");
+    
+    let mut file = File::create(output_file_path).expect("Error in output file creation");
+    file.write_all(output.as_bytes()).expect("Errors in file write");
+ 
+
     println!("Proof verification successful");
 
     println!("output: {output}")

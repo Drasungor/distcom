@@ -41,9 +41,11 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
 
     println!("antes de correr el comando de verificacion");
 
+    let execution_args = vec![program_id, input_group_id];
+
     let output = Command::new("cargo")
         .arg("run")
-        // .args(execution_args)
+        .args(execution_args)
         .current_dir("./src/runner")
         .output()
         .expect("Failed to execute child program");
