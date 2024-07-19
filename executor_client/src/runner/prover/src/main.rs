@@ -64,10 +64,11 @@ fn main() {
         .prove(executor_env, DOWNLOADED_GUEST_ELF)
         .unwrap();
 
-    // let receipt = &prove_info.receipt;
+    let receipt = &prove_info.receipt;
+    let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
 
-    // let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
-    let serialized_proof = bincode::serialize(receipt).expect("Error in proof serialization");
+    // let serialized_proof = bincode::serialize(receipt).expect("Error in proof serialization");
+    // let serialized_proof = bincode::serialize(&prove_info).expect("Error in proof serialization");
 
     // println!("serialized_proof: {}", serialized_proof);
 

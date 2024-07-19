@@ -6,7 +6,7 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_files};
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadProgram, UploadProof}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
@@ -40,10 +40,19 @@ impl ProgramController {
         }
 
         let input_lock_timeout = uploaded_program.execution_timeout;
-        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id, 
+        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id.clone(), 
                                                                                                     uploaded_program.name, uploaded_program.description, 
                                                                                                     input_lock_timeout).await;
-        return AppHttpResponseBuilder::get_http_response(program_storage_result);
+        let returned_body_result: Result<UploadedProgram, AppError>;
+        if let Err(returned_error) = program_storage_result {
+            returned_body_result = Err(returned_error);
+        } else {
+            let program_data = UploadedProgram {
+                program_id: file_id,
+            };
+            returned_body_result = Ok(program_data);
+        }
+        return AppHttpResponseBuilder::get_http_response(returned_body_result);
     }
 
     pub async fn upload_proof(form: Multipart) -> impl Responder {
@@ -85,7 +94,10 @@ impl ProgramController {
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
             return AppHttpResponseBuilder::get_http_response::<()>(Err(AppError::from(file_deletion_error)));
         } else {
-            return AppHttpResponseBuilder::get_http_response(Ok(()));
+            let uploaded_input_group_data = UploadedInputGroup {
+                input_group_id: add_program_input_group_result.unwrap(),
+            };
+            return AppHttpResponseBuilder::get_http_response(Ok(uploaded_input_group_data));
         }
     }
 

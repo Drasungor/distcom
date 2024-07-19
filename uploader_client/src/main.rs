@@ -117,7 +117,9 @@ async fn start_program_execution() {
                         };
 
                         // TODO: manage this error correctly
-                        write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
+                        let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
+                        let program_folder = format!("./programs_data/{program_id}");
+                        create_folder(&program_folder);
                     },
                     GetProgramsCommands::Template => {
                         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
@@ -164,6 +166,9 @@ async fn main() {
 
     create_folder("./downloads");
     create_folder("./aux_files");
+
+    // We create the folder that will store the programs' inputs and outputs
+    create_folder("./programs_data");
 
     {
         // We establish the connection to s3
