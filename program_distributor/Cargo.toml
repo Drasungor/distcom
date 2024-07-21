@@ -8,8 +8,8 @@ edition = "2021"
 # path = "src/main.rs"
 
 [dependencies]
-mysql_diesel_async_migration = { path = "./mysql_diesel_async_migration", version = "0.1.0" }
-embed_migrations_macro_function = { path = "./mysql_diesel_async_migration/embed_migrations_macro_function", version = "0.1.0" }
+# mysql_diesel_async_migration = { path = "./mysql_diesel_async_migration", version = "0.1.0" }
+# embed_migrations_macro_function = { path = "./mysql_diesel_async_migration/embed_migrations_macro_function", version = "0.1.0" }
 
 actix = "0.13"
 actix-multipart = "0.6.1"
@@ -44,6 +44,6 @@ chrono = { version = "0.4.38", features = ["serde"]}
 
 
 
-[workspace]
-# members = [ "./mysql_diesel_async_migration" ]
-members = [ "./mysql_diesel_async_migration", "./mysql_diesel_async_migration/embed_migrations_macro_function" ]
+# [workspace]
+# # members = [ "./mysql_diesel_async_migration" ]
+# members = [ "./mysql_diesel_async_migration", "./mysql_diesel_async_migration/embed_migrations_macro_function" ]
