@@ -1,5 +1,6 @@
 use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::sync::RwLock;
@@ -31,7 +32,7 @@ pub struct Token {
 
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
-    pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&CONFIG_OBJECT.database_url);
+    pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&get_database_connection_url(&CONFIG_OBJECT));
     pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
     // pub static ref GENERAL_CONSTANTS: RwLock<GeneralConstants> = RwLock::new(general_constants::get_general_constants());
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
@@ -50,4 +51,13 @@ fn generate_connection_pool(database_url: &String) -> Pool<ConnectionManager<Mys
     let manager = ConnectionManager::<MysqlConnection>::new(database_url);
     let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
     return connection_pool;
+}
+
+fn get_database_connection_url(config: &Config) -> String {
+    let url_env_variable = env::var("database_url");
+    if let Ok(ok_env_url) = url_env_variable {
+        return ok_env_url;
+    } else {
+        return config.database_url.clone();
+    }
 }

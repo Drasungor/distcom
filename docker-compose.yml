@@ -43,6 +43,9 @@ services:
     ports:
       - "${SERVER_EXTERNAL_PORT}:8080"
     cpus: "${MY_SERVICE_CPUS}"
+    environment:
+      database_url: "${DATABASE_URL}"
+
     volumes:
       - ./program_distributor:/app
     depends_on:
