@@ -22,6 +22,8 @@ services:
       start_period: 20s
     volumes:
         - ${VOLUME_DIR}/db_data:/var/lib/mysql  # Add this line for the volume
+    # networks:
+    #   - app-network
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -33,22 +35,35 @@ services:
       # MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     depends_on:
-      - db
-      # db:
-      #   condition: service_healthy
+      # - db
+      db:
+        condition: service_healthy
 
   rust-app:
     build:
       context: ./program_distributor
     ports:
       - "${SERVER_EXTERNAL_PORT}:8080"
-    cpus: "${MY_SERVICE_CPUS}"
+      # - "127.0.0.1:${SERVER_EXTERNAL_PORT}:8080"
+      # - "0.0.0.0:${SERVER_EXTERNAL_PORT}:8080"
+      # - "0.0.0.0:${SERVER_EXTERNAL_PORT}:8080"
+    # cpus: "${MY_SERVICE_CPUS}"
     environment:
       database_url: "${DATABASE_URL}"
 
     volumes:
       - ./program_distributor:/app
     depends_on:
-      - db
-      # db:
-      #   condition: service_healthy
+      # - db
+      db:
+        condition: service_healthy
+
+    # extra_hosts:
+    #     - "host.docker.internal:host-gateway"
+
+#     networks:
+#       - app-network
+
+# networks:
+#   app-network:
+#     driver: bridge

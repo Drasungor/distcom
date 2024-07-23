@@ -10,10 +10,6 @@ WORKDIR /app
 
 COPY . .
 
-
-# RUN echo $(ls)
-RUN ls -la
-
 # Build the Rust application
 # RUN cargo build --release
 
