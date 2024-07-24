@@ -18,17 +18,20 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 
 
-RUN apt install build-essential autoconf automake libtool pkg-config -y
-# RUN apt install libprotobuf-dev protobuf-compiler -y
-RUN apt install protobuf-compiler -y
-RUN apt install libprotobuf-dev -y
-# RUN apt install protoc -y
-RUN apt install xz-utils -y
-RUN apt install gawk -y
-RUN apt install python3 -y
-RUN apt-get install bash -y
+# # RUN apt install build-essential autoconf automake libtool pkg-config -y
+# # # RUN apt install libprotobuf-dev protobuf-compiler -y
+# # RUN apt install protobuf-compiler -y
+# # RUN apt install libprotobuf-dev -y
+# # # RUN apt install protoc -y
+# # RUN apt install xz-utils -y
+# # RUN apt install gawk -y
+# # RUN apt install python3 -y
 
-RUN apt-get install -y libssl-dev
+# RUN apt-get install bash -y
+# RUN apt-get install build-essential -y
+# RUN apt-get install pkg-config -y
+# RUN apt-get install libssl-dev -y
+RUN apt-get install bash build-essential pkg-config libssl-dev -y
 
 # ENV PATH="$PATH:/.cargo/bin"
 
