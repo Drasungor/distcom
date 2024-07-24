@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  rust-app:
+  rust-app-executor:
     build:
       context: ./
     # ports:

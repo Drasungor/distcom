@@ -1,5 +1,6 @@
 # Use the official Rust image as the base image
-FROM rust:latest
+# FROM rust:latest
+FROM ubuntu:latest
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -8,53 +9,52 @@ WORKDIR /app
 # # # COPY Cargo.toml .
 # # # COPY src ./src
 
-# # RUN apt-get update -y
-# # RUN apt-get install -y iputils-ping
-# # RUN ping risczero.com
-
-# # RUN curl -L https://risczero.com/install
-# # RUN curl -L https://risczero.com/install | bash
-# # RUN curl -L https://risczero.com/install | /bin/sh
-
-# RUN apt-get update && apt-get install -y bash
-
-# # RUN curl -L https://risczero.com/install | bash
-
-# # # RUN ./install
-# # # RUN cat install | bash
-
-# # # ENV RISC0_DIR="$HOME/.risc0"
-# # # ENV RISC0_BIN_DIR="$RISC0_DIR/bin"
-# # # ENV BIN_PATH="$RISC0_BIN_DIR/rzup"
-# # # # ENV PATH="$PATH:$RISC0_BIN_DIR"
-# # # ENV PATH="$PATH:$BIN_PATH"
-
-# # # ENV PATH="$PATH:/opt/gtk/bin"
-
-# # # RUN echo "$PATH" | grepp rzup
-# # # SHELL ["/bin/bash", "-c"]
-# # # RUN bash -c rzup --version
-
-# # # RUN ls $HOME
-
-# # Download and run the install script
-# RUN curl -L https://risczero.com/install -o install.sh && bash install.sh
-
-# # Set the environment variables for rzup
-# RUN export BASE_DIR=${XDG_CONFIG_HOME:-$HOME} && \
-#     export RISC0_DIR=${RISC0_DIR-"$BASE_DIR/.risc0"} && \
-#     export RISC0_BIN_DIR="$RISC0_DIR/bin" && \
-#     export PATH="$PATH:$RISC0_BIN_DIR" && \
-#     rzup --version
-
-# RUN rzup --version
-# RUN rzup
 RUN apt-get update
-RUN cargo install cargo-binstall
-RUN cargo binstall cargo-risczero -y
-RUN cargo risczero install
 
-COPY . .
+RUN apt install curl -y
+
+# RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+
+
+RUN apt install build-essential autoconf automake libtool pkg-config -y
+# RUN apt install libprotobuf-dev protobuf-compiler -y
+RUN apt install protobuf-compiler -y
+RUN apt install libprotobuf-dev -y
+# RUN apt install protoc -y
+RUN apt install xz-utils -y
+RUN apt install gawk -y
+RUN apt install python3 -y
+RUN apt-get install bash -y
+
+RUN apt-get install -y libssl-dev
+
+# ENV PATH="$PATH:/.cargo/bin"
+
+# RUN /.cargo/bin install cargo-binstall
+
+# RUN cargo install cargo-binstall
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install cargo-binstall"]
+
+# RUN cargo binstall cargo-risczero -y
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo binstall cargo-risczero -y"]
+
+# RUN cargo risczero install
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo risczero install"]
+
+# PROTOC_ZIP=protoc-3.15.8-linux-x86_64.zip
+# curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/$PROTOC_ZIP
+# sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+# sudo unzip -o $PROTOC_ZIP -d /usr/local include/*
+# rm -f $PROTOC_ZIP
+
+# # COPY . .
+# # COPY Cargo.lock Cargo.toml src ./
+# COPY Cargo.lock Cargo.toml ./src /app/
+COPY Cargo.lock Cargo.lock
+COPY Cargo.toml Cargo.toml
+COPY ./src ./src
 
 # Build the Rust application
 # RUN cargo build --release
@@ -64,4 +64,5 @@ COPY . .
 
 # Set the default command to run the built server
 # CMD ["target/release/my_rust_server"]
-CMD cargo run
+# CMD cargo run
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo run"]
