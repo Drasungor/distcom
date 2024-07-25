@@ -1,5 +1,6 @@
 use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::sync::RwLock;
@@ -16,33 +17,43 @@ use crate::services::program_distributor::ProgramDistributorService;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-   pub database_url: String,
-   pub token: Token,
-   pub uploaded_files_connection_string: String, // String that defines where the files are stored, it is a single attribute so that different
-                                   // parameters can be formatted inside it
+    pub program_distributor_url: String,
+//    pub database_url: String,
+//    pub token: Token,
+//    pub uploaded_files_connection_string: String, // String that defines where the files are stored, it is a single attribute so that different
+//                                    // parameters can be formatted inside it
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Token {
-    pub basic_token_secret: String,
-    pub basic_token_minutes_duration: u64,
-    pub refresh_token_secret: String,
-    pub refresh_token_days_duration: u64,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct Token {
+//     pub basic_token_secret: String,
+//     pub basic_token_minutes_duration: u64,
+//     pub refresh_token_secret: String,
+//     pub refresh_token_days_duration: u64,
+// }
 
 lazy_static! {
-    // pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
+    pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     // pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
 
     // TODO: get the base url from the config object
-    pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new("http://localhost:8080"));
+    pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new(&get_database_connection_url(&CONFIG_OBJECT)));
 }
 
-// fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-//     let mut file = File::open(path)?;
-//     let mut content = String::new();
-//     file.read_to_string(&mut content)?;
-//     let config_object: Config = serde_json::from_str(&content)?;
+fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
+    let mut file = File::open(path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    let config_object: Config = serde_json::from_str(&content)?;
 
-//     Ok(config_object)
-// }
+    Ok(config_object)
+}
+
+fn get_database_connection_url(config: &Config) -> String {
+    let url_env_variable = env::var("program_distributor_url");
+    if let Ok(ok_env_url) = url_env_variable {
+        return ok_env_url;
+    } else {
+        return config.program_distributor_url.clone();
+    }
+}
