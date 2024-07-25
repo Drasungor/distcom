@@ -13,7 +13,6 @@ services:
     # tty: true
     # stdin_open: true
     environment:
-      database_url: "${DATABASE_URL}"
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
       # - ./program_distributor:/app
