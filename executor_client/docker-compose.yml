@@ -4,26 +4,12 @@ services:
   rust-app-executor:
     build:
       context: ./
-    # ports:
-    #   - "${SERVER_EXTERNAL_PORT}:8080"
-    #   # - "127.0.0.1:${SERVER_EXTERNAL_PORT}:8080"
-    #   # - "0.0.0.0:${SERVER_EXTERNAL_PORT}:8080"
-    #   # - "0.0.0.0:${SERVER_EXTERNAL_PORT}:8080"
-    # tty: true
-    # stdin_open: true
     
     cpus: "${MY_SERVICE_CPUS}"
     
     environment:
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
-      # - ./program_distributor:/app
-      # - .:/app
       - ./:/app
-    # depends_on:
-    #   - db
-    #   # db:
-    #   #   condition: service_healthy
-
     extra_hosts:
         - "host.docker.internal:host-gateway"
