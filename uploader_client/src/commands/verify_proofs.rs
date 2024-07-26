@@ -79,7 +79,26 @@ async fn verify_all_program_proven_executions(program_id: &str) {
         for input_group_proof in input_groups_array {
             verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
         }
+        // if input_groups_array.len() != 0 {
 
+        // }
+        input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+        input_groups_array = input_groups_page.program_input_groups;
+    }
+}
+
+async fn verify_some_program_proven_executions(program_id: &str, proofs_amount: usize) {
+    let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
+    let mut input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+    let mut input_groups_array = input_groups_page.program_input_groups;
+    let mut verified_proofs = 0;
+    while input_groups_array.len() != 0 && verified_proofs < proofs_amount {
+        let mut current_page_iterator = 0;
+        while current_page_iterator < input_groups_array.len() && verified_proofs < proofs_amount {
+            let input_group_proof = &input_groups_array[current_page_iterator];
+            verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
+            current_page_iterator += 1;
+        }
         input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
         input_groups_array = input_groups_page.program_input_groups;
     }
@@ -91,10 +110,7 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
     let mut input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
     print_input_groups_list(&input_groups_page.program_input_groups);
 
-    // println!("&input_groups_page.program_input_groups.len(): {}", &input_groups_page.program_input_groups.len());
-
-    // TODO: change for while should_continue_looping
-    loop {
+    while should_continue_looping {
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
@@ -112,10 +128,12 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
                         should_continue_looping = false;
                     },
                     GetProofsCommands::VerifyN {verified_amount} => {
-
+                        verify_some_program_proven_executions(program_id, verified_amount).await;
+                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
                     },
                     GetProofsCommands::VerifyAll => {
                         verify_all_program_proven_executions(program_id).await;
+                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
                     },
                }
             }
