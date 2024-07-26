@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use std::{fs, path::Path, process::Command};
+use std::time::{SystemTime, Duration};
 
 use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
 
@@ -32,6 +33,8 @@ async fn download_and_run_program(program: &ReturnedProgram) {
 
     let execution_args = vec![csv_file_name.clone()];
 
+    let start_time = SystemTime::now();
+
     let output = Command::new("cargo")
         .arg("run")
         .args(execution_args)
@@ -54,7 +57,9 @@ async fn download_and_run_program(program: &ReturnedProgram) {
 
     read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
 
-    println!("Proof was uploaded");
+    let after_proof_time = SystemTime::now();
+
+    println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
 
 }
 

@@ -62,8 +62,10 @@ impl ProgramDistributorService {
             params.push(("page", page.unwrap()))
         }
 
-        // TODO: Ensure the request was successful (status code 200)
-        let response = self.client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
+        let get_organizations_url = format!("{}/account/organizations", self.base_url);
+
+        // let response = self.client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
+        let response = self.client.get(get_organizations_url).query(&params).send().await.expect("Error in get");
         
         if response.status().is_success() {
             let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
@@ -81,8 +83,9 @@ impl ProgramDistributorService {
         if (page.is_some()) {
             params.push(("page", page.unwrap()))
         }
-        let url = format!("http://localhost:8080/program/organization/{}", organization_id);
-        let response = self.client.get(url).query(&params).send().await.expect("Error in get");
+        // let url = format!("http://localhost:8080/program/organization/{}", organization_id);
+        let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
+        let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
     
         // Ensure the request was successful (status code 200)
         if response.status().is_success() {
@@ -105,10 +108,11 @@ impl ProgramDistributorService {
             params.push(("page", page.unwrap()))
         }
     
-        let get_programs_url = format!("http://localhost:8080/program/all");
+        // let get_programs_url = format!("http://localhost:8080/program/all");
+        let get_general_programs_url = format!("{}/program/all", self.base_url);
     
         // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
-        let response = self.client.get(get_programs_url).query(&params).send().await.expect("Error in get");
+        let response = self.client.get(get_general_programs_url).query(&params).send().await.expect("Error in get");
     
         // Ensure the request was successful (status code 200)
         if response.status().is_success() {
@@ -121,8 +125,9 @@ impl ProgramDistributorService {
     
     // pub async fn get_program_and_input_group(&self, program_id: &String) -> String {
     pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
-        let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
-        let response = reqwest::get(request_url).await.expect("Error in get");
+        // let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
+        let get_program_and_input_group_url = format!("{}/program/program-and-inputs/{}", self.base_url, program_id);
+        let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
     
         // Ensure the request was successful (status code 200)
         if response.status().is_success() {

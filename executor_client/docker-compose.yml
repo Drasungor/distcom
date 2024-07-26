@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  rust-app-executor:
+    build:
+      context: ./
+    
+    cpus: "${MY_SERVICE_CPUS}"
+    
+    environment:
+      program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
+    volumes:
+      - ./:/app
+    extra_hosts:
+        - "host.docker.internal:host-gateway"

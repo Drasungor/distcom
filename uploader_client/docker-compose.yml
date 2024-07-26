@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  rust-app-uploader:
+    build:
+      context: ./
+    environment:
+      program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
+    volumes:
+      - ./:/app
+
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
