@@ -34,6 +34,7 @@ async fn retrieve_proven_inputs(program_id: &str, limit: Option<usize>, page: Op
     return write_guard.get_program_proven_inputs(program_id, limit, page).await.expect("Error while getting uploaded programs");
 }
 
+
 async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
     write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
@@ -69,6 +70,21 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
 
 }
 
+
+async fn verify_all_program_proven_executions(program_id: &str) {
+    let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
+    let mut input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+    let mut input_groups_array = input_groups_page.program_input_groups;
+    while input_groups_array.len() != 0 {
+        for input_group_proof in input_groups_array {
+            verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
+        }
+
+        input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+        input_groups_array = input_groups_page.program_input_groups;
+    }
+}
+
 // TODO: Update this so that the page size is used, do this also with the first page and limit values
 async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Option<usize>) {
     let mut should_continue_looping = true;
@@ -99,7 +115,7 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
 
                     },
                     GetProofsCommands::VerifyAll => {
-                        
+                        verify_all_program_proven_executions(program_id).await;
                     },
                }
             }
