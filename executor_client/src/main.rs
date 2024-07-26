@@ -127,39 +127,6 @@ async fn main() {
 
     println!("default_limit: {}", default_limit);
 
-    // run_program_get_example("357de710-7ac0-4889-9ce5-6c024db50236".to_string()).await;
-
-    // get_program_template().await;
-
-    // get_program_and_input_group("5793ec0c-d820-4613-bee9-46bf06dd6dbd".to_string()).await;
-
-
-    // // // compress_folder("../risc_0_examples/basic_prime_test/methods", "./my_compressed_methods.tar").expect("Compression failed");
-    // // // compress_folder("./folder_to_compress", "./my_compressed_methods.tar").expect("Compression failed");
-    // // compress_folder("./methods", "./my_compressed_methods.tar").expect("Compression failed");
-
-    // compress_folder_contents("./methods_test", "./my_compressed_methods.tar").expect("Compression failed");
-    
-
-    // // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
-    // decompress_tar("./my_compressed_methods.tar", "./src/runner/methods").expect("Decompression failed")
-    // // decompress_tar("./downloaded_file.tar", "./my_decompressed_src").expect("Decompression failed")
-
-    // get_organizations(None, None).await;
-
-    // println!("");
-    // println!("");
-    // println!("");
-
-    // get_organization_programs("210c3559-86d1-4bbb-999b-dcc1d27867ea".to_string(), None, None).await;
-
-    // println!("");
-    // println!("");
-    // println!("");
-
-
-    // get_general_programs(None, None).await;
-
     run_commands_loop().await;
 
 }
