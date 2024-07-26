@@ -39,7 +39,7 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
     // pub async fn download_proof(&mut self, program_id: &str, input_group_id: &str, download_path: &Path) -> Result<(), EndpointError> {
 
 
-    println!("antes de correr el comando de verificacion");
+    println!("Starting proof verification");
 
     let execution_args = vec![program_id, input_group_id];
 
@@ -50,12 +50,12 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
         .output()
         .expect("Failed to execute child program");
 
-    println!("Program output: {:?}", output);
+    // println!("Program output: {:?}", output);
 
     if output.status.success() {
-        println!("Process executed successfully.");
-        println!("Output: {}", String::from_utf8(output.stdout).unwrap());
-        println!("Stderr: {}", String::from_utf8(output.stderr).unwrap());
+        println!("Proof verified successfully.");
+        // println!("Output: {}", String::from_utf8(output.stdout).unwrap());
+        // println!("Stderr: {}", String::from_utf8(output.stderr).unwrap());
         write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
     } else {
         println!("Process failed.");
@@ -70,7 +70,7 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
     let mut input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
     print_input_groups_list(&input_groups_page.program_input_groups);
 
-    println!("&input_groups_page.program_input_groups.len(): {}", &input_groups_page.program_input_groups.len());
+    // println!("&input_groups_page.program_input_groups.len(): {}", &input_groups_page.program_input_groups.len());
 
     // TODO: change for while should_continue_looping
     loop {
@@ -83,9 +83,9 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
                         input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(page)).await;
                     },
                     GetProofsCommands::Verify{index} => {
-                        println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                         let chosen_input_group = &input_groups_page.program_input_groups[index];
-                        verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await
+                        verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await;
+                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
                     },
                     GetProofsCommands::Back => {
                         should_continue_looping = false;
