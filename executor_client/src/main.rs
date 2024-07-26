@@ -123,7 +123,7 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    let default_limit = &common::config::CONFIG_OBJECT.default_limit;
+    let default_limit = &common::config::CONFIG_OBJECT.max_page_size;
 
     println!("default_limit: {}", default_limit);
 

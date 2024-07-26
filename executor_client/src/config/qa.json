@@ -1,4 +1,5 @@
 {
-    "default_limit": 50,
-    "program_distributor_url": "http://localhost:8080"
+    "program_distributor_url": "http://localhost:8080",
+    "default_page_size" : 5,
+    "max_page_size" : 50
 }

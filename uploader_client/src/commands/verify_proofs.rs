@@ -21,6 +21,11 @@ enum GetProofsCommands {
         #[clap(index = 1)]
         index: usize,
     },
+    VerifyN {
+        #[clap(index = 1)]
+        verified_amount: usize,
+    },
+    VerifyAll,
     Back,
 }
 
@@ -89,7 +94,13 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
                     },
                     GetProofsCommands::Back => {
                         should_continue_looping = false;
-                    }
+                    },
+                    GetProofsCommands::VerifyN {verified_amount} => {
+
+                    },
+                    GetProofsCommands::VerifyAll => {
+                        
+                    },
                }
             }
             Err(_) => {
