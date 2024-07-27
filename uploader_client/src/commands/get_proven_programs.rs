@@ -50,9 +50,6 @@ async fn select_proven_program() {
                         programs_page = retrieve_my_proven_programs(Some(50), Some(page)).await;
                     },
                     GetProvenProgramsCommands::Verify{index} => {
-
-                        println!("Verify command");
-
                         let chosen_program = &programs_page.programs[index];
                         select_proven_inputs(&chosen_program.program_id, Some(50), Some(1)).await;
                     },
