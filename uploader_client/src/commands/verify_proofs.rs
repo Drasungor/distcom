@@ -79,9 +79,6 @@ async fn verify_all_program_proven_executions(program_id: &str) {
         for input_group_proof in input_groups_array {
             verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
         }
-        // if input_groups_array.len() != 0 {
-
-        // }
         input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
         input_groups_array = input_groups_page.program_input_groups;
     }
@@ -98,6 +95,7 @@ async fn verify_some_program_proven_executions(program_id: &str, proofs_amount: 
             let input_group_proof = &input_groups_array[current_page_iterator];
             verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
             current_page_iterator += 1;
+            verified_proofs += 1;
         }
         input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
         input_groups_array = input_groups_page.program_input_groups;

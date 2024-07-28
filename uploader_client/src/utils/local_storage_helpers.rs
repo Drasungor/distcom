@@ -1,8 +1,4 @@
 use std::fs;
-use tar::{Builder, Archive};
-use std::fs::File;
-use std::io::Write;
-use std::io;
 
 
 pub fn folder_exists(path: &str) -> bool {

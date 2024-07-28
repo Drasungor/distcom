@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use clap::{Parser, Subcommand};
+use utils::process_inputs::process_page_size;
 
 use crate::commands::get_organizations::select_organizations;
 use crate::commands::get_programs::select_general_programs;
@@ -70,16 +71,16 @@ struct Args {
 enum Commands {
     Organizations {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<u32>,
+        limit: Option<usize>,
 
-        #[clap(short = 'p', long = "page")]
-        page: Option<u32>,
+        #[clap(short = 'p', long = "page", default_value = "1")]
+        page: usize,
     },
     AllPrograms {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<u32>,
+        limit: Option<usize>,
 
-        #[clap(short = 'p', long = "page")]
+        #[clap(short = 'p', long = "page", default_value = "1")]
         page: Option<u32>,
     },
 }
@@ -93,21 +94,11 @@ async fn run_commands_loop() {
             Ok(cli) => {
                 match cli.cmd {
                     Commands::Organizations{limit, page} => {
-                        if (limit.is_some()) {
-                            println!("Get valuea: {}", limit.unwrap());
-                        }
-                        if (page.is_some()) {
-                            println!("Get valueb: {}", page.unwrap());
-                        }
+                        let limit_value = process_page_size(limit);
                         select_organizations().await;
                     },
                     Commands::AllPrograms{limit, page} => {
-                        if (limit.is_some()) {
-                            println!("Get valuea: {}", limit.unwrap());
-                        }
-                        if (page.is_some()) {
-                            println!("Get valueb: {}", page.unwrap());
-                        } 
+                        let limit_value = process_page_size(limit);
                         select_general_programs().await;
                     },
                }
@@ -123,10 +114,6 @@ async fn run_commands_loop() {
 
 #[tokio::main]
 async fn main() {
-    let default_limit = &common::config::CONFIG_OBJECT.max_page_size;
-
-    println!("default_limit: {}", default_limit);
-
     run_commands_loop().await;
 
 }

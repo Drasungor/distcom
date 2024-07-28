@@ -75,7 +75,8 @@ impl ProgramDistributorService {
         }
     }
 
-    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    // pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
             params.push(("limit", limit.unwrap()))
@@ -93,13 +94,14 @@ impl ProgramDistributorService {
             // let programs = get_organization_programs_response.data.programs;
             // let programs_amount = programs.len();
             
-            return get_organization_programs_response;
+            return get_organization_programs_response.data;
         } else {
             panic!("Error in programs get");
         }
     }
     
-    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    // pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
             params.push(("limit", limit.unwrap()))
@@ -117,7 +119,7 @@ impl ProgramDistributorService {
         // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            return programs;
+            return programs.data;
         } else {
             panic!("Error in programs get: {:?}", response);
         }

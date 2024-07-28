@@ -46,7 +46,6 @@ async fn select_proven_program() {
             Ok(cli) => {
                 match cli.cmd {
                     GetProvenProgramsCommands::Page{page} => {
-                        println!("page {page}");
                         programs_page = retrieve_my_proven_programs(Some(50), Some(page)).await;
                     },
                     GetProvenProgramsCommands::Verify{index} => {
@@ -62,7 +61,7 @@ async fn select_proven_program() {
        };
         print_programs_list(&programs_page.programs);
 
-    }    
+    }
 }
 
 pub async fn select_my_proven_programs() {

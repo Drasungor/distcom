@@ -26,10 +26,26 @@ enum GetProgramsCommands {
         #[clap(index = 1)]
         amount: usize,
     },
+    RunAll,
 }
 
-pub async fn select_general_programs(limit: usize, page: usize) {
-    let mut programs_page = retrieve_programs(None, Some(50), Some(1)).await;
+async fn run_all_organization_programs(organization_id: &str) {
+    let page_size = common::config::CONFIG_OBJECT.max_page_size;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+    let mut programs_list = programs_page.programs;
+
+    while programs_list.len() != 0 {
+        for returned_program in programs_list {
+            download_and_run_program(&returned_program).await;
+        }
+        programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+        programs_list = programs_page.programs;
+    }
+
+}
+
+pub async fn select_organization_programs(organization_id: &str, limit: usize, first_received_page: usize) {
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(limit), Some(first_received_page)).await;
     print_programs_list(&programs_page.programs);
 
     loop {
@@ -39,14 +55,17 @@ pub async fn select_general_programs(limit: usize, page: usize) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Page{page} => {
-                        programs_page = retrieve_programs(None, Some(50), Some(page)).await;
+                        programs_page = retrieve_programs(Some(organization_id), Some(limit), Some(page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.programs[index];
                         download_and_run_program(chosen_program).await;
                     },
                     GetProgramsCommands::RunN{amount} => {
-                        run_some_programs(None, amount).await;
+                        run_some_programs(Some(organization_id), amount).await;
+                    },
+                    GetProgramsCommands::RunAll => {
+                        run_all_organization_programs(organization_id).await;
                     },
                }
             }
