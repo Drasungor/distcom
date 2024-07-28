@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use std::{fs, path::Path, process::Command};
 use std::time::{SystemTime, Duration};
 
+use crate::utils::process_inputs::process_previously_set_page_size;
 use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
 use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
 
@@ -15,6 +16,9 @@ struct ProgramsArgs {
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
     Page {
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<usize>,
+
         #[clap(index = 1)]
         page: usize,
     },
@@ -28,8 +32,10 @@ enum GetProgramsCommands {
     },
 }
 
-pub async fn select_general_programs(limit: usize, page: usize) {
-    let mut programs_page = retrieve_programs(None, Some(50), Some(1)).await;
+pub async fn select_general_programs(first_received_limit: usize, first_received_page: usize) {
+    let mut used_limit = first_received_limit;
+    let mut used_page = first_received_page;
+    let mut programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
     print_programs_list(&programs_page.programs);
 
     loop {
@@ -38,8 +44,11 @@ pub async fn select_general_programs(limit: usize, page: usize) {
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetProgramsCommands::Page{page} => {
-                        programs_page = retrieve_programs(None, Some(50), Some(page)).await;
+                    GetProgramsCommands::Page{page, limit} => {
+                        used_page = page;
+                        used_limit = process_previously_set_page_size(used_limit, limit);
+
+                        programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.programs[index];

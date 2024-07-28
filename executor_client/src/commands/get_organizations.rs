@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::{commands::get_organization_programs::select_organization_programs, common, models::returned_organization::print_organizations_list, utils::process_inputs::process_user_input};
+use crate::{commands::get_organization_programs::select_organization_programs, common, models::returned_organization::print_organizations_list, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -26,10 +26,11 @@ enum GetOrganizationsCommands {
 }
 
 
-pub async fn select_organizations(limit: usize, first_received_page: usize) {
+pub async fn select_organizations(first_received_limit: usize, first_received_page: usize) {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
-    let mut organizations_page = read_guard.get_organizations(Some(limit), Some(first_received_page)).await;
-    let mut used_limit = limit;
+    let mut used_limit = first_received_limit;
+    let mut used_page = first_received_page;
+    let mut organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
     print_organizations_list(&organizations_page.data.organizations);
 
     loop { 
@@ -39,15 +40,16 @@ pub async fn select_organizations(limit: usize, first_received_page: usize) {
         match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetOrganizationsCommands::Page{page} => {
-
+                    GetOrganizationsCommands::Page{page, limit} => {
+                        used_page = page;
+                        used_limit = process_previously_set_page_size(used_limit, limit);
                         // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        organizations_page = read_guard.get_organizations(Some(50), Some(page)).await;
+                        organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
                         
                     },
                     GetOrganizationsCommands::Choose{index} => {
                         let chosen_organization = &organizations_page.data.organizations[index];
-                        select_organization_programs(&chosen_organization.organization_id).await;
+                        select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await;
                     },
                 }
             }

@@ -16,3 +16,10 @@ pub fn process_page_size(limit: Option<usize>) -> usize {
     }
     return common::config::CONFIG_OBJECT.max_page_size;
 }
+
+pub fn process_previously_set_page_size(previous_limit: usize, limit: Option<usize>) -> usize {
+    if let Some(limit_value) = limit {
+        return limit_value;
+    }
+    return previous_limit;
+}

@@ -81,7 +81,7 @@ enum Commands {
         limit: Option<usize>,
 
         #[clap(short = 'p', long = "page", default_value = "1")]
-        page: Option<u32>,
+        page: usize,
     },
 }
 
@@ -95,11 +95,11 @@ async fn run_commands_loop() {
                 match cli.cmd {
                     Commands::Organizations{limit, page} => {
                         let limit_value = process_page_size(limit);
-                        select_organizations().await;
+                        select_organizations(limit_value, page).await;
                     },
                     Commands::AllPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
-                        select_general_programs().await;
+                        select_general_programs(limit_value, page).await;
                     },
                }
             }
