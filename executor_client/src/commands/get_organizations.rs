@@ -12,6 +12,10 @@ struct OrganizationsArgs {
 #[derive(Subcommand, Debug, Clone)]
 enum GetOrganizationsCommands {
     Page {
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<usize>,
+
+        // #[clap(short = 'p', long = "page")]
         #[clap(index = 1)]
         page: usize,
     },
@@ -25,6 +29,7 @@ enum GetOrganizationsCommands {
 pub async fn select_organizations(limit: usize, first_received_page: usize) {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let mut organizations_page = read_guard.get_organizations(Some(limit), Some(first_received_page)).await;
+    let mut used_limit = limit;
     print_organizations_list(&organizations_page.data.organizations);
 
     loop { 
@@ -44,12 +49,12 @@ pub async fn select_organizations(limit: usize, first_received_page: usize) {
                         let chosen_organization = &organizations_page.data.organizations[index];
                         select_organization_programs(&chosen_organization.organization_id).await;
                     },
-               }
+                }
             }
             Err(_) => {
                 println!("That's not a valid command!");
             }
-       };
-       print_organizations_list(&organizations_page.data.organizations);
+        };
+        print_organizations_list(&organizations_page.data.organizations);
     }
 }
