@@ -51,7 +51,6 @@ impl ProgramDistributorService {
     }
 
     // TODO: make it return a result that contains the struct instead of the array directly
-    // pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
     pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> PagedOrganizations {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if let Some(limit_value) = limit {
@@ -81,13 +80,8 @@ impl ProgramDistributorService {
         }
         let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
         let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
-    
-        // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             let get_organization_programs_response: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            // let programs = get_organization_programs_response.data.programs;
-            // let programs_amount = programs.len();
-            
             return get_organization_programs_response.data;
         } else {
             panic!("Error in programs get");
@@ -102,7 +96,6 @@ impl ProgramDistributorService {
         if let Some(page_value) = page {
             params.push(("page", page_value))
         }
-    
         let get_general_programs_url = format!("{}/program/all", self.base_url);
         let response = self.client.get(get_general_programs_url).query(&params).send().await.expect("Error in get");
     
@@ -118,8 +111,6 @@ impl ProgramDistributorService {
     pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
         let get_program_and_input_group_url = format!("{}/program/program-and-inputs/{}", self.base_url, program_id);
         let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
-    
-        // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             // Open a file to write the downloaded content
             let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
@@ -166,8 +157,8 @@ impl ProgramDistributorService {
         let serialized_proof_args = serde_json::to_string(&uploaded_proof_data).unwrap();
 
         let form = multipart::Form::new()
-        .text("data", serialized_proof_args.clone())
-        .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
+            .text("data", serialized_proof_args.clone())
+            .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
         let post_methods_request_builder = self.client.post(&upload_proof_url).multipart(form);
 
         let response = self.make_request_with_stream_upload_and_response_body::<()>(post_methods_request_builder).await;
