@@ -31,7 +31,7 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
-    print_organizations_list(&organizations_page.data.organizations);
+    print_organizations_list(&organizations_page.organizations);
 
     loop { 
         println!("Please execute a command");
@@ -48,7 +48,7 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                         
                     },
                     GetOrganizationsCommands::Choose{index} => {
-                        let chosen_organization = &organizations_page.data.organizations[index];
+                        let chosen_organization = &organizations_page.organizations[index];
                         select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await;
                     },
                 }
@@ -57,6 +57,6 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                 println!("That's not a valid command!");
             }
         };
-        print_organizations_list(&organizations_page.data.organizations);
+        print_organizations_list(&organizations_page.organizations);
     }
 }

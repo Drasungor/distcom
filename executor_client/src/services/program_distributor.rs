@@ -1,7 +1,7 @@
 use reqwest::multipart::Part;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_derive::{Deserialize};
+use serde_derive::Deserialize;
 use std::{fs, path::Path};
 use std::fs::File;
 use std::io::{Read, Write};
@@ -50,8 +50,9 @@ impl ProgramDistributorService {
         }
     }
 
-    // TODO: make itreturn a result that contains the struct instead of the array directly
-    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
+    // TODO: make it return a result that contains the struct instead of the array directly
+    // pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
+    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> PagedOrganizations {
         let mut params: Vec<(&str, usize)> = Vec::new();
 
         if (limit.is_some()) {
@@ -69,13 +70,12 @@ impl ProgramDistributorService {
         
         if response.status().is_success() {
             let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-            return get_organizations_response;
+            return get_organizations_response.data;
         } else {
             panic!("Error in organizations get");
         }
     }
 
-    // pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
     pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
@@ -100,7 +100,6 @@ impl ProgramDistributorService {
         }
     }
     
-    // pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
     pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if (limit.is_some()) {
@@ -125,9 +124,7 @@ impl ProgramDistributorService {
         }
     }
     
-    // pub async fn get_program_and_input_group(&self, program_id: &String) -> String {
     pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
-        // let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
         let get_program_and_input_group_url = format!("{}/program/program-and-inputs/{}", self.base_url, program_id);
         let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
     

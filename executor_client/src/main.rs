@@ -1,5 +1,3 @@
-use std::fs::File;
-use std::io::Write;
 use clap::{Parser, Subcommand};
 use utils::process_inputs::process_page_size;
 
