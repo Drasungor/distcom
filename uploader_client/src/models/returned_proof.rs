@@ -10,15 +10,18 @@ pub struct ReturnedProof {
     pub input_lock_timeout: i64,
 }
 
-pub fn print_programs_list(programs: &Vec<ReturnedProof>) {
+pub fn print_proofs_list(proofs: &Vec<ReturnedProof>) {
+    if (proofs.len() == 0) {
+        println!("No proofs remaining");
+    }
     let mut index = 0;
-    for program in programs {
+    for proof in proofs {
         println!("Proof {}:", index);
-        println!("\torganization_id: {}", program.organization_id);
-        println!("\tprogram_id: {}", program.program_id);
-        println!("\tname: {}", program.name);
-        println!("\tdescription: {}", program.description);
-        println!("\tinput_lock_timeout: {}", program.input_lock_timeout);
+        println!("\torganization_id: {}", proof.organization_id);
+        println!("\tprogram_id: {}", proof.program_id);
+        println!("\tname: {}", proof.name);
+        println!("\tdescription: {}", proof.description);
+        println!("\tinput_lock_timeout: {}", proof.input_lock_timeout);
         index += 1;
     }
 }
