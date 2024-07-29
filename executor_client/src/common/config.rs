@@ -12,14 +12,15 @@ use crate::services::program_distributor::ProgramDistributorService;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-   pub default_limit: usize,
    pub program_distributor_url: String,
+   pub default_page_size : usize,
+   pub max_page_size : usize
+
 }
 
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
-    // pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new("http://localhost:8080".to_string()));
     pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new(get_database_connection_url(&CONFIG_OBJECT)));
 }
 

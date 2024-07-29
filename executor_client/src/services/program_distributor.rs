@@ -1,7 +1,7 @@
 use reqwest::multipart::Part;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_derive::{Deserialize};
+use serde_derive::Deserialize;
 use std::{fs, path::Path};
 use std::fs::File;
 use std::io::{Read, Write};
@@ -50,86 +50,67 @@ impl ProgramDistributorService {
         }
     }
 
-    // TODO: make itreturn a result that contains the struct instead of the array directly
-    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
+    // TODO: make it return a result that contains the struct instead of the array directly
+    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> PagedOrganizations {
         let mut params: Vec<(&str, usize)> = Vec::new();
-
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
-
         let get_organizations_url = format!("{}/account/organizations", self.base_url);
-
-        // let response = self.client.get("http://localhost:8080/account/organizations").query(&params).send().await.expect("Error in get");
         let response = self.client.get(get_organizations_url).query(&params).send().await.expect("Error in get");
         
         if response.status().is_success() {
             let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-            return get_organizations_response;
+            return get_organizations_response.data;
         } else {
             panic!("Error in organizations get");
         }
     }
 
-    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
-        // let url = format!("http://localhost:8080/program/organization/{}", organization_id);
         let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
         let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
-    
-        // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             let get_organization_programs_response: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            // let programs = get_organization_programs_response.data.programs;
-            // let programs_amount = programs.len();
-            
-            return get_organization_programs_response;
+            return get_organization_programs_response.data;
         } else {
             panic!("Error in programs get");
         }
     }
     
-    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedPrograms> {
+    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
-    
-        // let get_programs_url = format!("http://localhost:8080/program/all");
         let get_general_programs_url = format!("{}/program/all", self.base_url);
-    
-        // let response = reqwest::get("http://localhost:8080/account/organizations").await.expect("Error in get");
         let response = self.client.get(get_general_programs_url).query(&params).send().await.expect("Error in get");
     
         // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            return programs;
+            return programs.data;
         } else {
             panic!("Error in programs get: {:?}", response);
         }
     }
     
-    // pub async fn get_program_and_input_group(&self, program_id: &String) -> String {
     pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
-        // let request_url = format!("http://localhost:8080/program/program-and-inputs/{}", program_id);
         let get_program_and_input_group_url = format!("{}/program/program-and-inputs/{}", self.base_url, program_id);
         let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
-    
-        // Ensure the request was successful (status code 200)
         if response.status().is_success() {
             // Open a file to write the downloaded content
             let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
@@ -176,8 +157,8 @@ impl ProgramDistributorService {
         let serialized_proof_args = serde_json::to_string(&uploaded_proof_data).unwrap();
 
         let form = multipart::Form::new()
-        .text("data", serialized_proof_args.clone())
-        .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
+            .text("data", serialized_proof_args.clone())
+            .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
         let post_methods_request_builder = self.client.post(&upload_proof_url).multipart(form);
 
         let response = self.make_request_with_stream_upload_and_response_body::<()>(post_methods_request_builder).await;

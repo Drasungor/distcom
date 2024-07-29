@@ -2,9 +2,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client, RequestBuilder, Response};
 use reqwest::multipart::{self, Part};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 use serde_derive::{Deserialize, Serialize};
-use std::fs;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::collections::HashMap;
@@ -12,7 +10,6 @@ use std::path::Path;
 use rpassword;
 use std::io;
 use bytes::Bytes;
-// use std::io::Write;
 
 use crate::common::communication::{EndpointError, EndpointResult, AppErrorType};
 use crate::common::user_interaction::get_input_string;
@@ -39,12 +36,6 @@ pub struct PagedProgramInputGroups {
     pub total_elements_amount: i64,
 }
 
-// #[derive(Debug, Deserialize)]
-// pub struct PagedProofs {
-//     pub proofs: Vec<ReturnedProof>,
-//     pub total_elements_amount: i64,
-// }
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Token {
     pub token_id: String,
@@ -61,8 +52,6 @@ pub struct ReceivedTokens {
 struct UploadedProgramReturnedData {
     pub program_id: String,
 }
-
-// UploadedProgramReturnedData, UploadedInputGroupReturnedData
 
 #[derive(Deserialize, Debug)]
 struct UploadedInputGroupReturnedData {
@@ -121,11 +110,11 @@ impl ProgramDistributorService {
 
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_programs_url = format!("{}/program/mine", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
@@ -135,11 +124,11 @@ impl ProgramDistributorService {
 
     pub async fn get_program_proven_inputs(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_programs_url = format!("{}/program/proofs/{program_id}", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
@@ -149,11 +138,11 @@ impl ProgramDistributorService {
 
     pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_proven_programs_url = format!("{}/program/proofs", self.base_url);
         let get_my_proven_programs_request_builder = self.client.get(get_my_proven_programs_url).query(&params);
@@ -175,13 +164,13 @@ impl ProgramDistributorService {
         let serialized = serde_json::to_string(&uploaded_program).unwrap();
 
         let form = multipart::Form::new()
-        .text("data", serialized.clone())
-        .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
+            .text("data", serialized.clone())
+            .part("file", Part::bytes(file_content.clone()).file_name("uploaded_methods.tar"));
         let post_methods_request_builder = self.client.post(&post_program_url).multipart(form);
         
         let form_clone = multipart::Form::new()
-        .text("data", serialized)
-        .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
+            .text("data", serialized)
+            .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
         let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
         // self.make_request_with_stream_upload_and_response_body::<()>(
@@ -199,14 +188,13 @@ impl ProgramDistributorService {
         file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
 
         let form = multipart::Form::new()
-        .part("file", Part::bytes(file_content.clone()).file_name("program_input_group.csv"));
+            .part("file", Part::bytes(file_content.clone()).file_name("program_input_group.csv"));
         let post_program_input_group_builder = self.client.post(&post_program_input_group_url).multipart(form);
         
         let form_clone = multipart::Form::new()
-        .part("file", Part::bytes(file_content).file_name("program_input_group_clone.csv"));
+            .part("file", Part::bytes(file_content).file_name("program_input_group_clone.csv"));
         let post_program_input_group_builder_clone = self.client.post(&post_program_input_group_url).multipart(form_clone);
 
-        // self.make_request_with_stream_upload_and_response_body::<()>(
         let uploaded_input_group_data = self.make_request_with_stream_upload_and_response_body::<UploadedInputGroupReturnedData>(
                                                 post_program_input_group_builder, post_program_input_group_builder_clone).await?;
         return Ok(uploaded_input_group_data.data.input_group_id);
