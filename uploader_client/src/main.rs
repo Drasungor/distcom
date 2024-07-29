@@ -113,6 +113,7 @@ async fn start_program_execution() {
 #[tokio::main]
 async fn main() {
     create_folder("./downloads");
+    create_folder("./uploads");
     create_folder("./aux_files");
 
     // We create the folder that will store the programs' inputs and outputs

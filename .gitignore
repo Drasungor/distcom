@@ -5,7 +5,6 @@ aux_files
 programs_data
 db_data
 db.sql
-// migrations
 *.trace
 *.memory
 *.proof
@@ -17,5 +16,4 @@ uploader_client/src/runner/methods
 program_with_input
 methods_test
 *dev.json
-program_distributor/.env
 local_files
