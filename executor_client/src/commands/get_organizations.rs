@@ -23,10 +23,12 @@ enum GetOrganizationsCommands {
         #[clap(index = 1)]
         index: usize,
     },
+    Back,
+    Exit,
 }
 
 
-pub async fn select_organizations(first_received_limit: usize, first_received_page: usize) {
+pub async fn select_organizations(first_received_limit: usize, first_received_page: usize) -> bool {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
@@ -49,7 +51,15 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                     },
                     GetOrganizationsCommands::Choose{index} => {
                         let chosen_organization = &organizations_page.organizations[index];
-                        select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await;
+                        if !select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await {
+                            return false;
+                        }
+                    },
+                    GetOrganizationsCommands::Back => {
+                        return true;
+                    },
+                    GetOrganizationsCommands::Exit => {
+                        return false;
                     },
                 }
             }

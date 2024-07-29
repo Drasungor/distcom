@@ -30,9 +30,11 @@ enum GetProgramsCommands {
         #[clap(index = 1)]
         amount: usize,
     },
+    Back,
+    Exit,
 }
 
-pub async fn select_general_programs(first_received_limit: usize, first_received_page: usize) {
+pub async fn select_general_programs(first_received_limit: usize, first_received_page: usize) -> bool {
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
@@ -56,6 +58,12 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                     },
                     GetProgramsCommands::RunN{amount} => {
                         run_some_programs(None, amount).await;
+                    },
+                    GetProgramsCommands::Back => {
+                        return true;
+                    },
+                    GetProgramsCommands::Exit => {
+                        return false;
                     },
                }
             }

@@ -31,6 +31,8 @@ enum GetProvenProgramsCommands {
         #[clap(index = 1)]
         index: usize,
     },
+    Back,
+    Exit,
 }
 
 async fn retrieve_my_proven_programs(limit: usize, page: usize) -> PagedPrograms {
@@ -39,13 +41,15 @@ async fn retrieve_my_proven_programs(limit: usize, page: usize) -> PagedPrograms
 }
 
 // TODO: Update this so that the page size is used
-pub async fn select_my_proven_programs(first_received_limit: usize, first_received_page: usize) {
+pub async fn select_my_proven_programs(first_received_limit: usize, first_received_page: usize) -> bool {
+    // let mut should_continue_looping = true;
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
     println!("Proven programs amount: {}", &programs_page.programs.len());
     print_programs_list(&programs_page.programs);
 
+    // while should_continue_looping {
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
@@ -64,7 +68,16 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
                         let chosen_program = &programs_page.programs[index];
-                        select_proven_inputs(&chosen_program.program_id, used_limit, used_page).await;
+                        if !select_proven_inputs(&chosen_program.program_id, used_limit, used_page).await {
+                            return false;
+                        }
+                    },
+                    GetProvenProgramsCommands::Back => {
+                        // should_continue_looping = false;
+                        return true;
+                    },
+                    GetProvenProgramsCommands::Exit => {
+                        return false;
                     },
                     // TODO: add here commands for uploaded proofs manipulation
                }
