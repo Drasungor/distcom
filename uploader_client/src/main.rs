@@ -98,7 +98,7 @@ async fn start_program_execution() {
                     GetProgramsCommands::Exit => {
                         should_continue_looping = false;
                     }
-               }
+                }
             }
             Err(err) => {
                 println!("That's not a valid command!: {}", err);
