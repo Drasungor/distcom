@@ -121,11 +121,11 @@ impl ProgramDistributorService {
 
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_programs_url = format!("{}/program/mine", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
@@ -135,11 +135,11 @@ impl ProgramDistributorService {
 
     pub async fn get_program_proven_inputs(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_programs_url = format!("{}/program/proofs/{program_id}", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
@@ -149,11 +149,11 @@ impl ProgramDistributorService {
 
     pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_my_proven_programs_url = format!("{}/program/proofs", self.base_url);
         let get_my_proven_programs_request_builder = self.client.get(get_my_proven_programs_url).query(&params);
