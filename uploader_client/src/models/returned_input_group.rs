@@ -12,6 +12,9 @@ pub struct ReturnedInputGroup {
 
 pub fn print_input_groups_list(input_groups: &Vec<ReturnedInputGroup>) {
     let mut index = 0;
+    if (input_groups.len() == 0) {
+        println!("No input groups remaining");
+    }
     for input_group in input_groups {
         println!("Program input group {}:", index);
         println!("\tinput_group_id: {}", input_group.input_group_id);

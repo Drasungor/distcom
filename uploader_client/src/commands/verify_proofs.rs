@@ -2,7 +2,7 @@ use std::path::Path;
 use clap::{Parser, Subcommand};
 use std::{fs, process::Command};
 
-use crate::{common, models::{returned_input_group::print_input_groups_list, returned_program::print_programs_list}, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}, utils::process_inputs::process_user_input};
+use crate::{common, models::{returned_input_group::print_input_groups_list, returned_program::print_programs_list}, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -14,6 +14,9 @@ struct ProgramsArgs {
 #[derive(Subcommand, Debug, Clone)]
 enum GetProofsCommands {
     Page {
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<usize>,
+
         #[clap(index = 1)]
         page: usize,
     },
@@ -29,9 +32,10 @@ enum GetProofsCommands {
     Back,
 }
 
-async fn retrieve_proven_inputs(program_id: &str, limit: Option<usize>, page: Option<usize>) -> PagedProgramInputGroups {
+// async fn retrieve_proven_inputs(program_id: &str, limit: Option<usize>, page: Option<usize>) -> PagedProgramInputGroups {
+async fn retrieve_proven_inputs(program_id: &str, limit: usize, page: usize) -> PagedProgramInputGroups {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.get_program_proven_inputs(program_id, limit, page).await.expect("Error while getting uploaded programs");
+    return write_guard.get_program_proven_inputs(program_id, Some(limit), Some(page)).await.expect("Error while getting uploaded programs");
 }
 
 
@@ -73,20 +77,20 @@ async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
 
 async fn verify_all_program_proven_executions(program_id: &str) {
     let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
-    let mut input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+    let mut input_groups_page = retrieve_proven_inputs(program_id, max_page_size, 1).await;
     let mut input_groups_array = input_groups_page.program_input_groups;
     while input_groups_array.len() != 0 {
         for input_group_proof in input_groups_array {
             verify_proven_execution(program_id, &input_group_proof.input_group_id).await;
         }
-        input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+        input_groups_page = retrieve_proven_inputs(program_id, max_page_size, 1).await;
         input_groups_array = input_groups_page.program_input_groups;
     }
 }
 
 async fn verify_some_program_proven_executions(program_id: &str, proofs_amount: usize) {
     let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
-    let mut input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+    let mut input_groups_page = retrieve_proven_inputs(program_id, max_page_size, 1).await;
     let mut input_groups_array = input_groups_page.program_input_groups;
     let mut verified_proofs = 0;
     while input_groups_array.len() != 0 && verified_proofs < proofs_amount {
@@ -97,15 +101,16 @@ async fn verify_some_program_proven_executions(program_id: &str, proofs_amount: 
             current_page_iterator += 1;
             verified_proofs += 1;
         }
-        input_groups_page = retrieve_proven_inputs(program_id, Some(max_page_size), Some(1)).await;
+        input_groups_page = retrieve_proven_inputs(program_id, max_page_size, 1).await;
         input_groups_array = input_groups_page.program_input_groups;
     }
 }
 
-// TODO: Update this so that the page size is used, do this also with the first page and limit values
-async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Option<usize>) {
+pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize, first_received_page: usize) {
     let mut should_continue_looping = true;
-    let mut input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
+    let mut used_limit = first_received_limit;
+    let mut used_page = first_received_page;
+    let mut input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
     print_input_groups_list(&input_groups_page.program_input_groups);
 
     while should_continue_looping {
@@ -114,24 +119,26 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetProofsCommands::Page{page} => {
-                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(page)).await;
+                    GetProofsCommands::Page{page, limit} => {
+                        used_page = page;
+                        used_limit = process_previously_set_page_size(used_limit, limit);
+                        // input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
                     },
                     GetProofsCommands::Verify{index} => {
                         let chosen_input_group = &input_groups_page.program_input_groups[index];
                         verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await;
-                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
+                        // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
                     },
                     GetProofsCommands::Back => {
                         should_continue_looping = false;
                     },
                     GetProofsCommands::VerifyN {verified_amount} => {
                         verify_some_program_proven_executions(program_id, verified_amount).await;
-                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
+                        // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
                     },
                     GetProofsCommands::VerifyAll => {
                         verify_all_program_proven_executions(program_id).await;
-                        input_groups_page = retrieve_proven_inputs(program_id, Some(50), Some(1)).await;
+                        // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
                     },
                }
             }
@@ -140,11 +147,8 @@ async fn select_proven_input(program_id: &str, limit: Option<usize>, page: Optio
             }
        };
        if (should_continue_looping) {
-           print_input_groups_list(&input_groups_page.program_input_groups);
+            input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
+            print_input_groups_list(&input_groups_page.program_input_groups);
        }
     }    
-}
-
-pub async fn select_proven_inputs(program_id: &str, limit: Option<usize>, page: Option<usize>) {
-    select_proven_input(program_id, limit, page).await;
 }

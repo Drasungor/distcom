@@ -9,7 +9,7 @@ use services::program_distributor::UploadedProgram;
 use tar::{Builder, Archive};
 use clap::{Parser, Subcommand};
 use utils::local_storage_helpers::create_folder;
-use utils::process_inputs::process_user_input;
+use utils::process_inputs::{process_page_size, process_user_input};
 use std::process::Command;
 use std::io::{self, Read, Write};
 
@@ -81,17 +81,17 @@ enum GetProgramsCommands {
     Template,
     MyPrograms {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<u32>,
+        limit: Option<usize>,
 
-        #[clap(short = 'p', long = "page")]
-        page: Option<u32>,
+        #[clap(short = 'p', long = "page", default_value = "1")]
+        page: usize,
     },
     ProvenPrograms {
         #[clap(short = 'l', long = "limit")]
-        limit: Option<u32>,
+        limit: Option<usize>,
 
-        #[clap(short = 'p', long = "page")]
-        page: Option<u32>,
+        #[clap(short = 'p', long = "page", default_value = "1")]
+        page: usize,
     },
 }
 
@@ -128,22 +128,12 @@ async fn start_program_execution() {
                         write_guard.download_template_methods(Path::new("./downloads/template")).await.expect("Error in template download");
                     },
                     GetProgramsCommands::MyPrograms{limit, page} => {
-                        if (limit.is_some()) {
-                            println!("Get valuea: {}", limit.unwrap());
-                        }
-                        if (page.is_some()) {
-                            println!("Get valueb: {}", page.unwrap());
-                        }
-                        select_my_programs().await;
+                        let limit_value = process_page_size(limit);
+                        select_my_programs(limit_value, page).await;
                     },
                     GetProgramsCommands::ProvenPrograms{limit, page} => {
-                        if (limit.is_some()) {
-                            println!("Get valuea: {}", limit.unwrap());
-                        }
-                        if (page.is_some()) {
-                            println!("Get valueb: {}", page.unwrap());
-                        }
-                        select_my_proven_programs().await;
+                        let limit_value = process_page_size(limit);
+                        select_my_proven_programs(limit_value, page).await;
                     },
                     // pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError>
 
