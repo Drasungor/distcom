@@ -54,17 +54,13 @@ impl ProgramDistributorService {
     // pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> EndpointResult<PagedOrganizations> {
     pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> PagedOrganizations {
         let mut params: Vec<(&str, usize)> = Vec::new();
-
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
-
         let get_organizations_url = format!("{}/account/organizations", self.base_url);
-
         let response = self.client.get(get_organizations_url).query(&params).send().await.expect("Error in get");
         
         if response.status().is_success() {
@@ -77,11 +73,11 @@ impl ProgramDistributorService {
 
     pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
         let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
         let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
@@ -100,11 +96,11 @@ impl ProgramDistributorService {
     
     pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
         let mut params: Vec<(&str, usize)> = Vec::new();
-        if (limit.is_some()) {
-            params.push(("limit", limit.unwrap()))
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
         }
-        if (page.is_some()) {
-            params.push(("page", page.unwrap()))
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
         }
     
         let get_general_programs_url = format!("{}/program/all", self.base_url);
