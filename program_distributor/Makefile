@@ -3,16 +3,16 @@
 all: run_all
 
 run_all:
-	sudo rm -r program_with_input
-	mkdir -p program_with_input
-	docker-compose run --rm rust-app-executor
+	sudo rm -r aux_files uploads downloads
+	mkdir -p aux_files uploads downloads
+	docker-compose up
 
 clear_build:
 	sudo rm -r target src/runner/target
 	echo "Deleted build folders"
 
 clear_aux_folders:
-	sudo rm -r program_with_input
+	sudo rm -r aux_files uploads downloads
 	echo "Deleted aux folders"
 
 clear_docker:

@@ -15,4 +15,8 @@ clear_aux_folders:
 	sudo rm -r aux_files downloads
 	echo "Deleted aux folders"
 
-clear_build_aux: clear_aux_folders clear_build
+clear_docker:
+	docker-compose rm -s -f
+	docker-compose down --rmi all
+
+clear_all: clear_aux_folders clear_build clear_docker
