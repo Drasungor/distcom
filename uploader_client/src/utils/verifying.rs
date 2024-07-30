@@ -1,4 +1,4 @@
-use std::{path::Path, process::Command};
+use std::{fs, path::Path, process::Command};
 
 use crate::{common, services::program_distributor::PagedProgramInputGroups};
 
@@ -34,6 +34,8 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) {
         println!("Process failed.");
         write_guard.mark_proof_as_invalid(program_id, input_group_id).await.expect("Error while marking proof as invalid");
     }
+
+    let _ = fs::remove_file(download_path);
 
 }
 

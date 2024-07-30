@@ -3,7 +3,7 @@ use reqwest::{Client, RequestBuilder, Response};
 use reqwest::multipart::{self, Part};
 use serde::de::DeserializeOwned;
 use serde_derive::{Deserialize, Serialize};
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::collections::HashMap;
 use std::path::Path;
@@ -92,6 +92,9 @@ impl ProgramDistributorService {
         let mut file = File::create(downloaded_file_path).expect("Error in file creation");
         file.write_all(bytes.as_ref()).expect("Errors in file write");
         decompress_tar(downloaded_file_path, download_path_str).expect("Error in downloaded file decompression");
+
+        let _ = fs::remove_file(downloaded_file_path);
+
         return Ok(());
     }
 
@@ -176,6 +179,7 @@ impl ProgramDistributorService {
         // self.make_request_with_stream_upload_and_response_body::<()>(
         let uploaded_program_data = self.make_request_with_stream_upload_and_response_body::<UploadedProgramReturnedData>(
                                                                 post_methods_request_builder, post_methods_request_builder_clone).await?;
+        let _ = fs::remove_file(compressed_folder_path);
         return Ok(uploaded_program_data.data.program_id);
     }
 
@@ -212,6 +216,9 @@ impl ProgramDistributorService {
             let mut file = File::create(file_path).expect("Error in file creation");
             file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
             decompress_tar(file_path, download_path.to_str().unwrap()).expect("Error in downloaded file decompression");
+
+            let _ = fs::remove_file(file_path);
+
         } else {
             panic!("Failed to download file: {}", response.status());
         }
