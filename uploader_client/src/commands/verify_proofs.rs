@@ -30,17 +30,19 @@ enum GetProofsCommands {
     },
     VerifyAll,
     Back,
+    Exit,
 }
 
 
-pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize, first_received_page: usize) {
-    let mut should_continue_looping = true;
+pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize, first_received_page: usize) -> bool {
+    // let mut should_continue_looping = true;
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
     print_input_groups_list(&input_groups_page.program_input_groups);
 
-    while should_continue_looping {
+    // while should_continue_looping {
+    loop {
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
@@ -56,9 +58,6 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
                         verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await;
                         // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
                     },
-                    GetProofsCommands::Back => {
-                        should_continue_looping = false;
-                    },
                     GetProofsCommands::VerifyN {verified_amount} => {
                         verify_some_program_proven_executions(program_id, verified_amount).await;
                         // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
@@ -67,15 +66,24 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
                         verify_all_program_proven_executions(program_id).await;
                         // input_groups_page = retrieve_proven_inputs(program_id, 50, 1).await;
                     },
+                    GetProofsCommands::Back => {
+                        // should_continue_looping = false;
+                        return true;
+                    },
+                    GetProofsCommands::Exit => {
+                        return false;
+                    },
                }
             }
             Err(_) => {
                 println!("That's not a valid command!");
             }
-       };
-       if (should_continue_looping) {
-            input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
-            print_input_groups_list(&input_groups_page.program_input_groups);
-       }
+        };
+        // if (should_continue_looping) {
+        //     input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
+        //     print_input_groups_list(&input_groups_page.program_input_groups);
+        // }
+        input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
+        print_input_groups_list(&input_groups_page.program_input_groups);
     }    
 }

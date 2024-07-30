@@ -22,7 +22,7 @@ pub async fn download_and_run_program(program: &ReturnedProgram) {
         .output()
         .expect("Failed to execute child program");
 
-    println!("Program output: {:?}", output);
+    // println!("Program output: {:?}", output);
 
     let input_group_id = csv_file_name.split(".").collect::<Vec<&str>>()[0];
 
@@ -35,11 +35,16 @@ pub async fn download_and_run_program(program: &ReturnedProgram) {
         input_group_id: input_group_id.to_string(),
     };
 
-    read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
-
-    let after_proof_time = SystemTime::now();
-
-    println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
+    if output.status.success() {
+        let after_proof_time = SystemTime::now();
+        println!("Proof generated successfully.");
+        read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
+        println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
+            
+    } else {
+        println!("Process failed.");
+        println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
+    }
 
 }
 

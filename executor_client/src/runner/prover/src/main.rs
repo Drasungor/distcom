@@ -40,12 +40,11 @@ fn main() {
 
         for value in line_iterator {
             
-            // TODO: decode this string from utf8 before assigning a value to decoded_value
-            let decoded_value = value;
-
-            let decoded_bytes = decoded_value.as_bytes();
-
-            let bytes_vector = decoded_bytes.to_vec();
+            // // let decoded_value = value;
+            // let decoded_value = base64::decode(value).expect("Failed to decode base64");
+            // let decoded_bytes = decoded_value.as_bytes();
+            // let bytes_vector = decoded_bytes.to_vec();
+            let bytes_vector = base64::decode(value).expect("Failed to decode base64");
 
             // // env_bulder_ref = env_bulder_ref.write(decoded_value.as_bytes()).unwrap();
             // env_bulder_ref = env_bulder_ref.write(&decoded_bytes).unwrap();

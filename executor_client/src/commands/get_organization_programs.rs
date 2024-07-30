@@ -27,6 +27,8 @@ enum GetProgramsCommands {
         amount: usize,
     },
     RunAll,
+    Back,
+    Exit,
 }
 
 async fn run_all_organization_programs(organization_id: &str) {
@@ -44,7 +46,7 @@ async fn run_all_organization_programs(organization_id: &str) {
 
 }
 
-pub async fn select_organization_programs(organization_id: &str, limit: usize, first_received_page: usize) {
+pub async fn select_organization_programs(organization_id: &str, limit: usize, first_received_page: usize) -> bool {
     let mut programs_page = retrieve_programs(Some(organization_id), Some(limit), Some(first_received_page)).await;
     print_programs_list(&programs_page.programs);
 
@@ -66,6 +68,12 @@ pub async fn select_organization_programs(organization_id: &str, limit: usize, f
                     },
                     GetProgramsCommands::RunAll => {
                         run_all_organization_programs(organization_id).await;
+                    },
+                    GetProgramsCommands::Back => {
+                        return true;
+                    },
+                    GetProgramsCommands::Exit => {
+                        return false;
                     },
                }
             }

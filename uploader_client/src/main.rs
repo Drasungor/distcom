@@ -23,7 +23,8 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     Upload {
         #[clap(short = 'p', long = "path")]
-        folder_path: String,
+        // folder_path: String,
+        folder_name: String,
 
         #[clap(short = 'n', long = "name")]
         name: String,
@@ -50,17 +51,21 @@ enum GetProgramsCommands {
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
     },
+    Exit,
 }
 
 async fn start_program_execution() {
-    loop {
+    let mut should_continue_looping = true;
+    // loop {
+    while should_continue_looping {
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Upload{
-                        folder_path,
+                        // folder_path,
+                        folder_name,
                         name,
                         description,
                         execution_timeout,
@@ -73,6 +78,7 @@ async fn start_program_execution() {
                             execution_timeout,
                         };
 
+                        let folder_path = format!("./uploads/{folder_name}");
                         // TODO: manage this error correctly
                         let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
                         let program_folder = format!("./programs_data/{program_id}");
@@ -86,14 +92,16 @@ async fn start_program_execution() {
                     },
                     GetProgramsCommands::MyPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
-                        select_my_programs(limit_value, page).await;
+                        should_continue_looping = select_my_programs(limit_value, page).await;
                     },
                     GetProgramsCommands::ProvenPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
-                        select_my_proven_programs(limit_value, page).await;
+                        should_continue_looping = select_my_proven_programs(limit_value, page).await;
                     },
-
-               }
+                    GetProgramsCommands::Exit => {
+                        should_continue_looping = false;
+                    }
+                }
             }
             Err(err) => {
                 println!("That's not a valid command!: {}", err);
@@ -108,6 +116,7 @@ async fn start_program_execution() {
 #[tokio::main]
 async fn main() {
     create_folder("./downloads");
+    create_folder("./uploads");
     create_folder("./aux_files");
 
     // We create the folder that will store the programs' inputs and outputs

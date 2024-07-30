@@ -960,6 +960,7 @@ dependencies = [
 name = "prover"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "bincode",
  "csv",
  "methods",
