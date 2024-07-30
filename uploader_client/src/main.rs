@@ -78,7 +78,7 @@ async fn start_program_execution() {
                             execution_timeout,
                         };
 
-                        let folder_path = format!("{folder_name}");
+                        let folder_path = format!("./uploads/{folder_name}");
                         // TODO: manage this error correctly
                         let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
                         let program_folder = format!("./programs_data/{program_id}");
