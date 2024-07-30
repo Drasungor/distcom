@@ -1,4 +1,4 @@
-.PHONY: all run_all
+.PHONY: all run_all clear_build clear_aux_folders clear_docker clear_all
 
 all: run_all
 
