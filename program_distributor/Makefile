@@ -8,7 +8,7 @@ run_all:
 	docker-compose up
 
 clear_build:
-	sudo rm -r target src/runner/target
+	sudo rm -r target
 	echo "Deleted build folders"
 
 clear_aux_folders:
