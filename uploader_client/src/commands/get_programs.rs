@@ -24,7 +24,7 @@ enum GetProgramsCommands {
         index: usize,
 
         #[clap(index = 2)]
-        input_file_path: String,
+        input_file_name: String,
     },
     Back,
     Exit,
@@ -60,10 +60,12 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         used_page = page;
                         programs_page = retrieve_my_programs(used_limit, used_page).await;
                     },
-                    GetProgramsCommands::PostInput{index, input_file_path} => {
+                    GetProgramsCommands::PostInput{index, input_file_name} => {
                         let chosen_program = &programs_page.programs[index];
                         let program_id = &chosen_program.program_id;
-                        let input_file_path = Path::new(&input_file_path);
+                        // let input_file_path = Path::new(&input_file_path);
+                        let input_file_path_string = format!("./uploads/{input_file_name}");
+                        let input_file_path = Path::new(&input_file_path_string);
                         let input_group_id = post_input_group(program_id, input_file_path).await;
                         let input_group_folder = format!("./programs_data/{program_id}/{input_group_id}");
                         create_folder(&input_group_folder);

@@ -23,7 +23,8 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     Upload {
         #[clap(short = 'p', long = "path")]
-        folder_path: String,
+        // folder_path: String,
+        folder_name: String,
 
         #[clap(short = 'n', long = "name")]
         name: String,
@@ -63,7 +64,8 @@ async fn start_program_execution() {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Upload{
-                        folder_path,
+                        // folder_path,
+                        folder_name,
                         name,
                         description,
                         execution_timeout,
@@ -76,6 +78,7 @@ async fn start_program_execution() {
                             execution_timeout,
                         };
 
+                        let folder_path = format!("{folder_name}");
                         // TODO: manage this error correctly
                         let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
                         let program_folder = format!("./programs_data/{program_id}");
