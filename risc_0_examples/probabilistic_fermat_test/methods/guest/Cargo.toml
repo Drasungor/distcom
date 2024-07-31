@@ -11,4 +11,3 @@ edition = "2021"
 risc0-zkvm = { version = "1.0.1", default-features = false, features = ["std"] }
 serde = { version = "1.0", default-features = false }
 serde_json = "1.0.120"
-rand = "0.8.5" # or the latest version
