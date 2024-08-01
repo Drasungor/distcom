@@ -46,7 +46,7 @@ async fn manage_input_group_upload(program_id: &str, uploaded_input_group_file_p
     create_folder(&input_group_folder);
     let final_input_group_path = format!("{input_group_folder}/{}", uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap());
     fs::copy(uploaded_input_group_file_path, final_input_group_path).expect("Error moving input file");
-    println!("Uploaded input group with path: {}", );
+    println!("Uploaded input group with path: {}", uploaded_input_group_file_path.to_str().unwrap());
 }
 
 async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
