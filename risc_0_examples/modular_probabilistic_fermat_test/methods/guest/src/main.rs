@@ -15,6 +15,19 @@ use risc0_zkvm::guest::env;
 
 risc0_zkvm::guest::entry!(main);
 
+fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
+    let cast_base = base as u64;
+    if (exponent == 2) {
+        return (base * base) % modulo;
+    }
+    let sqrt = modular_exponentiation(base, exponent/2, modulo);
+    if (exponent % 2 == 0) {
+        return (sqrt * sqrt) % modulo;
+    } else {
+        return (((sqrt * sqrt) % modulo) * base) % modulo;
+    }
+}
+
 fn main() {
     let input: Vec<u8> = env::read();
 
@@ -23,14 +36,14 @@ fn main() {
     let mut randomly_generated_numbers: Vec<u32> = Vec::new();
     let mut may_be_prime = true;
     let mut iteration_counter: u32 = 0;
+
     while may_be_prime && iteration_counter < 20 { // At 20 iterations, if not all tests are fools, then the chance of not being prime is really low
         let current_byte_index = (4*(iteration_counter + 1)) as usize;
         let last_number_byte_index_bound = (current_byte_index + 4) as usize;
         let currently_analyzed_bytes: &[u8] = &input[current_byte_index..last_number_byte_index_bound];
         let random_input = u32::from_be_bytes(currently_analyzed_bytes.try_into().expect("Error transforming into number from bytes"));
-        let cast_random_input = random_input as u128;
-        let divisor: u128 = cast_random_input.checked_pow(number_to_test).expect(&format!("Exponent overflow base {} exponent {}", cast_random_input, number_to_test)) - cast_random_input;
-        may_be_prime = divisor % (number_to_test as u128) == 0;
+        let divisor = modular_exponentiation(random_input, number_to_test - 1, number_to_test);
+        may_be_prime = divisor % number_to_test == 1;
         iteration_counter += 1;
     } 
 

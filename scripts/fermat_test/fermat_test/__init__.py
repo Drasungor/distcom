@@ -10,7 +10,7 @@ def write_big_endian_inputs_to_csv(number, file_path):
     random_numbers = []
 
 
-    while len(random_numbers) < 20:
+    while len(random_numbers) < 20 and (len(random_numbers) < (number - 2)):
         generated_number = random.randint(2, number - 1)
         if not (generated_number in random_numbers):
             random_numbers.append(generated_number)
@@ -27,7 +27,7 @@ def write_big_endian_inputs_to_csv(number, file_path):
         writer.writerow([base64_data])
 
 # Example usage
-number = 599
+number = 7843
 file_path = 'fermat_big_endian.csv'
 write_big_endian_inputs_to_csv(number, file_path)
 
