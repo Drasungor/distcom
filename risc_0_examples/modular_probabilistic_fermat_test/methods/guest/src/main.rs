@@ -20,6 +20,9 @@ fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
     if (exponent == 2) {
         return (base * base) % modulo;
     }
+    if (exponent == 1) {
+        return base;
+    }
     let sqrt = modular_exponentiation(base, exponent/2, modulo);
     if (exponent % 2 == 0) {
         return (sqrt * sqrt) % modulo;
