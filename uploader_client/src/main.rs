@@ -47,7 +47,8 @@ enum GetProgramsCommands {
     /// Download of an example of the methods folder for implementation reference
     Template,
 
-    /// Display of the information of the user's uploaded programs
+    /// Display of the information of the user's uploaded programs,
+    /// moves the execution to another commands set
     MyPrograms {
 
         /// Amount displayed
@@ -59,7 +60,8 @@ enum GetProgramsCommands {
         page: usize,
     },
 
-    /// Display of the user's programs that have at least one input group with a proven execution
+    /// Display of the user's programs that have at least one input group with a proven execution,
+    /// moves the execution to another commands set
     ProvenPrograms {
         
         /// Amount displayed
@@ -123,7 +125,7 @@ async fn start_program_execution() {
                         should_continue_looping = false;
                     }
                 }
-            }
+            },
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {

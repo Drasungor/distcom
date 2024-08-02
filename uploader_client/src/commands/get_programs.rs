@@ -1,10 +1,10 @@
-use clap::{Parser, Subcommand};
+use clap::{error::ErrorKind, Parser, Subcommand};
 use std::{fs, path::Path, process::Command};
 
 use crate::{common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProgramsCommands
@@ -12,21 +12,32 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
+    /// Displays a page of the user's uploaded programs
     Page {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(index = 1)]
         page: usize,
     },
+
+    /// Uploads one or more input groups for a specific program
     PostInput {
+        /// Index of the displayed program for which an input group wants to be uploaded
         #[clap(index = 1)]
         index: usize,
 
+        /// Name of the csv file of folder containing csv files inside the uploads folder
         #[clap(index = 2)]
         input_file_name: String,
     },
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -73,7 +84,7 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Page{page, limit} => {
@@ -102,9 +113,16 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         return false;
                     },
                 }
-            }
+            },
             Err(err) => {
-                println!("That's not a valid command!: {}", err);
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
         };
         print_programs_list(&programs_page.programs);

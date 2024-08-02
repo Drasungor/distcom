@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use clap::{Parser, Subcommand};
+use clap::{error::ErrorKind, Parser, Subcommand};
 
 use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProvenProgramsCommands
@@ -13,25 +13,37 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProvenProgramsCommands {
+    /// Displays a page of the user's uploaded programs with at least one proven execution
     Page {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(index = 1)]
-        // #[clap(index = 1, parse(try_from_str = parse_positive_integer))]
         page: usize,
     },
+
+    /// Displays the information of a page of the proven input groups of the selected program,
+    /// moves the execution to another commands set
     Verify {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
 
+        /// Index of the selected program
         #[clap(index = 1)]
         index: usize,
     },
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -54,9 +66,9 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
         println!("Please execute a command:");
         let args = process_user_input();
 
-        println!("args: {:?}", args);
+        // println!("args: {:?}", args);
 
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProvenProgramsCommands::Page{page, limit} => {
@@ -81,9 +93,16 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                     },
                     // TODO: add here commands for uploaded proofs manipulation
                }
-            }
-            Err(error) => {
-                println!("That's not a valid command!: {error}");
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
        };
         print_programs_list(&programs_page.programs);
