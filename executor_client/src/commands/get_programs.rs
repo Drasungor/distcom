@@ -67,8 +67,8 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                     },
                }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(error) => {
+                println!("That's not a valid command!: {}", error);
             }
        };
         print_programs_list(&programs_page.programs);

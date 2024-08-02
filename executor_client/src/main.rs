@@ -60,8 +60,8 @@ async fn run_commands_loop() {
                     }
                }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(error) => {
+                println!("That's not a valid command!: {}", error);
             }
        };
     }

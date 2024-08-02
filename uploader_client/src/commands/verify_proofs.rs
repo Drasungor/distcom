@@ -75,8 +75,8 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
                     },
                }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(err) => {
+                println!("That's not a valid command!: {}", err);
             }
         };
         // if (should_continue_looping) {

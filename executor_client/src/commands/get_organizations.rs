@@ -63,8 +63,8 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                     },
                 }
             }
-            Err(_) => {
-                println!("That's not a valid command!");
+            Err(error) => {
+                println!("That's not a valid command!: {}", error);
             }
         };
         print_organizations_list(&organizations_page.organizations);
