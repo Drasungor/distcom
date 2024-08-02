@@ -1,3 +1,4 @@
+use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 use std::{fs, path::Path, process::Command};
 use std::time::{SystemTime, Duration};
@@ -7,7 +8,7 @@ use crate::utils::proving::{download_and_run_program, retrieve_programs, run_som
 use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProgramsCommands
@@ -15,22 +16,35 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
+    /// Displays a list with information of programs regardless of their uploader
     Page {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(index = 1)]
         page: usize,
     },
+
+    /// Generates the proof for a specific program run
     Run {
+        /// Index of the chosen program
         #[clap(index = 1)]
         index: usize,
     },
+
+    /// Generates the proofs for a bounded amount of programs
     RunN {
+        /// Amount of executions that will be proven
         #[clap(index = 1)]
         amount: usize,
     },
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -43,7 +57,7 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Page{page, limit} => {
@@ -66,9 +80,16 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                         return false;
                     },
                }
-            }
-            Err(error) => {
-                println!("That's not a valid command!: {}", error);
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
        };
         print_programs_list(&programs_page.programs);

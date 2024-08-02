@@ -1,9 +1,9 @@
-use clap::{Parser, Subcommand};
+use clap::{error::ErrorKind, Parser, Subcommand};
 
 use crate::{commands::get_organization_programs::select_organization_programs, common, models::returned_organization::print_organizations_list, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct OrganizationsArgs {
     #[command(subcommand)]
     cmd: GetOrganizationsCommands
@@ -11,19 +11,28 @@ struct OrganizationsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetOrganizationsCommands {
+    /// Displays a list with the information of a page of the organizations stored in the program distributor
     Page {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
-        // #[clap(short = 'p', long = "page")]
+        /// Page number
         #[clap(index = 1)]
         page: usize,
     },
+
+    /// Displays the information of the programs stored in the program distributor that belong to the chosen organization
     Choose {
+        /// Index of the chosen organization
         #[clap(index = 1)]
         index: usize,
     },
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -39,7 +48,7 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
         println!("Please execute a command");
         let args = process_user_input();
 
-        match OrganizationsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match OrganizationsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetOrganizationsCommands::Page{page, limit} => {
@@ -62,9 +71,16 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                         return false;
                     },
                 }
-            }
-            Err(error) => {
-                println!("That's not a valid command!: {}", error);
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
         };
         print_organizations_list(&organizations_page.organizations);

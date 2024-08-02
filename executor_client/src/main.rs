@@ -1,3 +1,4 @@
+use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 use utils::process_inputs::process_page_size;
 
@@ -12,7 +13,7 @@ mod utils;
 mod services;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct Args {
     #[command(subcommand)]
     cmd: Commands
@@ -20,20 +21,32 @@ struct Args {
 
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
+    /// Displays a list with the information of the organizations stored in the program distributor,
+    /// moves the execution to another commands set
     Organizations {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
     },
+
+    /// Displays a list with the information of the programs stored in the program distributor without taking
+    /// the uploader into account,
+    /// moves the execution to another commands set
     AllPrograms {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
     },
+
+    /// Exits the program
     Exit,
 }
 
@@ -44,7 +57,7 @@ async fn run_commands_loop() {
         println!("Please execute a command");
         let args = process_user_input();
 
-        match Args::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match Args::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     Commands::Organizations{limit, page} => {
@@ -59,9 +72,16 @@ async fn run_commands_loop() {
                         should_continue_looping = false;
                     }
                }
-            }
-            Err(error) => {
-                println!("That's not a valid command!: {}", error);
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
        };
     }
