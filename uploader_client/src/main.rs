@@ -1,4 +1,5 @@
 use std::path::Path;
+use clap::error::ErrorKind;
 use commands::get_programs::select_my_programs;
 use commands::get_proven_programs::select_my_proven_programs;
 use services::program_distributor::UploadedProgram;
@@ -13,7 +14,7 @@ mod commands;
 mod models;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProgramsCommands
@@ -21,36 +22,58 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
+    /// Upload of the methods folder of the code the user wants to upload
     Upload {
+        /// Name of the methods folder in the uploads directory
         #[clap(short = 'p', long = "path")]
-        // folder_path: String,
         folder_name: String,
 
+        /// Name for the program what will be displayed for the provers
         #[clap(short = 'n', long = "name")]
         name: String,
 
+        /// Explanation of the objectives of the program or any additional information
+        /// considered necessary
         #[clap(short = 'd', long = "description")]
         description: String,
 
+        /// How many seconds an input group of this program will be blocked before another
+        /// prover can request it for execution
         #[clap(short = 't', long = "timeout")]
         execution_timeout: i64,
         
     },
+
+    /// Download of an example of the methods folder for implementation reference
     Template,
+
+    /// Display of the information of the user's uploaded programs,
+    /// moves the execution to another commands set
     MyPrograms {
+
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
     },
+
+    /// Display of the user's programs that have at least one input group with a proven execution,
+    /// moves the execution to another commands set
     ProvenPrograms {
+        
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(short = 'p', long = "page", default_value = "1")]
         page: usize,
     },
+
+    /// Exit the program
     Exit,
 }
 
@@ -60,7 +83,7 @@ async fn start_program_execution() {
     while should_continue_looping {
         println!("Please execute a command:");
         let args = process_user_input();
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Upload{
@@ -102,9 +125,16 @@ async fn start_program_execution() {
                         should_continue_looping = false;
                     }
                 }
-            }
+            },
             Err(err) => {
-                println!("That's not a valid command!: {}", err);
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
        };
         // print_programs_list(&programs_page.data.programs);

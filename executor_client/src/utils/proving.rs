@@ -40,7 +40,7 @@ pub async fn download_and_run_program(program: &ReturnedProgram) {
         println!("Proof generated successfully.");
         read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
         println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
-            
+        let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names.program_file_name));
     } else {
         println!("Process failed.");
         println!("Error output: {}", String::from_utf8(output.stderr).unwrap());

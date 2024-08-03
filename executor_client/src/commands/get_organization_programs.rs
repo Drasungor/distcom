@@ -1,12 +1,14 @@
+use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 use std::{fs, path::Path, process::Command};
 use std::time::{SystemTime, Duration};
 
+use crate::utils::process_inputs::process_previously_set_page_size;
 use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
 use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProgramsCommands
@@ -14,20 +16,38 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProgramsCommands {
+    /// Displays a list with information of the chosen organization's programs
     Page {
+        /// Amount displayed
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<usize>,
+
+        /// Page number
         #[clap(index = 1)]
         page: usize,
     },
+
+    /// Generates the proof of the chosen program's obtained input group
     Run {
+        /// Index of the selected program to prove
         #[clap(index = 1)]
         index: usize,
     },
+
+    /// Generates a proof for a bounded amount of program input groups, which may not belong to the same program
     RunN {
+        /// Amount of input groups what will be proven for this organization's programs
         #[clap(index = 1)]
         amount: usize,
     },
+
+
     RunAll,
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -46,18 +66,22 @@ async fn run_all_organization_programs(organization_id: &str) {
 
 }
 
-pub async fn select_organization_programs(organization_id: &str, limit: usize, first_received_page: usize) -> bool {
-    let mut programs_page = retrieve_programs(Some(organization_id), Some(limit), Some(first_received_page)).await;
+pub async fn select_organization_programs(organization_id: &str, first_received_limit: usize, first_received_page: usize) -> bool {
+    let mut used_limit = first_received_limit;
+    let mut used_page = first_received_page;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(first_received_page)).await;
     print_programs_list(&programs_page.programs);
 
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
-                    GetProgramsCommands::Page{page} => {
-                        programs_page = retrieve_programs(Some(organization_id), Some(limit), Some(page)).await;
+                    GetProgramsCommands::Page{page, limit} => {
+                        used_page = page;
+                        used_limit = process_previously_set_page_size(used_limit, limit);
+                        programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.programs[index];
@@ -76,9 +100,16 @@ pub async fn select_organization_programs(organization_id: &str, limit: usize, f
                         return false;
                     },
                }
-            }
-            Err(_) => {
-                println!("That's not a valid command!");
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
        };
         print_programs_list(&programs_page.programs);

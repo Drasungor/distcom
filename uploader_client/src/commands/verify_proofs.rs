@@ -1,11 +1,11 @@
 use std::path::Path;
-use clap::{Parser, Subcommand};
+use clap::{error::ErrorKind, Parser, Subcommand};
 use std::{fs, process::Command};
 
 use crate::{common, models::{returned_input_group::print_input_groups_list, returned_program::print_programs_list}, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}, utils::{process_inputs::{process_previously_set_page_size, process_user_input}, verifying::{retrieve_proven_inputs, verify_all_program_proven_executions, verify_proven_execution, verify_some_program_proven_executions}}};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "")]
 struct ProgramsArgs {
     #[command(subcommand)]
     cmd: GetProofsCommands
@@ -13,23 +13,38 @@ struct ProgramsArgs {
 
 #[derive(Subcommand, Debug, Clone)]
 enum GetProofsCommands {
+    /// Displays a page of the selected program's proven executions
     Page {
+        /// Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
+        /// Page number
         #[clap(index = 1)]
         page: usize,
     },
+
+    /// Runs risc zero's proof verification algorithm over the proof associated to the input's execution
     Verify {
+        /// Index of the input group whose proof is going to be verified
         #[clap(index = 1)]
         index: usize,
     },
+
+    /// Runs risc zero's proof verification algorithm over a bounded ammount of executions
     VerifyN {
+        /// Maximum amount of proofs verified
         #[clap(index = 1)]
         verified_amount: usize,
     },
+
+    /// Runs risc zero's proof verification algorithm over all of this program's proven executions
     VerifyAll,
+
+    /// Goes back to the previous commands selection
     Back,
+
+    /// Exits the program
     Exit,
 }
 
@@ -45,7 +60,7 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
     loop {
         println!("Please execute a command:");
         let args = process_user_input();
-        match ProgramsArgs::try_parse_from(args.iter()).map_err(|e| e.to_string()) {
+        match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProofsCommands::Page{page, limit} => {
@@ -74,9 +89,16 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
                         return false;
                     },
                }
-            }
-            Err(_) => {
-                println!("That's not a valid command!");
+            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::DisplayHelp => {
+                        println!("{}", err.to_string());
+                    },
+                    _ => {
+                        println!("Invalid command, run the \"help\" command for usage information.")
+                    }
+                }
             }
         };
         // if (should_continue_looping) {
