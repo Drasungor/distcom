@@ -64,13 +64,13 @@ fn main() {
         current_value = (current_value * current_value) % number_to_test;
 
         // Modulo == 1
-        if initial_value == 1 {
+        if current_value == 1 {
             was_result_obtained = true;
             is_probably_prime = false;
         }
 
         // Modulo == -1
-        if initial_value == (number_to_test - 1) {
+        if current_value == (number_to_test - 1) {
             was_result_obtained = true;
             is_probably_prime = true;
         }
