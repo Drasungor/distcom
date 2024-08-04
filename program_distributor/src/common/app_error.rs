@@ -37,6 +37,7 @@ impl InternalServerErrorType {
 pub enum AppErrorType {
     AccountNotFound,
     ProgramNotFound,
+    InputGroupNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
     RefreshTokenNotfound,
@@ -78,6 +79,7 @@ impl AppErrorType {
         match self {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
             AppErrorType::ProgramNotFound => String::from("PROGRAM_NOT_FOUND"),
+            AppErrorType::InputGroupNotFound => String::from("INPUT_GROUP_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
@@ -108,6 +110,10 @@ impl AppError {
             },
             AppErrorType::ProgramNotFound => {
                 message_text = "Program not found";
+                status_code = StatusCode::NOT_FOUND;
+            },
+            AppErrorType::InputGroupNotFound => {
+                message_text = "Input group not found";
                 status_code = StatusCode::NOT_FOUND;
             },
             AppErrorType::WrongCredentials => {

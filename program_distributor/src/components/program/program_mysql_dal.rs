@@ -183,13 +183,21 @@ impl ProgramMysqlDal {
             return Err(AppError::new(AppErrorType::ProgramNotFound))
         }
 
-        let found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+        // let found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+        //     .filter(program_input_group::program_id.eq(program_id.clone()).and(program_input_group::last_reserved.is_null()))
+        //     .first::<ProgramInputGroup>(connection);
+        let found_input_group_option: Option<ProgramInputGroup> = program_input_group::table
             .filter(program_input_group::program_id.eq(program_id.clone()).and(program_input_group::last_reserved.is_null()))
-            .first::<ProgramInputGroup>(connection);
+            .first::<ProgramInputGroup>(connection).optional()?;
+        // let found_input_group: ProgramInputGroup;
+        // if let Some(found_input_group_value) = found_input_group_option {
+        //     found_input_group = found_input_group_value;
+        // } else {
+        //     return Err(AppError::new(AppErrorType::ProgramNotFound))
+        // }
 
-
-        if found_input_group.is_ok() {
-            returned_input_group = found_input_group.unwrap();
+        if let Some(found_input_group) = found_input_group_option {
+            returned_input_group = found_input_group;
         } else {
             let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
             .filter(program_input_group::program_id.eq(program_id).and(program_input_group::last_reserved.is_not_null()))
@@ -208,9 +216,35 @@ impl ProgramMysqlDal {
                     break;
                 }
             }
-            assert!(chosen_input_index != -1, "No input group is available");
+            if chosen_input_index == -1 {
+                return Err(AppError::new(AppErrorType::InputGroupNotFound));
+            }
             returned_input_group = found_input_groups_array[chosen_input_index as usize].clone();
         }
+
+        // if found_input_group.is_ok() {
+        //     returned_input_group = found_input_group.unwrap();
+        // } else {
+        //     let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
+        //     .filter(program_input_group::program_id.eq(program_id).and(program_input_group::last_reserved.is_not_null()))
+        //     .load::<ProgramInputGroup>(connection)?;
+
+        //     let mut chosen_input_index: i32 = -1;
+
+        //     // Try to find of the reserved inputs one that suffered a timeout
+        //     for i in 0..found_input_groups_array.len() {
+        //         let current_input_group = &found_input_groups_array[i];
+        //         let current_last_reserved_date = current_input_group.last_reserved.unwrap();
+        //         let difference = *current_datetime - current_last_reserved_date;
+        //         let difference_in_seconds = difference.num_seconds();
+        //         if (difference_in_seconds > found_program.input_lock_timeout) {
+        //             chosen_input_index = i as i32;
+        //             break;
+        //         }
+        //     }
+        //     assert!(chosen_input_index != -1, "No input group is available");
+        //     returned_input_group = found_input_groups_array[chosen_input_index as usize].clone();
+        // }
 
         let input_group_id = returned_input_group.input_group_id;
         diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
