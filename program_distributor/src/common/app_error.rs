@@ -1,6 +1,5 @@
-use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
-use aws_sdk_s3::{error::SdkError, primitives::ByteStreamError, types::Error};
-use serde::Serialize;
+use actix_web::http::StatusCode;
+use aws_sdk_s3::{error::SdkError, primitives::ByteStreamError};
 use std::fmt;
 
 #[derive(Debug)]
@@ -13,6 +12,7 @@ pub enum InternalServerErrorType {
     IOError(std::io::Error),
     ByteStreamGenerationError(ByteStreamError),
     S3Error(String),
+    DatabaseError(String),
     UnknownError(String),
 }
 
@@ -27,6 +27,7 @@ impl InternalServerErrorType {
             InternalServerErrorType::ByteStreamGenerationError(byte_stream_error) => format!("Bytestream error: {:?}", byte_stream_error),
             InternalServerErrorType::IOError(io_error) => format!("IO error: {:?}", io_error.to_string()),
             InternalServerErrorType::S3Error(s3_error) => format!("S3 error: {:?}", s3_error),
+            InternalServerErrorType::DatabaseError(db_error) => format!("Database error: {:?}", db_error),
             InternalServerErrorType::UnknownError(message) => message.clone(),
         }
     }
@@ -35,6 +36,7 @@ impl InternalServerErrorType {
 #[derive(Debug)]
 pub enum AppErrorType {
     AccountNotFound,
+    ProgramNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
     RefreshTokenNotfound,
@@ -60,6 +62,11 @@ impl From<ByteStreamError> for AppError {
     }
 }
 
+impl From<diesel::result::Error> for AppError {
+    fn from(error: diesel::result::Error) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::DatabaseError(error.to_string())))
+    }
+}
 // impl From<std::error::Error> for AppError {
 //     fn from(error: ByteStreamError) -> Self {
 //         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
@@ -70,6 +77,7 @@ impl AppErrorType {
     pub fn to_string(&self) -> String {
         match self {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
+            AppErrorType::ProgramNotFound => String::from("PROGRAM_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
@@ -96,6 +104,10 @@ impl AppError {
         match error_type {
             AppErrorType::AccountNotFound => {
                 message_text = "Account not found";
+                status_code = StatusCode::NOT_FOUND;
+            },
+            AppErrorType::ProgramNotFound => {
+                message_text = "Program not found";
                 status_code = StatusCode::NOT_FOUND;
             },
             AppErrorType::WrongCredentials => {

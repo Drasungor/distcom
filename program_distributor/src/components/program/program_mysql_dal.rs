@@ -132,7 +132,8 @@ impl ProgramMysqlDal {
         
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             let found_program = program::table
             .filter(program::program_id.eq(cloned_program_id))
@@ -144,39 +145,55 @@ impl ProgramMysqlDal {
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(organization_id)) => Ok(organization_id),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+            // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+            //     match db_err_kind {
+            //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+            //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+            //     }
+            // },
+            // // Ok(Err(AppError)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+            // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+            Ok(Err(err)) => Err(err),
         };
         // return general_manage_diesel_task_result(result);
     }
 
 
+    // fn get_available_input_group_id(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
+    //                                   program_id: &String, current_datetime: &NaiveDateTime) -> String {
     fn get_available_input_group_id(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
-                                      program_id: &String, current_datetime: &NaiveDateTime) -> String {
-
+        program_id: &String, current_datetime: &NaiveDateTime) -> Result<String, AppError> {
+    // fn get_available_input_group_id(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
+    //     program_id: &String, current_datetime: &NaiveDateTime) -> Result<String, AppErrorType> {
+        
         let returned_input_group;
 
-        let found_program: StoredProgram = program::table
+        // let found_program: StoredProgram = program::table
+        //     .filter(program::program_id.eq(program_id.clone()))
+        //     .first::<StoredProgram>(connection).expect("No program was found");
+
+        let found_program_option: Option<StoredProgram> = program::table
             .filter(program::program_id.eq(program_id.clone()))
-            .first::<StoredProgram>(connection).expect("No program was found");
+            .first::<StoredProgram>(connection).optional()?;
 
+        let found_program: StoredProgram;
+        if let Some(found_program_value) = found_program_option {
+            found_program = found_program_value;
+        } else {
+            return Err(AppError::new(AppErrorType::ProgramNotFound))
+        }
 
-        let mut found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
+        let found_input_group: Result<ProgramInputGroup, _> = program_input_group::table
             .filter(program_input_group::program_id.eq(program_id.clone()).and(program_input_group::last_reserved.is_null()))
             .first::<ProgramInputGroup>(connection);
 
 
-        if (found_input_group.is_ok()) {
+        if found_input_group.is_ok() {
             returned_input_group = found_input_group.unwrap();
         } else {
             let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
             .filter(program_input_group::program_id.eq(program_id).and(program_input_group::last_reserved.is_not_null()))
-            .load::<ProgramInputGroup>(connection).expect("Error finding taken input groups");
+            .load::<ProgramInputGroup>(connection)?;
 
             let mut chosen_input_index: i32 = -1;
 
@@ -198,9 +215,10 @@ impl ProgramMysqlDal {
         let input_group_id = returned_input_group.input_group_id;
         diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
                 .set(program_input_group::last_reserved.eq(Some(current_datetime)))
-                .execute(connection).expect("Error in input group update");
+                // .execute(connection).expect("Error in input group update");
+                .execute(connection)?;
 
-        return input_group_id;
+        return Ok(input_group_id);
     }
 
     fn store_input_group_in_csv(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 

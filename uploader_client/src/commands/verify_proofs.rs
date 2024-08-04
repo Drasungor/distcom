@@ -109,5 +109,5 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
         // }
         input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
         print_input_groups_list(&input_groups_page.program_input_groups);
-    }    
+    }
 }
