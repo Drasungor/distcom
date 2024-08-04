@@ -291,9 +291,10 @@ impl ProgramMysqlDal {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
             let now_naive_datetime = get_current_naive_datetime();
-            let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime);
+            let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime)?;
             let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
             return Ok((input_group_id, file_path));
@@ -302,13 +303,14 @@ impl ProgramMysqlDal {
         return match result {
             Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
             Ok(Ok(result_tuple)) => Ok(result_tuple),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+            // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+            //     match db_err_kind {
+            //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+            //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+            //     }
+            // },
+            // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+            Ok(Err(err)) => Err(err),
         };
     }
 
