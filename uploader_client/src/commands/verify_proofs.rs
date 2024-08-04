@@ -54,10 +54,12 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut input_groups_page = retrieve_proven_inputs(program_id, used_limit, used_page).await;
+    println!("");
     print_input_groups_list(&input_groups_page.program_input_groups);
 
     // while should_continue_looping {
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {

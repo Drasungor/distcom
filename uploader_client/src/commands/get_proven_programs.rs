@@ -58,11 +58,12 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
-    println!("Proven programs amount: {}", &programs_page.programs.len());
+    println!("");
     print_programs_list(&programs_page.programs);
 
     // while should_continue_looping {
     loop {
+    println!("");
         println!("Please execute a command:");
         let args = process_user_input();
 

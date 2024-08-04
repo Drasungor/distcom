@@ -78,10 +78,12 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_programs(used_limit, used_page).await;
-    print_programs_list(&programs_page.programs);
+        println!("");
+        print_programs_list(&programs_page.programs);
 
     // while should_continue_looping {
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {

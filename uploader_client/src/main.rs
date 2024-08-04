@@ -81,6 +81,7 @@ async fn start_program_execution() {
     let mut should_continue_looping = true;
     // loop {
     while should_continue_looping {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {

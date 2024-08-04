@@ -70,9 +70,11 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(first_received_page)).await;
+    println!("");
     print_programs_list(&programs_page.programs);
 
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -111,8 +113,7 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     }
                 }
             }
-       };
+        };
         print_programs_list(&programs_page.programs);
-
     }    
 }

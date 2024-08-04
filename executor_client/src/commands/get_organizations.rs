@@ -42,10 +42,12 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+    println!("");
     print_organizations_list(&organizations_page.organizations);
 
     loop { 
-        println!("Please execute a command");
+        println!("");
+        println!("Please execute a command:");
         let args = process_user_input();
 
         match OrganizationsArgs::try_parse_from(args.iter()) {
