@@ -26,6 +26,7 @@ use crate::schema::specific_program_input;
 use crate::schema::{program, account};
 use crate::utils::datetime_helpers::get_current_naive_datetime;
 use crate::utils::diesel_helpers::general_manage_diesel_task_result;
+use crate::utils::diesel_helpers::manage_converted_dal_result;
 
 pub struct ProgramMysqlDal;
 
@@ -42,7 +43,8 @@ impl ProgramMysqlDal {
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
             diesel::insert_into(program::table)
                         .values(&stored_program)
                         .execute(connection)?;
@@ -50,7 +52,8 @@ impl ProgramMysqlDal {
 
         })
         }).await;
-        return general_manage_diesel_task_result(result);
+        // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
     fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), diesel::result::Error> {
@@ -96,7 +99,7 @@ impl ProgramMysqlDal {
         // let mut connection: Result<PooledConnection<ConnectionManager<MysqlConnection>>, diesel::r2d2::Error> = crate::common::config::CONNECTION_POOL.get();
         // // : r2d2::Error
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             // TODO: Check why when no value is found we do not return an error, probably not returning a value is not viewed as an
             // error, but as a valid result
@@ -113,18 +116,19 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(_)) => Ok(()),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown error: ".to_string())))),
-        };
-        // return general_manage_diesel_task_result(result);
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(_)) => Ok(()),
+        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //         match db_err_kind {
+        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //             unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //         }
+        //     },
+        //     Ok(Err(_)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError("Unknown error: ".to_string())))),
+        // };
+        // // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -142,20 +146,21 @@ impl ProgramMysqlDal {
             return Ok(found_program.organization_id);
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(organization_id)) => Ok(organization_id),
-            // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-            //     match db_err_kind {
-            //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-            //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-            //     }
-            // },
-            // // Ok(Err(AppError)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-            // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-            Ok(Err(err)) => Err(err),
-        };
-        // return general_manage_diesel_task_result(result);
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(organization_id)) => Ok(organization_id),
+        //     // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //     //     match db_err_kind {
+        //     //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //     //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //     //     }
+        //     // },
+        //     // // Ok(Err(AppError)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        //     // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        //     Ok(Err(err)) => Err(err),
+        // };
+        // // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
 
@@ -300,18 +305,19 @@ impl ProgramMysqlDal {
             return Ok((input_group_id, file_path));
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(result_tuple)) => Ok(result_tuple),
-            // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-            //     match db_err_kind {
-            //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-            //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-            //     }
-            // },
-            // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-            Ok(Err(err)) => Err(err),
-        };
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(result_tuple)) => Ok(result_tuple),
+        //     // Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //     //     match db_err_kind {
+        //     //         DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //     //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //     //     }
+        //     // },
+        //     // Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        //     Ok(Err(err)) => Err(err),
+        // };
+        return manage_converted_dal_result(result);
     }
 
     pub async fn set_input_group_as_proven(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -338,7 +344,7 @@ impl ProgramMysqlDal {
         let cloned_input_group_id = input_group_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             let found_program = program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
@@ -356,7 +362,8 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return general_manage_diesel_task_result(result);
+        // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
     pub async fn delete_input_group_entry(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -365,7 +372,7 @@ impl ProgramMysqlDal {
         let cloned_input_group_id = input_group_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             let found_program = program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
@@ -379,7 +386,8 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return general_manage_diesel_task_result(result);
+        // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
 
@@ -387,7 +395,7 @@ impl ProgramMysqlDal {
         let cloned_input_group_id = input_group_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
                 .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
@@ -395,24 +403,25 @@ impl ProgramMysqlDal {
             return Ok(());
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(result_tuple)) => Ok(result_tuple),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(result_tuple)) => Ok(result_tuple),
+        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //         match db_err_kind {
+        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //             unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //         }
+        //     },
+        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        // };
+        return manage_converted_dal_result(result);
     }
 
     pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             // TODO: check if we should ask first for the organization programs and then get the proven programs, or maybe 
             // we could join the two queries into one
@@ -437,17 +446,18 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(result)) => Ok(result),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(result)) => Ok(result),
+        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //         match db_err_kind {
+        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //             unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //         }
+        //     },
+        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        // };
+        return manage_converted_dal_result(result);
     }
 
     pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
@@ -455,7 +465,7 @@ impl ProgramMysqlDal {
         let cloned_program_id = program_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
             program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
                 .first::<StoredProgram>(connection)?;
@@ -475,24 +485,25 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return match result {
-            Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-            Ok(Ok(result_array)) => Ok(result_array),
-            Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-                match db_err_kind {
-                    DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-                    unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-                }
-            },
-            Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        };
+        // return match result {
+        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        //     Ok(Ok(result_array)) => Ok(result_array),
+        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
+        //         match db_err_kind {
+        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
+        //             unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
+        //         }
+        //     },
+        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
+        // };
+        return manage_converted_dal_result(result);
     }
 
 
     pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        connection.transaction::<_, AppError, _>(|connection| {
             account::table
                 .filter(account::account_was_verified.eq(true))
                 .first::<CompleteAccount>(connection)?;
@@ -512,7 +523,8 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return general_manage_diesel_task_result(found_account_result);
+        // return general_manage_diesel_task_result(found_account_result);
+        return manage_converted_dal_result(found_account_result);
     }
 
     
@@ -520,8 +532,8 @@ impl ProgramMysqlDal {
     pub async fn get_general_programs(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         // let cloned_organization_id = organization_id.clone();
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
-        let found_account_result = web::block(move || {
-        connection.transaction::<_, diesel::result::Error, _>(|connection| {
+        let result = web::block(move || {
+        connection.transaction::<_, AppError, _>(|connection| {
 
             let mut programs_query = program::table.offset((page - 1) * limit).limit(limit).into_boxed();
 
@@ -541,7 +553,8 @@ impl ProgramMysqlDal {
             });
         })
         }).await;
-        return general_manage_diesel_task_result(found_account_result);
+        // return general_manage_diesel_task_result(result);
+        return manage_converted_dal_result(result);
     }
 
 }
