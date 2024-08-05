@@ -1,11 +1,9 @@
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
-use std::time::{SystemTime, Duration};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
 use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
-use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
+use crate::{models::returned_program::print_programs_list, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
