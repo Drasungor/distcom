@@ -68,6 +68,8 @@ pub async fn retrieve_programs(organization_option: Option<&str>, limit: Option<
     return response.unwrap();
 }
 
+// Executes all the possible program inputs of each program that is iterated until the
+// received amount of program executions are proven
 pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: usize) {
     let page_size: usize = common::config::CONFIG_OBJECT.max_page_size;
     let mut programs_page = retrieve_programs(organization_id, Some(page_size), Some(1)).await;

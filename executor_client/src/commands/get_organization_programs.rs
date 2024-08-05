@@ -53,23 +53,27 @@ enum GetProgramsCommands {
 
 async fn run_all_organization_programs(organization_id: &str) {
     let page_size = common::config::CONFIG_OBJECT.max_page_size;
-    let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+    let mut page_counter = 1;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
     let mut programs_list = programs_page.programs;
 
     while programs_list.len() != 0 {
         for returned_program in programs_list {
-            download_and_run_program(&returned_program).await;
+            let mut keep_executing_same_program = true;
+            while keep_executing_same_program {
+                keep_executing_same_program = download_and_run_program(&returned_program).await.is_ok();
+            }
         }
-        programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+        page_counter += 1;
+        programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
         programs_list = programs_page.programs;
     }
-
 }
 
 pub async fn select_organization_programs(organization_id: &str, first_received_limit: usize, first_received_page: usize) -> bool {
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
-    let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(first_received_page)).await;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
     println!("");
     print_programs_list(&programs_page.programs);
 
@@ -87,7 +91,7 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.programs[index];
-                        download_and_run_program(chosen_program).await;
+                        let _ = download_and_run_program(chosen_program).await;
                     },
                     GetProgramsCommands::RunN{amount} => {
                         run_some_programs(Some(organization_id), amount).await;
