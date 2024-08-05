@@ -31,7 +31,7 @@ pub fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Res
         let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
         let entry_path = format!("{}/{}", folder_path, entry_name);
 
-        if (path.is_dir()) {
+        if path.is_dir() {
             builder.append_dir_all(format!("./{}", entry_name), entry_path).expect("Error in directory appending");
         } else {
             builder.append_path_with_name(path, entry_name).expect("Error in directory appending");

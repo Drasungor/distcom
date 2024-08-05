@@ -90,3 +90,12 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
         programs_list = programs_page.programs;
     }
 }
+
+pub async fn run_some_program_inputs(chosen_program: &ReturnedProgram, programs_amount: usize) {
+    let mut keep_running_program = true;
+    let mut programs_counter = 0;
+    while keep_running_program && programs_counter < programs_amount {
+        keep_running_program = download_and_run_program(chosen_program).await.is_ok();
+        programs_counter += 1;
+    }
+}

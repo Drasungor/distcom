@@ -2,7 +2,7 @@ use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
-use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
+use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
 use crate::{models::returned_program::print_programs_list, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
@@ -37,6 +37,11 @@ enum GetProgramsCommands {
         /// Amount of executions that will be proven
         #[clap(index = 1)]
         amount: usize,
+
+        /// Program chosen for execution, if no value is provided then it is applied to all the system's programs
+        /// until the desired executions amount is reached
+        #[clap(index = 1)]
+        index: Option<usize>,
     },
 
     /// Goes back to the previous commands selection
@@ -70,7 +75,11 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                         let chosen_program = &programs_page.programs[index];
                         let _ = download_and_run_program(chosen_program).await;
                     },
-                    GetProgramsCommands::RunN{amount} => {
+                    GetProgramsCommands::RunN{amount, index} => {
+                        if let Some(index_value) = index {
+                            let chosen_program = &programs_page.programs[index_value];
+                            run_some_program_inputs(chosen_program, amount).await;
+                        }
                         run_some_programs(None, amount).await;
                     },
                     GetProgramsCommands::Back => {

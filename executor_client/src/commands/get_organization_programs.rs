@@ -2,7 +2,7 @@ use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
-use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
+use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
 use crate::{common, models::returned_program::{print_programs_list, ReturnedProgram}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
@@ -37,11 +37,17 @@ enum GetProgramsCommands {
         /// Amount of input groups what will be proven for this organization's programs
         #[clap(index = 1)]
         amount: usize,
+
+        /// Index of the program that will be executed, if this value is not provided then the command will be
+        /// applied to all of the organization's programs untill the desired executions amount is reached
+        #[clap(index = 1)]
+        index: Option<usize>,
     },
 
 
     RunAll {
-        /// Index of the selected program to prove
+        /// Index of the selected program to prove, if no value is provided then all organization's programs are
+        /// executed
         #[clap(index = 1)]
         index: Option<usize>,
     },
@@ -99,7 +105,11 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                         let chosen_program = &programs_page.programs[index];
                         let _ = download_and_run_program(chosen_program).await;
                     },
-                    GetProgramsCommands::RunN{amount} => {
+                    GetProgramsCommands::RunN{amount, index} => {
+                        if let Some(index_value) = index {
+                            let chosen_program = &programs_page.programs[index_value];
+                            run_some_program_inputs(chosen_program, amount).await;
+                        }
                         run_some_programs(Some(organization_id), amount).await;
                     },
                     GetProgramsCommands::RunAll{index} => {
