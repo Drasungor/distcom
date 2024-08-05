@@ -325,7 +325,7 @@ impl ProgramDistributorService {
         headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());
         request = request.headers(headers);
 
-        let response = request.send().await.expect("Error in get");
+        let response = request.send().await.expect("Error in request making");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
         
         return match response_parse_result {

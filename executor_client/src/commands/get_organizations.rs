@@ -41,7 +41,11 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
-    let mut organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+    let mut organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+    if let Err(organizations_page_err) = organizations_page_result {
+        panic!("Error in get organizations: {:?}", organizations_page_err);
+    }
+    let mut organizations_page = organizations_page_result.unwrap();
     println!("");
     print_organizations_list(&organizations_page.organizations);
 
@@ -57,8 +61,11 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
                         // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
-                        
+                        organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+                        if let Err(organizations_page_err) = organizations_page_result {
+                            panic!("Error in get organizations: {:?}", organizations_page_err);
+                        }
+                        organizations_page = organizations_page_result.unwrap();
                     },
                     GetOrganizationsCommands::Choose{index} => {
                         let chosen_organization = &organizations_page.organizations[index];
