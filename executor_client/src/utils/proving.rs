@@ -2,9 +2,7 @@ use std::{fs, path::Path, process::Command, time::SystemTime};
 
 use crate::{common::{self, communication::EndpointError}, models::returned_program::ReturnedProgram, services::program_distributor::{PagedPrograms, UploadedProof}};
 
-
-
-pub async fn download_and_run_program(program: &ReturnedProgram) {
+pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), ()> {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let downloaded_files_names_result = read_guard.get_program_and_input_group(&program.program_id).await;
 
@@ -46,9 +44,11 @@ pub async fn download_and_run_program(program: &ReturnedProgram) {
                 println!("Process failed.");
                 println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
             }
+            Ok(())
         },
         Err(received_error) => {
             println!("Error while requesting the program with an input group: {:?}", received_error);
+            Err(())
         }
     }
 }
@@ -75,11 +75,14 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
     let mut programs_counter = 0;
     while programs_list.len() != 0 && programs_counter < programs_amount {
         let mut current_page_iterator = 0;
-        while programs_list.len() != 0 && programs_counter < programs_amount {
+        while current_page_iterator < programs_list.len() && programs_counter < programs_amount {
+            let mut keep_same_program = true;
             let returned_program = &programs_list[current_page_iterator];
-            download_and_run_program(&returned_program);
+            while keep_same_program && programs_counter < programs_amount {
+                keep_same_program = download_and_run_program(&returned_program).await.is_ok();
+                programs_counter += 1;
+            }
             current_page_iterator += 1;
-            programs_counter += 1;
         }
         programs_page = retrieve_programs(organization_id, Some(page_size), Some(1)).await;
         programs_list = programs_page.programs;
