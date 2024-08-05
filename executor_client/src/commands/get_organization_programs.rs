@@ -1,11 +1,9 @@
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
-use std::time::{SystemTime, Duration};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
 use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
-use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
+use crate::{common, models::returned_program::{print_programs_list, ReturnedProgram}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -42,7 +40,11 @@ enum GetProgramsCommands {
     },
 
 
-    RunAll,
+    RunAll {
+        /// Index of the selected program to prove
+        #[clap(index = 1)]
+        index: Option<usize>,
+    },
 
     /// Goes back to the previous commands selection
     Back,
@@ -59,14 +61,18 @@ async fn run_all_organization_programs(organization_id: &str) {
 
     while programs_list.len() != 0 {
         for returned_program in programs_list {
-            let mut keep_executing_same_program = true;
-            while keep_executing_same_program {
-                keep_executing_same_program = download_and_run_program(&returned_program).await.is_ok();
-            }
+            run_all_program_inputs(&returned_program).await;
         }
         page_counter += 1;
         programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
         programs_list = programs_page.programs;
+    }
+}
+
+async fn run_all_program_inputs(chosen_program: &ReturnedProgram) {
+    let mut keep_executing_program = true;
+    while keep_executing_program {
+        keep_executing_program = download_and_run_program(chosen_program).await.is_ok();
     }
 }
 
@@ -96,8 +102,13 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     GetProgramsCommands::RunN{amount} => {
                         run_some_programs(Some(organization_id), amount).await;
                     },
-                    GetProgramsCommands::RunAll => {
-                        run_all_organization_programs(organization_id).await;
+                    GetProgramsCommands::RunAll{index} => {
+                        if let Some(index_value) = index {
+                            let chosen_program = &programs_page.programs[index_value];
+                            run_all_program_inputs(chosen_program).await;
+                        } else {
+                            run_all_organization_programs(organization_id).await;
+                        }
                     },
                     GetProgramsCommands::Back => {
                         return true;

@@ -70,7 +70,7 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                     },
                     GetProgramsCommands::Run{index} => {
                         let chosen_program = &programs_page.programs[index];
-                        download_and_run_program(chosen_program).await;
+                        let _ = download_and_run_program(chosen_program).await;
                     },
                     GetProgramsCommands::RunN{amount} => {
                         run_some_programs(None, amount).await;
