@@ -40,6 +40,16 @@ enum GetProvenProgramsCommands {
         index: usize,
     },
 
+    /// Verify a bounded amount of executions for programs uploaded
+    VerifyN {
+        /// Maximum amount of proofs verified
+        #[clap(index = 1)]
+        verified_amount: usize,
+    },
+
+    /// Verify a bounded all executions for programs uploaded
+    VerifyAll,
+
     /// Goes back to the previous commands selection
     Back,
 
@@ -47,27 +57,18 @@ enum GetProvenProgramsCommands {
     Exit,
 }
 
-async fn retrieve_my_proven_programs(limit: usize, page: usize) -> PagedPrograms {
-    let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.get_my_proven_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs");
-}
 
-// TODO: Update this so that the page size is used
 pub async fn select_my_proven_programs(first_received_limit: usize, first_received_page: usize) -> bool {
-    // let mut should_continue_looping = true;
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
     println!("");
     print_programs_list(&programs_page.programs);
 
-    // while should_continue_looping {
     loop {
-    println!("");
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
-
-        // println!("args: {:?}", args);
 
         match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
@@ -85,14 +86,15 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                             return false;
                         }
                     },
+                    GetProvenProgramsCommands::VerifyN {verified_amount} => {
+
+                    }
                     GetProvenProgramsCommands::Back => {
-                        // should_continue_looping = false;
                         return true;
                     },
                     GetProvenProgramsCommands::Exit => {
                         return false;
                     },
-                    // TODO: add here commands for uploaded proofs manipulation
                }
             },
             Err(err) => {

@@ -82,7 +82,9 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
             let returned_program = &programs_list[current_page_iterator];
             while keep_same_program && programs_counter < programs_amount {
                 keep_same_program = download_and_run_program(&returned_program).await.is_ok();
-                programs_counter += 1;
+                if keep_same_program {
+                    programs_counter += 1;
+                }
             }
             current_page_iterator += 1;
         }
@@ -96,6 +98,8 @@ pub async fn run_some_program_inputs(chosen_program: &ReturnedProgram, programs_
     let mut programs_counter = 0;
     while keep_running_program && programs_counter < programs_amount {
         keep_running_program = download_and_run_program(chosen_program).await.is_ok();
-        programs_counter += 1;
+        if keep_running_program {
+            programs_counter += 1;
+        }
     }
 }

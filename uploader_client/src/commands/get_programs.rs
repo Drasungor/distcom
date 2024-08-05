@@ -72,16 +72,13 @@ async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
     }
 }
 
-// TODO: Update this so that the page size is used
 pub async fn select_my_programs(first_received_limit: usize, first_received_page: usize) -> bool {
-    // let mut should_continue_looping = true;
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_programs(used_limit, used_page).await;
-        println!("");
-        print_programs_list(&programs_page.programs);
+    println!("");
+    print_programs_list(&programs_page.programs);
 
-    // while should_continue_looping {
     loop {
         println!("");
         println!("Please execute a command:");
@@ -107,13 +104,12 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         }
                     },
                     GetProgramsCommands::Back => {
-                        // should_continue_looping = false;
                         return true;
                     },
                     GetProgramsCommands::Exit => {
-                        // should_continue_looping = false;
                         return false;
                     },
+                    // Add commands for program deletion
                 }
             },
             Err(err) => {
