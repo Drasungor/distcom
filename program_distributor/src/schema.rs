@@ -91,7 +91,8 @@ diesel::table! {
         input_group_id -> Varchar, // Generate index in migration
 
         #[max_length = 1024]
-        blob_data -> Nullable<Varbinary>,
+        // blob_data -> Nullable<Varbinary>,
+        blob_data -> Varbinary,
 
         order -> Integer,
     }

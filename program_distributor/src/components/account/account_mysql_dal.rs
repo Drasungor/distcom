@@ -1,10 +1,5 @@
-use actix_web::error::BlockingError;
-use diesel::connection;
-use diesel::result::DatabaseErrorKind;
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
-use diesel::mysql::MysqlConnection;
-use diesel::r2d2::{ ConnectionManager, Pool };
 use actix_web::web;
 
 use super::db_models::account::CompleteAccount;
@@ -12,8 +7,6 @@ use super::db_models::refresh_token::RefreshToken;
 use super::model::PagedOrganizations;
 use super::model::ReturnedOrganization;
 use crate::common::app_error::AppError;
-use crate::common::app_error::AppErrorType;
-use crate::common::app_error::InternalServerErrorType;
 use crate::schema::{account, refresh_token};
 use crate::utils::diesel_helpers::manage_converted_dal_result;
 

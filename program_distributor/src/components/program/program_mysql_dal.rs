@@ -1,4 +1,5 @@
 use std::fs::File;
+use actix_web::App;
 use csv::Reader;
 use diesel::r2d2::PooledConnection;
 use diesel::result::DatabaseErrorKind;
@@ -56,11 +57,11 @@ impl ProgramMysqlDal {
         return manage_converted_dal_result(result);
     }
 
-    fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), diesel::result::Error> {
+    fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), AppError> {
         // Storage of specific inputs
         let mut current_input = 0;
         for line in input_reader.records() {
-            let line_ok = line.expect("Error in line reading");
+            let line_ok = line?;
             let line_iterator = line_ok.into_iter();
             let mut counter = 0;
 
@@ -69,7 +70,8 @@ impl ProgramMysqlDal {
                 let specific_input = SpecificProgramInput {
                     specific_input_id: Uuid::new_v4().to_string(),
                     input_group_id: input_group_id.clone(),
-                    blob_data: Some(BASE64_STANDARD.decode(value).expect("Error in base 64 decoding")),
+                    // blob_data: Some(BASE64_STANDARD.decode(value)?),
+                    blob_data: BASE64_STANDARD.decode(value)?,
                     order: current_input
                 };
                 counter += 1;
@@ -213,7 +215,7 @@ impl ProgramMysqlDal {
             // Try to find of the reserved inputs one that suffered a timeout
             for i in 0..found_input_groups_array.len() {
                 let current_input_group = &found_input_groups_array[i];
-                let current_last_reserved_date = current_input_group.last_reserved.unwrap();
+                let current_last_reserved_date = current_input_group.last_reserved.unwrap(); // This unwrap is ok because of the is_not_null in the filter
                 let difference = *current_datetime - current_last_reserved_date;
                 let difference_in_seconds = difference.num_seconds();
                 if (difference_in_seconds > found_program.input_lock_timeout) {
@@ -261,35 +263,38 @@ impl ProgramMysqlDal {
     }
 
     fn store_input_group_in_csv(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
-                                file_path: &String, input_group_id: &String) {
+                                file_path: &String, input_group_id: &String) -> Result<(), AppError> {
         let mut input_line_counter = 0;
-        let mut current_input = specific_program_input::table
+        let mut current_input: Option<SpecificProgramInput> = specific_program_input::table
             .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
             // TODO: return a good error indicating that no unreserved input was found
-            .first::<SpecificProgramInput>(connection);
+            .first::<SpecificProgramInput>(connection).optional()?;
 
         {
             // println!("file_path: {}", file_path);
 
             // TODO: change this so that the created folder comes from the parent directory of the file path
             // stored in the variable "file_path"
-            std::fs::create_dir_all(format!("./aux_files/{}", input_group_id)).expect("Error while creating parent dir path");
+            std::fs::create_dir_all(format!("./aux_files/{}", input_group_id))?;
 
 
-            let file = File::create(file_path.clone()).expect("Error in file creation");
+            let file = File::create(file_path.clone())?;
         }
-        let mut writer = csv::Writer::from_path(file_path.clone()).expect("Error in writer generation");
+        let mut writer = csv::Writer::from_path(file_path.clone())?;
 
-        while let Ok(input_tuple) = current_input {
+        // while let Ok(input_tuple) = current_input {
+        while let Some(input_tuple) = current_input {
             input_line_counter += 1;
-            let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.expect("Blob data is null"));
-            writer.write_record(&[encoded_data]).expect("Error in writer");
+            // let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data.unwrap());
+            let encoded_data = BASE64_STANDARD.encode(input_tuple.blob_data);
+            writer.write_record(&[encoded_data])?;
 
             current_input = specific_program_input::table
             .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
             // TODO: return a good error indicating that no unreserved input was found
-            .first::<SpecificProgramInput>(connection);
+            .first::<SpecificProgramInput>(connection).optional()?;
         }
+        return Ok(());
     }
 
     pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {

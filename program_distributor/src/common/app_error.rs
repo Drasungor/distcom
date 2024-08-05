@@ -13,6 +13,7 @@ pub enum InternalServerErrorType {
     ByteStreamGenerationError(ByteStreamError),
     S3Error(String),
     DatabaseError(String),
+    CsvError(String),
     UnknownError(String),
 }
 
@@ -28,6 +29,7 @@ impl InternalServerErrorType {
             InternalServerErrorType::IOError(io_error) => format!("IO error: {:?}", io_error.to_string()),
             InternalServerErrorType::S3Error(s3_error) => format!("S3 error: {:?}", s3_error),
             InternalServerErrorType::DatabaseError(db_error) => format!("Database error: {:?}", db_error),
+            InternalServerErrorType::CsvError(csv_error) => format!("Database error: {:?}", csv_error),
             InternalServerErrorType::UnknownError(message) => message.clone(),
         }
     }
@@ -42,6 +44,7 @@ pub enum AppErrorType {
     UsernameAlreadyExists,
     RefreshTokenNotfound,
     InvalidToken,
+    EncodingNotBase64,
     InternalServerError(InternalServerErrorType),
 }
 
@@ -68,6 +71,21 @@ impl From<diesel::result::Error> for AppError {
         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::DatabaseError(error.to_string())))
     }
 }
+
+impl From<csv::Error> for AppError {
+    fn from(error: csv::Error) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::CsvError(error.to_string())))
+    }
+}
+
+impl From<base64::DecodeError> for AppError {
+    fn from(error: base64::DecodeError) -> Self {
+        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::CsvError(error.to_string())))
+    }
+}
+
+
+
 // impl From<std::error::Error> for AppError {
 //     fn from(error: ByteStreamError) -> Self {
 //         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
@@ -81,6 +99,7 @@ impl AppErrorType {
             AppErrorType::ProgramNotFound => String::from("PROGRAM_NOT_FOUND"),
             AppErrorType::InputGroupNotFound => String::from("INPUT_GROUP_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
+            AppErrorType::EncodingNotBase64 => String::from("BAD_BASE_64_ENCODING"),
             AppErrorType::UsernameAlreadyExists => String::from("USERNAME_ALREADY_EXISTS"),
             AppErrorType::RefreshTokenNotfound => String::from("REFRESH_TOKEN_NOT_FOUND"),
             AppErrorType::InvalidToken => String::from("INVALID_TOKEN"),
@@ -115,6 +134,10 @@ impl AppError {
             AppErrorType::InputGroupNotFound => {
                 message_text = "Input group not found";
                 status_code = StatusCode::NOT_FOUND;
+            },
+            AppErrorType::EncodingNotBase64 => {
+                message_text = "Input group data is not encoded in base 64";
+                status_code = StatusCode::UNPROCESSABLE_ENTITY;
             },
             AppErrorType::WrongCredentials => {
                 message_text = "Incorrect credentials";
