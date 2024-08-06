@@ -19,3 +19,4 @@ serde = "1.0.200"
 csv = "1.3.0"
 risc0-zkvm = "0.21.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+bytes = "1.7.1"

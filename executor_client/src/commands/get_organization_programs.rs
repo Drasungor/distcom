@@ -1,11 +1,9 @@
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
-use std::time::{SystemTime, Duration};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
-use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
-use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
+use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
+use crate::{common, models::returned_program::{print_programs_list, ReturnedProgram}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -18,7 +16,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a list with information of the chosen organization's programs
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -39,10 +37,20 @@ enum GetProgramsCommands {
         /// Amount of input groups what will be proven for this organization's programs
         #[clap(index = 1)]
         amount: usize,
+
+        /// OPTIONAL: Index of the program that will be executed, if this value is not provided then the command will be
+        /// applied to all of the organization's programs untill the desired executions amount is reached
+        #[clap(index = 2)]
+        index: Option<usize>,
     },
 
 
-    RunAll,
+    RunAll {
+        /// OPTIONAL: Index of the selected program to prove, if no value is provided then all organization's programs are
+        /// executed
+        #[clap(index = 1)]
+        index: Option<usize>,
+    },
 
     /// Goes back to the previous commands selection
     Back,
@@ -53,26 +61,36 @@ enum GetProgramsCommands {
 
 async fn run_all_organization_programs(organization_id: &str) {
     let page_size = common::config::CONFIG_OBJECT.max_page_size;
-    let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+    let mut page_counter = 1;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
     let mut programs_list = programs_page.programs;
 
     while programs_list.len() != 0 {
         for returned_program in programs_list {
-            download_and_run_program(&returned_program).await;
+            run_all_program_inputs(&returned_program).await;
         }
-        programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(1)).await;
+        page_counter += 1;
+        programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
         programs_list = programs_page.programs;
     }
+}
 
+async fn run_all_program_inputs(chosen_program: &ReturnedProgram) {
+    let mut keep_executing_program = true;
+    while keep_executing_program {
+        keep_executing_program = download_and_run_program(chosen_program).await.is_ok();
+    }
 }
 
 pub async fn select_organization_programs(organization_id: &str, first_received_limit: usize, first_received_page: usize) -> bool {
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
-    let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(first_received_page)).await;
+    let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
+    println!("");
     print_programs_list(&programs_page.programs);
 
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -81,21 +99,45 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     GetProgramsCommands::Page{page, limit} => {
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
-                        programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
+                        // programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
-                        let chosen_program = &programs_page.programs[index];
-                        download_and_run_program(chosen_program).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let _ = download_and_run_program(chosen_program).await;
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
                     },
-                    GetProgramsCommands::RunN{amount} => {
-                        run_some_programs(Some(organization_id), amount).await;
+                    GetProgramsCommands::RunN{amount, index} => {
+                        if let Some(index_value) = index {
+                            if (index_value < programs_page.programs.len()) {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_some_program_inputs(chosen_program, amount).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
+                        } else {
+                            run_some_programs(Some(organization_id), amount).await;
+                        }
+                        println!("Finished running all programs")
                     },
-                    GetProgramsCommands::RunAll => {
-                        run_all_organization_programs(organization_id).await;
+                    GetProgramsCommands::RunAll{index} => {
+                        if let Some(index_value) = index {
+                            if index_value < programs_page.programs.len() {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_all_program_inputs(chosen_program).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
+                        } else {
+                            run_all_organization_programs(organization_id).await;
+                        }
+                        println!("Finished running all programs")
                     },
                     GetProgramsCommands::Back => {
                         return true;
-                    },
+                    }, 
                     GetProgramsCommands::Exit => {
                         return false;
                     },
@@ -111,8 +153,8 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     }
                 }
             }
-       };
+        };
+        programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
         print_programs_list(&programs_page.programs);
-
     }    
 }

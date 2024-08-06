@@ -54,7 +54,8 @@ async fn run_commands_loop() {
     let mut should_continue_looping = true;
     // loop {
     while should_continue_looping {
-        println!("Please execute a command");
+        println!("");
+        println!("Please execute a command:");
         let args = process_user_input();
 
         match Args::try_parse_from(args.iter()) {
@@ -83,7 +84,7 @@ async fn run_commands_loop() {
                     }
                 }
             }
-       };
+        };
     }
 
 }

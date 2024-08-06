@@ -81,13 +81,13 @@ async fn start_program_execution() {
     let mut should_continue_looping = true;
     // loop {
     while should_continue_looping {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
             Ok(cli) => {
                 match cli.cmd {
                     GetProgramsCommands::Upload{
-                        // folder_path,
                         folder_name,
                         name,
                         description,
@@ -100,18 +100,25 @@ async fn start_program_execution() {
                             description,
                             execution_timeout,
                         };
-
                         let folder_path = format!("./uploads/{folder_name}");
-                        // TODO: manage this error correctly
-                        let program_id = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await.expect("Error in methods upload");
-                        let program_folder = format!("./programs_data/{program_id}");
-                        create_folder(&program_folder);
+                        let upload_methods_result = write_guard.upload_methods(Path::new(&folder_path), uploaded_program_args).await;
+                        match upload_methods_result {
+                            Ok(program_id) => {
+                                let program_folder = format!("./programs_data/{program_id}");
+                                create_folder(&program_folder);
+                            },
+                            Err(received_error) => {
+                                panic!("Error while uploading methods: {:?}", received_error);
+                            }
+                        }
+
                     },
                     GetProgramsCommands::Template => {
                         let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-
-                        // TODO: manage this error correctly
-                        write_guard.download_template_methods(Path::new("./downloads/template")).await.expect("Error in template download");
+                        let download_template_result = write_guard.download_template_methods(Path::new("./downloads/template")).await;
+                        if let Err(received_error) = download_template_result {
+                            panic!("Error while downloading template methods: {:?}", received_error);
+                        }
                     },
                     GetProgramsCommands::MyPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
@@ -137,7 +144,6 @@ async fn start_program_execution() {
                 }
             }
        };
-        // print_programs_list(&programs_page.data.programs);
 
     }    
 }

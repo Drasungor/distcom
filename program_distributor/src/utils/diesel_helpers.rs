@@ -15,3 +15,11 @@ pub fn general_manage_diesel_task_result<T>(result: Result<Result<T, diesel::res
         Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
     }
 }
+
+pub fn manage_converted_dal_result<T>(result: Result<Result<T, AppError>, BlockingError>) -> Result<T, AppError> {
+    return match result {
+        Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
+        Ok(Ok(organization_id)) => Ok(organization_id),
+        Ok(Err(err)) => Err(err),
+    };
+}

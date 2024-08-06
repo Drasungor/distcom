@@ -1,11 +1,9 @@
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
-use std::time::{SystemTime, Duration};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
-use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_programs};
-use crate::{common::{self, communication::EndpointResult}, models::{returned_organization::ReturnedOrganization, returned_program::{print_programs_list, ReturnedProgram}}, services::program_distributor::{PagedPrograms, UploadedProof}, utils::process_inputs::process_user_input};
+use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
+use crate::{models::returned_program::print_programs_list, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -18,7 +16,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a list with information of programs regardless of their uploader
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -39,6 +37,11 @@ enum GetProgramsCommands {
         /// Amount of executions that will be proven
         #[clap(index = 1)]
         amount: usize,
+
+        /// OPTIONAL: Program chosen for execution, if no value is provided then it is applied to all the system's programs
+        /// until the desired executions amount is reached
+        #[clap(index = 2)]
+        index: Option<usize>,
     },
 
     /// Goes back to the previous commands selection
@@ -52,9 +55,11 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
+    println!("");
     print_programs_list(&programs_page.programs);
 
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -64,14 +69,28 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
 
-                        programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
+                        // programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
-                        let chosen_program = &programs_page.programs[index];
-                        download_and_run_program(chosen_program).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let _ = download_and_run_program(chosen_program).await;
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
                     },
-                    GetProgramsCommands::RunN{amount} => {
-                        run_some_programs(None, amount).await;
+                    GetProgramsCommands::RunN{amount, index} => {
+                        if let Some(index_value) = index {
+                            if index_value < programs_page.programs.len() {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_some_program_inputs(chosen_program, amount).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
+                        } else {
+                            run_some_programs(None, amount).await;
+                        }
+                        println!("Finished running all programs")
                     },
                     GetProgramsCommands::Back => {
                         return true;
@@ -91,8 +110,8 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                     }
                 }
             }
-       };
+        };
+        programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
         print_programs_list(&programs_page.programs);
-
     }    
 }

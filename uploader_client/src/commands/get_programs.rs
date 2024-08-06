@@ -14,7 +14,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a page of the user's uploaded programs
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -72,16 +72,15 @@ async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
     }
 }
 
-// TODO: Update this so that the page size is used
 pub async fn select_my_programs(first_received_limit: usize, first_received_page: usize) -> bool {
-    // let mut should_continue_looping = true;
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_programs(used_limit, used_page).await;
+    println!("");
     print_programs_list(&programs_page.programs);
 
-    // while should_continue_looping {
     loop {
+        println!("");
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -90,28 +89,31 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                     GetProgramsCommands::Page{page, limit} => {
                         used_limit = process_previously_set_page_size(used_limit, limit);
                         used_page = page;
-                        programs_page = retrieve_my_programs(used_limit, used_page).await;
+                        // programs_page = retrieve_my_programs(used_limit, used_page).await;
                     },
                     GetProgramsCommands::PostInput{index, input_file_name} => {
-                        let chosen_program = &programs_page.programs[index];
-                        let program_id = &chosen_program.program_id;
-                        let input_file_path_string = format!("./uploads/{input_file_name}");
-                        let input_file_path = Path::new(&input_file_path_string);
-                        
-                        if input_file_path.is_dir() {
-                            upload_inputs_folder(program_id, input_file_path).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let program_id = &chosen_program.program_id;
+                            let input_file_path_string = format!("./uploads/{input_file_name}");
+                            let input_file_path = Path::new(&input_file_path_string);
+                            
+                            if input_file_path.is_dir() {
+                                upload_inputs_folder(program_id, input_file_path).await;
+                            } else {
+                                manage_input_group_upload(program_id, input_file_path).await;
+                            }
                         } else {
-                            manage_input_group_upload(program_id, input_file_path).await;
+                            println!("Index out of bounds, please choose one of the provided indexes.");
                         }
                     },
                     GetProgramsCommands::Back => {
-                        // should_continue_looping = false;
                         return true;
                     },
                     GetProgramsCommands::Exit => {
-                        // should_continue_looping = false;
                         return false;
                     },
+                    // Add commands for program deletion
                 }
             },
             Err(err) => {
@@ -125,6 +127,7 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                 }
             }
         };
+        programs_page = retrieve_my_programs(used_limit, used_page).await;
         print_programs_list(&programs_page.programs);
 
     }    

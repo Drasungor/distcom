@@ -11,7 +11,7 @@ pub struct ReturnedProgram {
 }
 
 pub fn print_programs_list(programs: &Vec<ReturnedProgram>) {
-    if (programs.len() == 0) {
+    if programs.len() == 0 {
         println!("No programs remaining");
     }
     let mut index = 0;

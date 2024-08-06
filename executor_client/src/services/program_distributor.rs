@@ -50,8 +50,7 @@ impl ProgramDistributorService {
         }
     }
 
-    // TODO: make it return a result that contains the struct instead of the array directly
-    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> PagedOrganizations {
+    pub async fn get_organizations(&self, limit: Option<usize>, page: Option<usize>) -> Result<PagedOrganizations, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if let Some(limit_value) = limit {
             params.push(("limit", limit_value))
@@ -60,17 +59,22 @@ impl ProgramDistributorService {
             params.push(("page", page_value))
         }
         let get_organizations_url = format!("{}/account/organizations", self.base_url);
-        let response = self.client.get(get_organizations_url).query(&params).send().await.expect("Error in get");
+        let get_organizations_request = self.client.get(get_organizations_url).query(&params);
+        // let response = self.client.get(get_organizations_url).query(&params).send().await.expect("Error in get");
         
-        if response.status().is_success() {
-            let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
-            return get_organizations_response.data;
-        } else {
-            panic!("Error in organizations get");
-        }
+        // make_request_with_response_body
+        let response = self.make_request_with_response_body::<PagedOrganizations>(get_organizations_request).await?;
+        return Ok(response.data);
+
+        // if response.status().is_success() {
+        //     let get_organizations_response: EndpointResult<PagedOrganizations> = response.json().await.expect("Error deserializing JSON");
+        //     return get_organizations_response.data;
+        // } else {
+        //     panic!("Error in organizations get");
+        // }
     }
 
-    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
+    pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if let Some(limit_value) = limit {
             params.push(("limit", limit_value))
@@ -79,16 +83,23 @@ impl ProgramDistributorService {
             params.push(("page", page_value))
         }
         let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
-        let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
-        if response.status().is_success() {
-            let get_organization_programs_response: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            return get_organization_programs_response.data;
-        } else {
-            panic!("Error in programs get");
-        }
+        let get_organization_programs_request = self.client.get(get_organization_programs_url).query(&params);
+        let response = self.make_request_with_response_body::<PagedPrograms>(get_organization_programs_request).await?;
+        return Ok(response.data);
+
+
+        // let response = self.client.get(get_organization_programs_url).query(&params).send().await.expect("Error in get");
+        // if response.status().is_success() {
+        //     let get_organization_programs_response: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
+        //     return get_organization_programs_response.data;
+        // } else {
+        //     panic!("Error in programs get");
+        // }
+
+        
     }
     
-    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> PagedPrograms {
+    pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if let Some(limit_value) = limit {
             params.push(("limit", limit_value))
@@ -97,52 +108,91 @@ impl ProgramDistributorService {
             params.push(("page", page_value))
         }
         let get_general_programs_url = format!("{}/program/all", self.base_url);
-        let response = self.client.get(get_general_programs_url).query(&params).send().await.expect("Error in get");
+        let get_general_programs_request = self.client.get(get_general_programs_url).query(&params);
+        let response = self.make_request_with_response_body::<PagedPrograms>(get_general_programs_request).await?;
+        return Ok(response.data);
+
+
+
+        // let response = self.client.get(get_general_programs_url).query(&params).send().await.expect("Error in get");
     
-        // Ensure the request was successful (status code 200)
-        if response.status().is_success() {
-            let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
-            return programs.data;
-        } else {
-            panic!("Error in programs get: {:?}", response);
-        }
+        // // Ensure the request was successful (status code 200)
+        // if response.status().is_success() {
+        //     let programs: EndpointResult<PagedPrograms> = response.json().await.expect("Error deserializing JSON");
+        //     return programs.data;
+        // } else {
+        //     panic!("Error in programs get: {:?}", response);
+        // }
     }
     
-    pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
+    // pub async fn get_program_and_input_group(&self, program_id: &String) -> ProgramWithInputFiles {
+    pub async fn get_program_and_input_group(&self, program_id: &String) -> Result<ProgramWithInputFiles, EndpointError> {
         let get_program_and_input_group_url = format!("{}/program/program-and-inputs/{}", self.base_url, program_id);
-        let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
-        if response.status().is_success() {
-            // Open a file to write the downloaded content
-            let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
-            file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
-            decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
-    
-            let mut csv_file_name: Option<String> = None;
-            let mut tar_file_name: Option<String> = None;
-    
-            // We scan the folder for the program .tar file
-            let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
-            for entry in folder_contents {
-                let unwrapped_entry = entry.expect("Error in folder entry processing");
-                let path = unwrapped_entry.path();
-                let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
-                let path_string = path.to_str().expect("Error in conversion from path to string");
-                if (entry_name.contains(".tar")) {
-                    println!("tar path_string: {}", path_string);
-                    decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
-                    tar_file_name = Some(entry_name.clone());
-                }
-                if (entry_name.contains(".csv")) {
-                    csv_file_name = Some(entry_name.clone());
-                }
+        // let response = reqwest::get(get_program_and_input_group_url).await.expect("Error in get");
+
+        let received_bytes = self.make_request_with_file_response(self.client.get(get_program_and_input_group_url)).await?;
+
+        // Open a file to write the downloaded content
+        let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
+        file.write_all(received_bytes.as_ref()).expect("Errors in file write");
+        decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+
+        let mut csv_file_name: Option<String> = None;
+        let mut tar_file_name: Option<String> = None;
+
+        // We scan the folder for the program .tar file
+        let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
+        for entry in folder_contents {
+            let unwrapped_entry = entry.expect("Error in folder entry processing");
+            let path = unwrapped_entry.path();
+            let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
+            let path_string = path.to_str().expect("Error in conversion from path to string");
+            if (entry_name.contains(".tar")) {
+                println!("tar path_string: {}", path_string);
+                decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+                tar_file_name = Some(entry_name.clone());
             }
-            return ProgramWithInputFiles {
-                input_file_name: csv_file_name.expect("No csv input file was received"),
-                program_file_name: tar_file_name.expect("No tar program file was received"),
+            if (entry_name.contains(".csv")) {
+                csv_file_name = Some(entry_name.clone());
             }
-        } else {
-            panic!("Failed to download file: {}", response.status());
         }
+        return Ok(ProgramWithInputFiles {
+            input_file_name: csv_file_name.expect("No csv input file was received"),
+            program_file_name: tar_file_name.expect("No tar program file was received"),
+        });
+
+        // if response.status().is_success() {
+        //     // Open a file to write the downloaded content
+        //     let mut file = File::create("downloaded_program_with_input.tar").expect("Error in file creation");
+        //     file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+        //     decompress_tar("./downloaded_program_with_input.tar", "./program_with_input").expect("Error in downloaded file decompression");
+    
+        //     let mut csv_file_name: Option<String> = None;
+        //     let mut tar_file_name: Option<String> = None;
+    
+        //     // We scan the folder for the program .tar file
+        //     let folder_contents = fs::read_dir("./program_with_input").expect("Error in ");
+        //     for entry in folder_contents {
+        //         let unwrapped_entry = entry.expect("Error in folder entry processing");
+        //         let path = unwrapped_entry.path();
+        //         let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
+        //         let path_string = path.to_str().expect("Error in conversion from path to string");
+        //         if (entry_name.contains(".tar")) {
+        //             println!("tar path_string: {}", path_string);
+        //             decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
+        //             tar_file_name = Some(entry_name.clone());
+        //         }
+        //         if (entry_name.contains(".csv")) {
+        //             csv_file_name = Some(entry_name.clone());
+        //         }
+        //     }
+        //     return ProgramWithInputFiles {
+        //         input_file_name: csv_file_name.expect("No csv input file was received"),
+        //         program_file_name: tar_file_name.expect("No tar program file was received"),
+        //     }
+        // } else {
+        //     panic!("Failed to download file: {}", response.status());
+        // }
     }
 
     pub async fn upload_proof(&self, proof_file_path: &Path, uploaded_proof_data: UploadedProof) -> Result<(), EndpointError> {
@@ -173,12 +223,12 @@ impl ProgramDistributorService {
     // we need the same request from request stored in request_clone but built without the try_clone function
     async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&self, request: RequestBuilder
                 ) -> Result<EndpointResult<T>, EndpointError> {
-        return self.wrapper_make_request_with_response_body::<T>(request).await;
+        return self.make_request_with_response_body::<T>(request).await;
     }
 
-    async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
+    async fn make_request_with_response_body<T: DeserializeOwned>(&self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
 
-        let response = request.send().await.expect("Error in get");
+        let response = request.send().await.expect("Error in request making");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
@@ -202,6 +252,16 @@ impl ProgramDistributorService {
             //         return Err(error_response);
             //     }
             // }
+        }
+    }
+
+    async fn make_request_with_file_response(&self, request: RequestBuilder) -> Result<bytes::Bytes, EndpointError> {
+        let response = request.send().await.expect("Error in request making");
+        if response.status().is_success() {
+            return Ok(response.bytes().await.expect("Error while getting request bytes"));
+        } else {
+            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
+            return Err(endpoint_response);
         }
     }
 

@@ -13,7 +13,7 @@ struct OrganizationsArgs {
 enum GetOrganizationsCommands {
     /// Displays a list with the information of a page of the organizations stored in the program distributor
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -41,11 +41,17 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
-    let mut organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+    let mut organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+    if let Err(organizations_page_err) = organizations_page_result {
+        panic!("Error in get organizations: {:?}", organizations_page_err);
+    }
+    let mut organizations_page = organizations_page_result.unwrap();
+    println!("");
     print_organizations_list(&organizations_page.organizations);
 
     loop { 
-        println!("Please execute a command");
+        println!("");
+        println!("Please execute a command:");
         let args = process_user_input();
 
         match OrganizationsArgs::try_parse_from(args.iter()) {
@@ -54,14 +60,21 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                     GetOrganizationsCommands::Page{page, limit} => {
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
-                        // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        organizations_page = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
-                        
+                        // // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
+                        // organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+                        // if let Err(organizations_page_err) = organizations_page_result {
+                        //     panic!("Error in get organizations: {:?}", organizations_page_err);
+                        // }
+                        // organizations_page = organizations_page_result.unwrap();
                     },
                     GetOrganizationsCommands::Choose{index} => {
-                        let chosen_organization = &organizations_page.organizations[index];
-                        if !select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await {
-                            return false;
+                        if index < organizations_page.organizations.len() {
+                            let chosen_organization = &organizations_page.organizations[index];
+                            if !select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await {
+                                return false;
+                            }
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
                         }
                     },
                     GetOrganizationsCommands::Back => {
@@ -83,6 +96,11 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                 }
             }
         };
+        organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
+        if let Err(organizations_page_err) = organizations_page_result {
+            panic!("Error in get organizations: {:?}", organizations_page_err);
+        }
+        organizations_page = organizations_page_result.unwrap();
         print_organizations_list(&organizations_page.organizations);
     }
 }
