@@ -2,7 +2,7 @@ use std::path::Path;
 
 use clap::{error::ErrorKind, Parser, Subcommand};
 
-use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
+use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{process_inputs::{process_previously_set_page_size, process_user_input}, verifying::{retrieve_my_proven_programs, verify_all_proven_executions, verify_some_proven_executions}}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -87,8 +87,11 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                         }
                     },
                     GetProvenProgramsCommands::VerifyN {verified_amount} => {
-
-                    }
+                        verify_some_proven_executions(verified_amount).await;
+                    },
+                    GetProvenProgramsCommands::VerifyAll => {
+                        verify_all_proven_executions().await;
+                    },
                     GetProvenProgramsCommands::Back => {
                         return true;
                     },

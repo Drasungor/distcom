@@ -62,6 +62,22 @@ pub async fn verify_all_program_proven_executions(program_id: &str) {
     }
 }
 
+pub async fn verify_all_proven_executions() {
+    let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
+    let mut should_continue_verification = true;
+
+    while should_continue_verification {
+        let proven_programs_page = retrieve_my_proven_programs(max_page_size, 1).await;
+        let proven_programs = proven_programs_page.programs;
+        if proven_programs.len() != 0 {
+            let program_id = &proven_programs[0].program_id;
+            let _ = verify_all_program_proven_executions(&program_id).await;
+        } else {
+            should_continue_verification = false;
+        }
+    }
+}
+
 pub async fn verify_some_program_proven_executions(program_id: &str, proofs_amount: usize) -> usize {
     let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
     let mut input_groups_page = retrieve_proven_inputs(program_id, max_page_size, 1).await;
@@ -82,14 +98,25 @@ pub async fn verify_some_program_proven_executions(program_id: &str, proofs_amou
     return verified_proofs;
 }
 
-async fn retrieve_my_proven_programs(limit: usize, page: usize) -> PagedPrograms {
+pub async fn retrieve_my_proven_programs(limit: usize, page: usize) -> PagedPrograms {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
     return write_guard.get_my_proven_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs");
 }
 
 pub async fn verify_some_proven_executions(proofs_amount: usize) {
     let max_page_size = common::config::CONFIG_OBJECT.max_page_size;
-    let mut pending_proofs = proofs_amount;
-    let proven_programs = retrieve_my_proven_programs(max_page_size, 1).await;
-    // verify_some_program_proven_executions(program_id: &str, pending_proofs);
+    let mut executed_proofs = 0;
+    let mut should_continue_verification = true;
+
+    while should_continue_verification && executed_proofs < proofs_amount {
+        let proven_programs_page = retrieve_my_proven_programs(max_page_size, 1).await;
+        let proven_programs = proven_programs_page.programs;
+        if proven_programs.len() != 0 {
+            let program_id = &proven_programs[0].program_id;
+            let last_executed_verifications_amount = verify_some_program_proven_executions(&program_id, proofs_amount - executed_proofs).await;
+            executed_proofs += last_executed_verifications_amount;
+        } else {
+            should_continue_verification = false;
+        }
+    }
 }
