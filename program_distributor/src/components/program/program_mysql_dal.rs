@@ -98,16 +98,14 @@ impl ProgramMysqlDal {
         };
 
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
-        // let mut connection: Result<PooledConnection<ConnectionManager<MysqlConnection>>, diesel::r2d2::Error> = crate::common::config::CONNECTION_POOL.get();
-        // // : r2d2::Error
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-
-            // TODO: Check why when no value is found we do not return an error, probably not returning a value is not viewed as an
-            // error, but as a valid result
-            program::table
+            let found_program_option: Option<StoredProgram> = program::table
                 .filter(program::program_id.eq(cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
-                .first::<StoredProgram>(connection)?;
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
 
             diesel::insert_into(program_input_group::table)
                     .values(&program_input_group)
@@ -141,11 +139,14 @@ impl ProgramMysqlDal {
         // connection.transaction::<_, diesel::result::Error, _>(|connection| {
         connection.transaction::<_, AppError, _>(|connection| {
 
-            let found_program = program::table
-            .filter(program::program_id.eq(cloned_program_id))
-            .first::<StoredProgram>(connection)?;
-
-            return Ok(found_program.organization_id);
+            let found_program_option: Option<StoredProgram> = program::table
+                .filter(program::program_id.eq(cloned_program_id))
+                .first::<StoredProgram>(connection).optional()?;
+            if let Some(found_program_value) = found_program_option {
+                return Ok(found_program_value.organization_id);
+            } else {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
         })
         }).await;
         // return match result {
@@ -351,10 +352,12 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
 
-            let found_program = program::table
+            let found_program_option: Option<StoredProgram> = program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
-                .first::<StoredProgram>(connection)?;
-
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
 
             diesel::update(program_input_group::table.filter(
                                 program_input_group::input_group_id.eq(&cloned_input_group_id).
@@ -379,15 +382,21 @@ impl ProgramMysqlDal {
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
 
-            let found_program = program::table
+            let found_program_option: Option<StoredProgram> = program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
-                .first::<StoredProgram>(connection)?;
-
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
 
             diesel::delete(program_input_group::table.filter(
-                                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
-                                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
-                    .execute(connection)?;
+                program_input_group::input_group_id.eq(cloned_input_group_id.clone()).
+                and(program_input_group::program_id.eq(cloned_program_id.clone()))))
+                .execute(connection)?;
+
+            diesel::delete(specific_program_input::table.filter(
+                specific_program_input::input_group_id.eq(cloned_input_group_id.clone())))
+                .execute(connection)?;
             return Ok(());
         })
         }).await;
@@ -471,9 +480,12 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-            program::table
+            let found_program_option: Option<StoredProgram> = program::table
                 .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
-                .first::<StoredProgram>(connection)?;
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
 
             let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
                 .filter(program_input_group::proven_datetime.is_not_null().and(program_input_group::program_id.eq(&cloned_program_id)))
