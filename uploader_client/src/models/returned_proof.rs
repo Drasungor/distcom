@@ -11,7 +11,7 @@ pub struct ReturnedProof {
 }
 
 pub fn print_proofs_list(proofs: &Vec<ReturnedProof>) {
-    if (proofs.len() == 0) {
+    if proofs.len() == 0 {
         println!("No proofs remaining");
     }
     let mut index = 0;

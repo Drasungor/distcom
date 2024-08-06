@@ -69,7 +69,7 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
 
-                        programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
+                        // programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
                         if index < programs_page.programs.len() {
@@ -111,6 +111,7 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                 }
             }
         };
+        programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
         print_programs_list(&programs_page.programs);
     }    
 }
