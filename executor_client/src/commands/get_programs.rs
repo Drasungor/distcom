@@ -16,7 +16,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a list with information of programs regardless of their uploader
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -38,9 +38,9 @@ enum GetProgramsCommands {
         #[clap(index = 1)]
         amount: usize,
 
-        /// Program chosen for execution, if no value is provided then it is applied to all the system's programs
+        /// OPTIONAL: Program chosen for execution, if no value is provided then it is applied to all the system's programs
         /// until the desired executions amount is reached
-        #[clap(index = 1)]
+        #[clap(index = 2)]
         index: Option<usize>,
     },
 
@@ -72,15 +72,25 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                         programs_page = retrieve_programs(None, Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
-                        let chosen_program = &programs_page.programs[index];
-                        let _ = download_and_run_program(chosen_program).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let _ = download_and_run_program(chosen_program).await;
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
                     },
                     GetProgramsCommands::RunN{amount, index} => {
                         if let Some(index_value) = index {
-                            let chosen_program = &programs_page.programs[index_value];
-                            run_some_program_inputs(chosen_program, amount).await;
+                            if index_value < programs_page.programs.len() {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_some_program_inputs(chosen_program, amount).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
+                        } else {
+                            run_some_programs(None, amount).await;
                         }
-                        run_some_programs(None, amount).await;
+                        println!("Finished running all programs")
                     },
                     GetProgramsCommands::Back => {
                         return true;

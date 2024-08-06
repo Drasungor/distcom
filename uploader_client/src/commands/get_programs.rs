@@ -14,7 +14,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a page of the user's uploaded programs
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -92,15 +92,19 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         programs_page = retrieve_my_programs(used_limit, used_page).await;
                     },
                     GetProgramsCommands::PostInput{index, input_file_name} => {
-                        let chosen_program = &programs_page.programs[index];
-                        let program_id = &chosen_program.program_id;
-                        let input_file_path_string = format!("./uploads/{input_file_name}");
-                        let input_file_path = Path::new(&input_file_path_string);
-                        
-                        if input_file_path.is_dir() {
-                            upload_inputs_folder(program_id, input_file_path).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let program_id = &chosen_program.program_id;
+                            let input_file_path_string = format!("./uploads/{input_file_name}");
+                            let input_file_path = Path::new(&input_file_path_string);
+                            
+                            if input_file_path.is_dir() {
+                                upload_inputs_folder(program_id, input_file_path).await;
+                            } else {
+                                manage_input_group_upload(program_id, input_file_path).await;
+                            }
                         } else {
-                            manage_input_group_upload(program_id, input_file_path).await;
+                            println!("Index out of bounds, please choose one of the provided indexes.");
                         }
                     },
                     GetProgramsCommands::Back => {

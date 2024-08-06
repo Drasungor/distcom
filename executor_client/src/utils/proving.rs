@@ -36,9 +36,11 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
         
             if output.status.success() {
                 let after_proof_time = SystemTime::now();
+                println!("");
                 println!("Proof generated successfully.");
                 read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
                 println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
+                println!("");
                 let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names_value.program_file_name));
             } else {
                 println!("Process failed.");
@@ -72,12 +74,13 @@ pub async fn retrieve_programs(organization_option: Option<&str>, limit: Option<
 // received amount of program executions are proven
 pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: usize) {
     let page_size: usize = common::config::CONFIG_OBJECT.max_page_size;
-    let mut programs_page = retrieve_programs(organization_id, Some(page_size), Some(1)).await;
+    let mut page_counter = 1;
+    let mut programs_page = retrieve_programs(organization_id, Some(page_size), Some(page_counter)).await;
     let mut programs_list = programs_page.programs;
     let mut programs_counter = 0;
     while programs_list.len() != 0 && programs_counter < programs_amount {
         let mut current_page_iterator = 0;
-        while current_page_iterator < programs_list.len() && programs_counter < programs_amount {
+        while current_page_iterator < programs_list.len() && programs_counter < programs_amount && current_page_iterator < programs_list.len() {
             let mut keep_same_program = true;
             let returned_program = &programs_list[current_page_iterator];
             while keep_same_program && programs_counter < programs_amount {
@@ -88,7 +91,8 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
             }
             current_page_iterator += 1;
         }
-        programs_page = retrieve_programs(organization_id, Some(page_size), Some(1)).await;
+        page_counter += 1;
+        programs_page = retrieve_programs(organization_id, Some(page_size), Some(page_counter)).await;
         programs_list = programs_page.programs;
     }
 }

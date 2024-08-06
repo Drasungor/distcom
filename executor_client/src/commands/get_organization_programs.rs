@@ -16,7 +16,7 @@ struct ProgramsArgs {
 enum GetProgramsCommands {
     /// Displays a list with information of the chosen organization's programs
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -38,15 +38,15 @@ enum GetProgramsCommands {
         #[clap(index = 1)]
         amount: usize,
 
-        /// Index of the program that will be executed, if this value is not provided then the command will be
+        /// OPTIONAL: Index of the program that will be executed, if this value is not provided then the command will be
         /// applied to all of the organization's programs untill the desired executions amount is reached
-        #[clap(index = 1)]
+        #[clap(index = 2)]
         index: Option<usize>,
     },
 
 
     RunAll {
-        /// Index of the selected program to prove, if no value is provided then all organization's programs are
+        /// OPTIONAL: Index of the selected program to prove, if no value is provided then all organization's programs are
         /// executed
         #[clap(index = 1)]
         index: Option<usize>,
@@ -102,23 +102,38 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                         programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
                     },
                     GetProgramsCommands::Run{index} => {
-                        let chosen_program = &programs_page.programs[index];
-                        let _ = download_and_run_program(chosen_program).await;
+                        if index < programs_page.programs.len() {
+                            let chosen_program = &programs_page.programs[index];
+                            let _ = download_and_run_program(chosen_program).await;
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
                     },
                     GetProgramsCommands::RunN{amount, index} => {
                         if let Some(index_value) = index {
-                            let chosen_program = &programs_page.programs[index_value];
-                            run_some_program_inputs(chosen_program, amount).await;
+                            if (index_value < programs_page.programs.len()) {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_some_program_inputs(chosen_program, amount).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
+                        } else {
+                            run_some_programs(Some(organization_id), amount).await;
                         }
-                        run_some_programs(Some(organization_id), amount).await;
+                        println!("Finished running all programs")
                     },
                     GetProgramsCommands::RunAll{index} => {
                         if let Some(index_value) = index {
-                            let chosen_program = &programs_page.programs[index_value];
-                            run_all_program_inputs(chosen_program).await;
+                            if index_value < programs_page.programs.len() {
+                                let chosen_program = &programs_page.programs[index_value];
+                                run_all_program_inputs(chosen_program).await;
+                            } else {
+                                println!("Index out of bounds, please choose one of the provided indexes.");
+                            }
                         } else {
                             run_all_organization_programs(organization_id).await;
                         }
+                        println!("Finished running all programs")
                     },
                     GetProgramsCommands::Back => {
                         return true;

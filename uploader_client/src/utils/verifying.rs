@@ -29,10 +29,12 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
     // println!("Program output: {:?}", output);
 
     if output.status.success() {
+        println!("");
         println!("Proof verified successfully.");
         // println!("Output: {}", String::from_utf8(output.stdout).unwrap());
         // println!("Stderr: {}", String::from_utf8(output.stderr).unwrap());
         write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
+        println!("");
     } else {
         println!("Process failed.");
         println!("Error output: {}", String::from_utf8(output.stderr).unwrap());

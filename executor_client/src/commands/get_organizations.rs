@@ -13,7 +13,7 @@ struct OrganizationsArgs {
 enum GetOrganizationsCommands {
     /// Displays a list with the information of a page of the organizations stored in the program distributor
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -68,9 +68,13 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                         organizations_page = organizations_page_result.unwrap();
                     },
                     GetOrganizationsCommands::Choose{index} => {
-                        let chosen_organization = &organizations_page.organizations[index];
-                        if !select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await {
-                            return false;
+                        if index < organizations_page.organizations.len() {
+                            let chosen_organization = &organizations_page.organizations[index];
+                            if !select_organization_programs(&chosen_organization.organization_id, used_limit, 1).await {
+                                return false;
+                            }
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
                         }
                     },
                     GetOrganizationsCommands::Back => {

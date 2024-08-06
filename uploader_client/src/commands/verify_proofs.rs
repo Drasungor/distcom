@@ -13,7 +13,7 @@ struct ProgramsArgs {
 enum GetProofsCommands {
     /// Displays a page of the selected program's proven executions
     Page {
-        /// Amount displayed
+        /// OPTIONAL: Amount displayed
         #[clap(short = 'l', long = "limit")]
         limit: Option<usize>,
 
@@ -66,14 +66,20 @@ pub async fn select_proven_inputs(program_id: &str, first_received_limit: usize,
                         used_limit = process_previously_set_page_size(used_limit, limit);
                     },
                     GetProofsCommands::Verify{index} => {
-                        let chosen_input_group = &input_groups_page.program_input_groups[index];
-                        let _ = verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await;
+                        if index < input_groups_page.program_input_groups.len() {
+                            let chosen_input_group = &input_groups_page.program_input_groups[index];
+                            let _ = verify_proven_execution(&chosen_input_group.program_id, &chosen_input_group.input_group_id).await;
+                        } else {
+                            println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
                     },
                     GetProofsCommands::VerifyN {verified_amount} => {
                         verify_some_program_proven_executions(program_id, verified_amount).await;
+                        println!("Finished verifying all programs");
                     },
                     GetProofsCommands::VerifyAll => {
                         verify_all_program_proven_executions(program_id).await;
+                        println!("Finished verifying all programs");
                     },
                     GetProofsCommands::Back => {
                         return true;
