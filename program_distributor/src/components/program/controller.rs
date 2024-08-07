@@ -88,7 +88,7 @@ impl ProgramController {
 
         let file_path = format!("./uploads/{}", file_name);
         let add_program_input_group_result = ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
-        if (add_program_input_group_result.is_err()) {
+        if add_program_input_group_result.is_err() {
             return AppHttpResponseBuilder::get_http_response(add_program_input_group_result);
         }
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
@@ -163,6 +163,17 @@ impl ProgramController {
         let organization_id = &jwt_payload.organization_id;
 
         let confirm_proof_validity_response = ProgramService::confirm_proof_validity(&organization_id, &program_id, &input_group_id).await;
+
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+
+            // Even if the aws deletion fails we dont return failure since for the user it will seem like everything worked fine,
+            // we can manage the deletion in the error case manually
+            let proof_deletion_result = read_guard.delete_proof(organization_id, &program_id, &input_group_id).await;
+            if let Err(err) = proof_deletion_result {
+                println!("Error in proof deletion: {}", err);
+            }
+        }
 
         return AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response);
     }
