@@ -1,5 +1,5 @@
 use clap::{error::ErrorKind, Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use crate::{common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
 
@@ -43,12 +43,12 @@ enum GetProgramsCommands {
 
 async fn retrieve_my_programs(limit: usize, page: usize) -> PagedPrograms {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.get_my_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs");
+    write_guard.get_my_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs")
 }
 
 async fn post_input_group(program_id: &str, uploaded_input_group_file_path: &Path) -> String {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.upload_input_group(program_id, uploaded_input_group_file_path).await.expect("Error while uploading program input group");
+    write_guard.upload_input_group(program_id, uploaded_input_group_file_path).await.expect("Error while uploading program input group")
 }
 
 async fn manage_input_group_upload(program_id: &str, uploaded_input_group_file_path: &Path) {
@@ -76,11 +76,11 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_programs(used_limit, used_page).await;
-    println!("");
+    println!();
     print_programs_list(&programs_page.programs);
 
     loop {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -118,7 +118,7 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

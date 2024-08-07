@@ -31,8 +31,8 @@ fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
 fn get_database_connection_url(config: &Config) -> String {
     let url_env_variable = env::var("program_distributor_url");
     if let Ok(ok_env_url) = url_env_variable {
-        return ok_env_url;
+        ok_env_url
     } else {
-        return config.program_distributor_url.clone();
+        config.program_distributor_url.clone()
     }
 }

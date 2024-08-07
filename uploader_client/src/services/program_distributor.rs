@@ -95,7 +95,7 @@ impl ProgramDistributorService {
 
         let _ = fs::remove_file(downloaded_file_path);
 
-        return Ok(());
+        Ok(())
     }
 
     pub async fn download_proof(&mut self, program_id: &str, input_group_id: &str, download_path: &Path) -> Result<(), EndpointError> {
@@ -108,7 +108,7 @@ impl ProgramDistributorService {
 
         let mut file = File::create(download_path_str).expect("Error in file creation");
         file.write_all(bytes.as_ref()).expect("Errors in file write");
-        return Ok(());
+        Ok(())
     }
 
     pub async fn get_my_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
@@ -122,7 +122,7 @@ impl ProgramDistributorService {
         let get_my_programs_url = format!("{}/program/mine", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
         let get_my_programs_response = self.make_request_with_response_body::<PagedPrograms>(get_my_programs_request_builder).await?;
-        return Ok(get_my_programs_response.data);
+        Ok(get_my_programs_response.data)
     }
 
     pub async fn get_program_proven_inputs(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
@@ -136,7 +136,7 @@ impl ProgramDistributorService {
         let get_my_programs_url = format!("{}/program/proofs/{program_id}", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
         let get_my_programs_response = self.make_request_with_response_body::<PagedProgramInputGroups>(get_my_programs_request_builder).await?;
-        return Ok(get_my_programs_response.data);
+        Ok(get_my_programs_response.data)
     }
 
     pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
@@ -150,7 +150,7 @@ impl ProgramDistributorService {
         let get_my_proven_programs_url = format!("{}/program/proofs", self.base_url);
         let get_my_proven_programs_request_builder = self.client.get(get_my_proven_programs_url).query(&params);
         let get_my_proven_programs_response = self.make_request_with_response_body::<PagedPrograms>(get_my_proven_programs_request_builder).await?;
-        return Ok(get_my_proven_programs_response.data);
+        Ok(get_my_proven_programs_response.data)
     }
 
     pub async fn upload_methods(&mut self, upload_folder_path: &Path, uploaded_program: UploadedProgram) -> Result<String, EndpointError> {
@@ -179,7 +179,7 @@ impl ProgramDistributorService {
         let uploaded_program_data = self.make_request_with_stream_upload_and_response_body::<UploadedProgramReturnedData>(
                                                                 post_methods_request_builder, post_methods_request_builder_clone).await?;
         let _ = fs::remove_file(compressed_folder_path);
-        return Ok(uploaded_program_data.data.program_id);
+        Ok(uploaded_program_data.data.program_id)
     }
 
     pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<String, EndpointError> {
@@ -200,7 +200,7 @@ impl ProgramDistributorService {
 
         let uploaded_input_group_data = self.make_request_with_stream_upload_and_response_body::<UploadedInputGroupReturnedData>(
                                                 post_program_input_group_builder, post_program_input_group_builder_clone).await?;
-        return Ok(uploaded_input_group_data.data.input_group_id);
+        Ok(uploaded_input_group_data.data.input_group_id)
     }
 
     pub async fn download_program(&self, program_id: &str, download_path: &Path) {
@@ -227,14 +227,14 @@ impl ProgramDistributorService {
         let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
         let patch_program_input_group_proof_request_builder = self.client.patch(patch_program_input_group_proof_url);
         self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
-        return Ok(());
+        Ok(())
     }
 
     pub async fn confirm_proof_validity(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
         let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
         let patch_program_input_group_proof_request_builder = self.client.delete(patch_program_input_group_proof_url);
         self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
-        return Ok(());
+        Ok(())
     }
 
     async fn interactive_login(&self) -> String {
@@ -248,7 +248,7 @@ impl ProgramDistributorService {
         // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
         // in cellphones
         serde_json::to_writer(refresh_token_file, &login_response.data.refresh_token).expect("Error while saving refresh token object");
-        return login_response.data.basic_token.token;
+        login_response.data.basic_token.token
     }
 
     async fn login(&self, username: String, password: String) -> EndpointResult<ReceivedTokens> {
@@ -263,7 +263,7 @@ impl ProgramDistributorService {
         
         if response.status().is_success() {
             let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
-            return login_response;
+            login_response
         } else { 
             panic!("Error in login");
         }
@@ -277,9 +277,9 @@ impl ProgramDistributorService {
                                     expect("Error in token refreshment endpoint call");
         if response.status().is_success() {
             let token_refreshment_response: EndpointResult<Token> = response.json().await.expect("Error deserializing JSON");
-            return Ok(token_refreshment_response);
+            Ok(token_refreshment_response)
         } else {
-            return Err(());
+            Err(())
         }
     }
 
@@ -291,7 +291,7 @@ impl ProgramDistributorService {
             let refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
             let refresh_token: Token = serde_json::from_reader(refresh_token_file).expect("Error in token object deserialization");
             let jwt_result = self.token_refreshment(refresh_token.token).await;
-            if (jwt_result.is_ok()) {
+            if jwt_result.is_ok() {
                 returned_token = Some(jwt_result.unwrap().data.token);
             } else {
                 should_log_in = true;
@@ -299,7 +299,7 @@ impl ProgramDistributorService {
         } else {
             should_log_in = true;
         }
-        if (should_log_in) {
+        if should_log_in {
             returned_token = Some(self.interactive_login().await);
         }
         self.jwt = Some(returned_token.unwrap());
@@ -307,7 +307,7 @@ impl ProgramDistributorService {
 
     async fn make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         let request_clone = request.try_clone().expect("Error while cloning request");
-        return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
+        self.wrapper_make_request_with_response_body::<T>(request, request_clone).await
     }
 
     // Since requests that are sending a stream cannot be cloned, and to repeat the request in case of a fail due to
@@ -315,7 +315,7 @@ impl ProgramDistributorService {
     // we need the same request from request stored in request_clone but built without the try_clone function
     async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder, 
                                                               request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
-        return self.wrapper_make_request_with_response_body::<T>(request, request_clone).await;
+        self.wrapper_make_request_with_response_body::<T>(request, request_clone).await
     }
 
     async fn wrapper_make_request_with_response_body<T: DeserializeOwned>(&mut self, mut request: RequestBuilder, mut request_clone: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
@@ -353,10 +353,10 @@ impl ProgramDistributorService {
     async fn parse_response_with_response_body<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
         if response.status().is_success() {
             let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing JSON");
-            return Ok(endpoint_response);
+            Ok(endpoint_response)
         } else {
             let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
-            return Err(endpoint_response);
+            Err(endpoint_response)
         }
     }
 
@@ -397,10 +397,10 @@ impl ProgramDistributorService {
         if response.status().is_success() {
             // TODO: change the expect to proper error management, investigate possible sources of errors
             let bytes_response: Bytes = response.bytes().await.expect("Error while receiving bytes");
-            return Ok(bytes_response);
+            Ok(bytes_response)
         } else {
             let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
-            return Err(endpoint_response);
+            Err(endpoint_response)
         }
     }
 

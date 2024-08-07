@@ -80,7 +80,7 @@ enum GetProgramsCommands {
 async fn start_program_execution() {
     let mut should_continue_looping = true;
     while should_continue_looping {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -135,7 +135,7 @@ async fn start_program_execution() {
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

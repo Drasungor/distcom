@@ -11,7 +11,7 @@ pub struct ReturnedInputGroup {
 }
 
 pub fn print_input_groups_list(input_groups: &Vec<ReturnedInputGroup>) {
-    if input_groups.len() == 0 {
+    if input_groups.is_empty() {
         println!("No input groups remaining");
     }
     let mut index = 0;
