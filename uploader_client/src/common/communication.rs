@@ -17,7 +17,10 @@ pub struct EndpointError {
 #[derive(Debug, PartialEq)]
 pub enum AppErrorType {
     AccountNotFound,
+    ProgramNotFound,
+    InputGroupNotFound,
     WrongCredentials,
+    EncodingNotBase64,
     UsernameAlreadyExists,
     RefreshTokenNotfound,
     InvalidToken,
@@ -31,7 +34,10 @@ impl FromStr for AppErrorType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "ACCOUNT_NOT_FOUND" => Ok(AppErrorType::AccountNotFound),
+            "PROGRAM_NOT_FOUND" => Ok(AppErrorType::ProgramNotFound),
+            "INPUT_GROUP_NOT_FOUND" => Ok(AppErrorType::InputGroupNotFound),
             "WRONG_CREDENTIALS" => Ok(AppErrorType::WrongCredentials),
+            "BAD_BASE_64_ENCODING" => Ok(AppErrorType::EncodingNotBase64),
             "USERNAME_ALREADY_EXISTS" => Ok(AppErrorType::UsernameAlreadyExists),
             "REFRESH_TOKEN_NOT_FOUND" => Ok(AppErrorType::RefreshTokenNotfound),
             "INVALID_TOKEN" => Ok(AppErrorType::InvalidToken),

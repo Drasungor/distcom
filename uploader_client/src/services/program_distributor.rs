@@ -330,12 +330,12 @@ impl ProgramDistributorService {
         return match response_parse_result {
             Ok(good_response) => Ok(good_response),
             Err(error_response) => {
-                let invalid_variant: Result<AppErrorType, String> = "InvalidVariant".parse();
+                let invalid_variant: Result<AppErrorType, String> = error_response.error_code.parse();
                 let error_type = match invalid_variant {
                     Ok(v) => v,
                     Err(e) => panic!("Received unknown error type: \"{}\" with message \"{}\"", e, error_response.error_message),
                 };
-                if (error_type == AppErrorType::InvalidToken) {
+                if error_type == AppErrorType::InvalidToken {
                     self.get_jwt().await;
                     jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
                     headers = HeaderMap::new();
@@ -378,7 +378,7 @@ impl ProgramDistributorService {
                     Ok(v) => v,
                     Err(e) => panic!("Received unknown error type: \"{}\" with message \"{}\"", e, error_response.error_message),
                 };
-                if (error_type == AppErrorType::InvalidToken) {
+                if error_type == AppErrorType::InvalidToken {
                     self.get_jwt().await;
                     jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
                     headers = HeaderMap::new();

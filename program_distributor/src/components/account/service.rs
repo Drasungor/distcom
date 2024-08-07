@@ -33,7 +33,7 @@ impl AccountService {
 
     pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {
         let account_data = AccountMysqlDal::get_account_data_by_username(username).await?;
-        if (!is_password_valid(password, account_data.password_hash)) {
+        if !is_password_valid(password, account_data.password_hash) {
             return Err(AppError::new(AppErrorType::WrongCredentials));
         }
         let login_tokens = generate_login_tokens(&account_data.organization_id);
