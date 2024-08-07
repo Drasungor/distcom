@@ -65,7 +65,7 @@ fn folder_exists(path: &str) -> bool {
     fs::metadata(path).is_ok()
 }
 
-fn create_folder(path: &str) -> () {
+fn create_folder(path: &str) {
     if !folder_exists(path) {
         fs::create_dir(path).expect("Error in uploads folder creation")
     }

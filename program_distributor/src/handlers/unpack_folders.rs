@@ -1,6 +1,5 @@
 use actix_web::{HttpResponse, Responder};
 use std::fs::File;
-use std::io::prelude::*;
 use tar::Archive;
 
 fn extract_tar_archive(archive_path: &str, dest_folder: &str) -> std::io::Result<()> {

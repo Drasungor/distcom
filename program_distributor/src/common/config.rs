@@ -46,17 +46,17 @@ fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
 
 fn generate_connection_pool(database_url: &String) -> Pool<ConnectionManager<MysqlConnection>> {
     let manager = ConnectionManager::<MysqlConnection>::new(database_url);
-    let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
-    return connection_pool;
+    
+    Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool")
 }
 
 fn get_database_connection_url(config: &Config) -> String {
     let url_env_variable = env::var("database_url");
     if let Ok(ok_env_url) = url_env_variable {
         println!("ok_env_url: {ok_env_url}");
-        return ok_env_url;
+        ok_env_url
     } else {
         println!("config.database_url: {}", config.database_url.clone());
-        return config.database_url.clone();
+        config.database_url.clone()
     }
 }

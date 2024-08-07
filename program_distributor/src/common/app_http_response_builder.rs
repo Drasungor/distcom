@@ -1,9 +1,8 @@
 use serde::Serialize;
-use std::fmt;
-use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
+use actix_web::{HttpResponse};
 
 
-use super::app_error::{AppError, AppErrorType};
+use super::app_error::{AppError};
 
 #[derive(Debug)]
 pub struct AppHttpResponseBuilder;
@@ -26,7 +25,7 @@ pub struct FailureResponse {
 
 impl AppHttpResponseBuilder {
     pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> HttpResponse {
-        return match app_result {
+        match app_result {
             Ok(successful_response) => HttpResponse::Ok().
                 json(SuccessfulResponse { 
                     status: "success".to_string(), 
@@ -35,7 +34,7 @@ impl AppHttpResponseBuilder {
             Err(error) => {
                 Self::generate_app_error_body(error)
             },
-        };
+        }
     }
 
     pub fn generate_app_error_body(app_error: AppError) -> HttpResponse {

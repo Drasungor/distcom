@@ -153,31 +153,31 @@ impl AppError {
             },
         };
 
-        return AppError {
+        AppError {
             error_type,
             message_text: message_text.to_string(),
             status_code,
-        };
+        }
 
     }
 
     pub fn message(&self) -> &String {
-        return &self.message_text;
+        &self.message_text
     }
 
     pub fn error_type(&self) -> String {
-        return self.error_type.to_string();
+        self.error_type.to_string()
     }
 
     pub fn unexpected_error_message(&self) -> Option<String> {
         if let AppErrorType::InternalServerError(internal_server_error_type) = &self.error_type {
             return Some(internal_server_error_type.to_string());
         }
-        return None;
+        None
     }
 
     pub fn status_code(&self) -> StatusCode {
-        return self.status_code;
+        self.status_code
     }
 }
 

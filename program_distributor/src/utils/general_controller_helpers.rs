@@ -30,7 +30,7 @@ pub fn process_paging_inputs(paging_params: PagingParameters) -> MandatoryPaging
         page = common::config::GENERAL_CONSTANTS.page_min;
     }
 
-    return MandatoryPagingParameters {
+    MandatoryPagingParameters {
         limit,
         page,
     }

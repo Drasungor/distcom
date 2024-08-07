@@ -15,7 +15,7 @@ fn compress_program_with_input(program_id: &str, input_group_id: &str, downloade
     tar_file_builder.append_path_with_name(downloaded_program_file_path, program_file_name)?;
     tar_file_builder.append_path_with_name(input_file_path, format!("{}.csv", input_group_id))?;
     tar_file_builder.finish()?;
-    return Ok(tar_file_path);
+    Ok(tar_file_path)
 }
 
 
@@ -32,6 +32,6 @@ pub fn manage_program_with_input_compression(req: &HttpRequest, program_id: &str
             return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
         },
     }
-    return generate_named_file_response(req, &tar_file_path)
+    generate_named_file_response(req, &tar_file_path)
 }
 

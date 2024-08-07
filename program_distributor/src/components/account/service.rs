@@ -28,7 +28,7 @@ impl AccountService {
         };
 
         AccountMysqlDal::register_account(new_account).await?;
-        return Ok(())
+        Ok(())
     }
 
     pub async fn login(username: String, password: String) -> Result<LoginTokens, AppError> {
@@ -42,24 +42,24 @@ impl AccountService {
             user_id: account_data.organization_id,
         };
         AccountMysqlDal::add_refresh_token(refresh_token_data).await?;
-        return Ok(login_tokens);
+        Ok(login_tokens)
     }
 
     pub async fn refresh_basic_token(refresh_token_id: String, user_id: String) -> Result<GeneratedToken, AppError> {
         let refresh_token_exists = AccountMysqlDal::user_refresh_token_exists(refresh_token_id, user_id.clone()).await?;
         if refresh_token_exists {
-            return Ok(generate_basic_token(&user_id));
+            Ok(generate_basic_token(&user_id))
         } else {
-            return Err(AppError::new(AppErrorType::RefreshTokenNotfound));
+            Err(AppError::new(AppErrorType::RefreshTokenNotfound))
         }
     }
 
     pub async fn delete_refresh_token(refresh_token_id: String) -> Result<(), AppError> {
         AccountMysqlDal::delete_refresh_token(refresh_token_id).await?;
-        return Ok(());
+        Ok(())
     }
 
     pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
-        return AccountMysqlDal::get_organizations(name_filter, limit, page).await;
+        AccountMysqlDal::get_organizations(name_filter, limit, page).await
     }
 }

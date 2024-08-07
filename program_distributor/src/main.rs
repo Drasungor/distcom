@@ -1,11 +1,6 @@
-use std::path::Path;
 
 use actix_web::dev::Service;
-use actix_web::{web, App, HttpMessage, HttpServer};
-use diesel::mysql::MysqlConnection;
-use diesel::prelude::*;
-use diesel::r2d2::{ ConnectionManager, Pool };
-use diesel::r2d2::R2D2Connection;
+use actix_web::{App, HttpMessage, HttpServer};
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
@@ -15,7 +10,7 @@ use utils::local_storage_helpers::clear_aux_directories;
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
 use crate::services::files_storage::file_storage::FileStorage;
-use crate::utils::local_storage_helpers::{clear_directory, compress_folder_contents};
+use crate::utils::local_storage_helpers::{compress_folder_contents};
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -76,10 +71,10 @@ async fn main() -> std::io::Result<()> {
                     // files_names: None,
                 };
                 req.extensions_mut().insert(init_data);
-                let return_value = srv.call(req).map(|res| {
+                
+                srv.call(req).map(|res| {
                     res
-                });
-                return_value
+                })
             })
             .service(
                 account_router("/account")

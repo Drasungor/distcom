@@ -22,10 +22,10 @@ impl AccountMysqlDal {
             diesel::insert_into(account::table)
                     .values(&new_account_data)
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn get_account_data_by_username(username: String) -> Result<CompleteAccount, AppError> {
@@ -37,13 +37,13 @@ impl AccountMysqlDal {
                 .filter(account::username.eq(username))
                 .first::<CompleteAccount>(connection).optional()?;
             if let Some(found_account) = found_account_option {
-                return Ok(found_account);
+                Ok(found_account)
             } else {
-                return Err(AppError::new(AppErrorType::AccountNotFound))
+                Err(AppError::new(AppErrorType::AccountNotFound))
             }
         })
         }).await;
-        return manage_converted_dal_result(found_account_result);
+        manage_converted_dal_result(found_account_result)
     }
 
     pub async fn add_refresh_token(refresh_token_data: RefreshToken) -> Result<(), AppError> {
@@ -54,10 +54,10 @@ impl AccountMysqlDal {
             diesel::insert_into(refresh_token::table)
                     .values(&refresh_token_data)
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn delete_refresh_token(refresh_token_id: String) -> Result<(), AppError> {
@@ -67,10 +67,10 @@ impl AccountMysqlDal {
 
             diesel::delete(refresh_token::table.filter(refresh_token::token_id.eq(refresh_token_id)))
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn user_refresh_token_exists(refresh_token_id: String, user_id: String) -> Result<bool, AppError> {
@@ -80,10 +80,10 @@ impl AccountMysqlDal {
             let found_account = refresh_token::table
                     .filter(refresh_token::token_id.eq(refresh_token_id).and(refresh_token::user_id.eq(user_id)))
                     .first::<RefreshToken>(connection);
-            return Ok(found_account.is_ok());
+            Ok(found_account.is_ok())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     // TODO: use this function in a "change password" endpoint, it still has not been used
@@ -94,10 +94,10 @@ impl AccountMysqlDal {
 
             diesel::delete(refresh_token::table.filter(refresh_token::user_id.eq(user_id)))
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
@@ -125,13 +125,13 @@ impl AccountMysqlDal {
                 description: organization.description.clone(),
             }).collect();
  
-            return Ok(PagedOrganizations {
+            Ok(PagedOrganizations {
                 organizations: returned_organizations,
                 total_elements_amount: count_of_matched_elements,
-            });
+            })
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
     
 }

@@ -45,11 +45,11 @@ impl ProgramMysqlDal {
             diesel::insert_into(program::table)
                         .values(&stored_program)
                         .execute(connection)?;
-            return Ok(());
+            Ok(())
 
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     fn store_inputs(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, input_group_id: String, mut input_reader: Reader<File>) -> Result<(), AppError> {
@@ -76,10 +76,10 @@ impl ProgramMysqlDal {
             assert!(counter == 1, "There is more than one element per line");
             current_input += 1;
         }
-        return Ok(());
+        Ok(())
     }
 
-    pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, mut input_reader: Reader<File>) -> Result<(), AppError> {
+    pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, input_reader: Reader<File>) -> Result<(), AppError> {
         let cloned_organization_id = organization_id.clone();
         let cloned_input_group_id = input_group_id.clone();
         let cloned_program_id = program_id.clone();
@@ -107,10 +107,10 @@ impl ProgramMysqlDal {
 
             Self::store_inputs(connection, cloned_input_group_id, input_reader)?;
 
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
@@ -124,13 +124,13 @@ impl ProgramMysqlDal {
                 .filter(program::program_id.eq(cloned_program_id))
                 .first::<StoredProgram>(connection).optional()?;
             if let Some(found_program_value) = found_program_option {
-                return Ok(found_program_value.organization_id);
+                Ok(found_program_value.organization_id)
             } else {
-                return Err(AppError::new(AppErrorType::ProgramNotFound))
+                Err(AppError::new(AppErrorType::ProgramNotFound))
             }
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     fn get_available_input_group_id(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
@@ -163,7 +163,7 @@ impl ProgramMysqlDal {
                 let current_last_reserved_date = current_input_group.last_reserved.unwrap(); // This unwrap is ok because of the is_not_null in the filter
                 let difference = *current_datetime - current_last_reserved_date;
                 let difference_in_seconds = difference.num_seconds();
-                if (difference_in_seconds > found_program.input_lock_timeout) {
+                if difference_in_seconds > found_program.input_lock_timeout {
                     chosen_input_index = i as i32;
                     break;
                 }
@@ -177,7 +177,7 @@ impl ProgramMysqlDal {
         diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(input_group_id.clone())))
                 .set(program_input_group::last_reserved.eq(Some(current_datetime)))
                 .execute(connection)?;
-        return Ok(input_group_id);
+        Ok(input_group_id)
     }
 
     fn store_input_group_in_csv(connection: &mut PooledConnection<ConnectionManager<MysqlConnection>>, 
@@ -206,7 +206,7 @@ impl ProgramMysqlDal {
             .filter(specific_program_input::input_group_id.eq(input_group_id.clone()).and(specific_program_input::order.eq(input_line_counter)))
             .first::<SpecificProgramInput>(connection).optional()?;
         }
-        return Ok(());
+        Ok(())
     }
 
     pub async fn retrieve_input_group(program_id: &String) -> Result<(String, String), AppError> {
@@ -218,10 +218,10 @@ impl ProgramMysqlDal {
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime)?;
             let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
             Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
-            return Ok((input_group_id, file_path));
+            Ok((input_group_id, file_path))
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn set_input_group_as_proven(program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -236,10 +236,10 @@ impl ProgramMysqlDal {
                                 and(program_input_group::program_id.eq(cloned_program_id.clone()))))
                     .set(program_input_group::proven_datetime.eq(Some(now_naive_datetime)))
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return general_manage_diesel_task_result(result);
+        general_manage_diesel_task_result(result)
     }
 
     pub async fn delete_input_group_proven_mark(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -265,10 +265,10 @@ impl ProgramMysqlDal {
                         program_input_group::last_reserved.eq(None::<NaiveDateTime>)
                     ))
                     .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn delete_input_group_entry(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
@@ -294,10 +294,10 @@ impl ProgramMysqlDal {
             diesel::delete(specific_program_input::table.filter(
                 specific_program_input::input_group_id.eq(cloned_input_group_id.clone())))
                 .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
 
@@ -310,10 +310,10 @@ impl ProgramMysqlDal {
             diesel::update(program_input_group::table.filter(program_input_group::input_group_id.eq(cloned_input_group_id)))
                 .set(program_input_group::last_reserved.eq(None::<NaiveDateTime>))
                 .execute(connection)?;
-            return Ok(());
+            Ok(())
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
@@ -339,13 +339,13 @@ impl ProgramMysqlDal {
                 .filter(program::program_id.eq_any(proven_programs).and(program::organization_id.eq(cloned_organization_id)))
                 .count().get_result(connection)?;
             
-            return Ok(PagedPrograms {
+            Ok(PagedPrograms {
                 programs,
                 total_elements_amount: count_of_matched_elements,
-            });
+            })
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
     pub async fn get_input_groups_with_proven_executions(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
@@ -370,13 +370,13 @@ impl ProgramMysqlDal {
                 .filter(program_input_group::proven_datetime.is_not_null().and(program_input_group::program_id.eq(cloned_program_id)))
                 .count().get_result(connection)?;
                 
-            return Ok(PagedProgramInputGroups {
+            Ok(PagedProgramInputGroups {
                 program_input_groups: proven_input_groups,
                 total_elements_amount: count_of_matched_elements,
-            });
+            })
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
 
@@ -397,13 +397,13 @@ impl ProgramMysqlDal {
                 .filter(program::organization_id.eq(&organization_id))
                 .count().get_result(connection)?;
  
-            return Ok(PagedPrograms {
+            Ok(PagedPrograms {
                 programs,
                 total_elements_amount: count_of_matched_elements,
-            });
+            })
         })
         }).await;
-        return manage_converted_dal_result(found_account_result);
+        manage_converted_dal_result(found_account_result)
     }
 
     
@@ -425,13 +425,13 @@ impl ProgramMysqlDal {
             let programs: Vec<StoredProgram> = programs_query.load::<StoredProgram>(connection)?;
             let count_of_matched_elements = count_of_matched_elements_query.count().get_result(connection)?;
  
-            return Ok(PagedPrograms {
+            Ok(PagedPrograms {
                 programs,
                 total_elements_amount: count_of_matched_elements,
-            });
+            })
         })
         }).await;
-        return manage_converted_dal_result(result);
+        manage_converted_dal_result(result)
     }
 
 }

@@ -1,6 +1,5 @@
 use serde_derive::{Serialize, Deserialize};
 
-use crate::utils::jwt_helpers::GeneratedToken;
 
 use super::db_models::{program::StoredProgram, program_input_group::ProgramInputGroup};
 
