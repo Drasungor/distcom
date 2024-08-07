@@ -1,4 +1,3 @@
-use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
 use std::env;
 use std::fs::File;
@@ -7,13 +6,6 @@ use std::sync::RwLock;
 use lazy_static::lazy_static;
 
 use crate::services::program_distributor::ProgramDistributorService;
-
-// use diesel::mysql::MysqlConnection;
-// use diesel::r2d2::{ ConnectionManager, Pool };
-
-// use crate::common::general_constants;
-// use crate::common::general_constants::GeneralConstants;
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -24,9 +16,6 @@ pub struct Config {
 
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
-    // pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
-
-    // TODO: get the base url from the config object
     pub static ref PROGRAM_DISTRIBUTOR_SERVICE: RwLock<ProgramDistributorService> = RwLock::new(ProgramDistributorService::new(&get_database_connection_url(&CONFIG_OBJECT)));
 }
 

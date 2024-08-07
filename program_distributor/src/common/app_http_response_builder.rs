@@ -1,4 +1,3 @@
-// use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use serde::Serialize;
 use std::fmt;
 use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
@@ -26,7 +25,6 @@ pub struct FailureResponse {
 
 
 impl AppHttpResponseBuilder {
-    // pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> impl Responder {
     pub fn get_http_response<T: Serialize>(app_result: Result<T, AppError>) -> HttpResponse {
         return match app_result {
             Ok(successful_response) => HttpResponse::Ok().

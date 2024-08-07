@@ -21,8 +21,6 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
                 .output()
                 .expect("Failed to execute child program");
         
-            // println!("Program output: {:?}", output);
-        
             let input_group_id = csv_file_name.split(".").collect::<Vec<&str>>()[0];
         
             let _ = fs::remove_file(format!("./program_with_input/{csv_file_name}"));

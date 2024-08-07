@@ -2,8 +2,8 @@ use actix_multipart::Multipart;
 use actix_web::{web, HttpRequest, Responder};
 use std::{fs::{self}, path::Path};
 
-use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_file::{upload_files_with_body, upload_one_file, upload_one_file_with_body}, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_file_suffix, get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
-use crate::{common::app_http_response_builder::AppHttpResponseBuilder, middlewares::callable_upload_file::upload_files};
+use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_file::{upload_one_file, upload_one_file_with_body}, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
+use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::services::files_storage::file_storage::FileStorage;
 
 use super::{model::{GetPagedPrograms, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
@@ -107,7 +107,7 @@ impl ProgramController {
         let download_file_path = format!("./downloads/{}", file_name);
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
 
-        if (organization_id.is_err()) {
+        if organization_id.is_err() {
             return AppHttpResponseBuilder::get_http_response(organization_id);
         }
 
@@ -247,26 +247,12 @@ impl ProgramController {
         let program_id = path.as_str().to_string();
         let program_file_name = format!("{}.tar", program_id);
         let organization_id = ProgramService::get_program_uploader_id(&program_id).await;
-        if (organization_id.is_err()) {
+        if organization_id.is_err() {
             return AppHttpResponseBuilder::get_http_response(organization_id);
         }
-
-        println!("AAAAAAAAAAAAAAAAAAAAAAAA");
-
         let input_group_id: String;
         let input_file_path: String;
-        // let (input_group_id, input_file_path) = ProgramService::retrieve_input_group(&program_id).await.expect("Error in input group retrieval");
         let retrieve_input_group_result = ProgramService::retrieve_input_group(&program_id).await;
-
-        // match input_result {
-        //     Ok(ok_input) => {
-        //         input_file_name = ok_input.1;
-        //     },
-        //     Err(error) => {
-        //         return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
-        //     }
-        // }
- 
         match retrieve_input_group_result {
             Ok(retrieve_input_group_value) => { 
                 input_group_id = retrieve_input_group_value.0;
@@ -276,11 +262,7 @@ impl ProgramController {
                 return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
             }
         }
-
-        println!("BBBBBBBBBBBBBBBBBBBBBBBB");
-
         let downloaded_program_file_path = format!("./aux_files/{}/{}", input_group_id, program_file_name);
-        // let object_name = format!("{}/{}", organization_id.unwrap(), program_file_name);
         let object_name = format!("{}/{}/program.tar", organization_id.unwrap(), program_id);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
@@ -293,7 +275,6 @@ impl ProgramController {
                 }
             }
         }
-        
         return manage_program_with_input_compression(&req, &program_id, &input_group_id, &downloaded_program_file_path, 
                                                      &program_file_name, &input_file_path);
         

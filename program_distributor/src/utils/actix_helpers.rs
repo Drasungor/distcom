@@ -1,5 +1,5 @@
-use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder};
-use std::{fs::{self, File}, path::Path, thread, time::Duration};
+use std::fs::File;
+use actix_web::{HttpMessage, HttpRequest, HttpResponse};
 
 use crate::{common::{app_error::{AppError, AppErrorType, InternalServerErrorType}, app_http_response_builder::AppHttpResponseBuilder}, RequestExtension};
 use super::jwt_helpers::Claims;

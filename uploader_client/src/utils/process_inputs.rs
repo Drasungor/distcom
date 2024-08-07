@@ -1,4 +1,4 @@
-use clap::{crate_name};
+use clap::crate_name;
 
 use crate::common;
 

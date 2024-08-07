@@ -1,4 +1,3 @@
-use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
 use std::env;
 use std::fs::File;
@@ -11,7 +10,6 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use crate::common::general_constants;
 use crate::common::general_constants::GeneralConstants;
 use crate::services::files_storage::aws_s3_handler::AwsS3Handler;
-use crate::services::files_storage::file_storage::FileStorage;
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,7 +32,6 @@ lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&get_database_connection_url(&CONFIG_OBJECT));
     pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
-    // pub static ref GENERAL_CONSTANTS: RwLock<GeneralConstants> = RwLock::new(general_constants::get_general_constants());
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
 }
 

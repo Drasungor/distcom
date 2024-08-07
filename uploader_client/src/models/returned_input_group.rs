@@ -1,5 +1,5 @@
-use serde_derive::{Deserialize};
-use chrono::{NaiveDateTime};
+use serde_derive::Deserialize;
+use chrono::NaiveDateTime;
 
 
 #[derive(Debug, Deserialize)]

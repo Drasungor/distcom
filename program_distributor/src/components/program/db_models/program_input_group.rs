@@ -1,7 +1,5 @@
 use diesel::prelude::*;
-use chrono::{NaiveDateTime};
-use diesel::sql_types::Timestamp;
-use std::time::{SystemTime};
+use chrono::NaiveDateTime;
 use serde_derive::Serialize;
 
 #[derive(Queryable, Selectable, Insertable, Clone, Debug, Serialize)]

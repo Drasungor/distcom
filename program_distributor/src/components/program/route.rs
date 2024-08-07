@@ -1,10 +1,9 @@
 use actix_web::{web, Scope};
 
-use crate::middlewares::{upload_file::UploadFileMiddleware, validate_jwt::ValidateJwtMiddleware};
+use crate::middlewares::validate_jwt::ValidateJwtMiddleware;
 use super::controller::ProgramController;
 
 pub fn program_router(path_prefix: &str) -> Scope {
-    // web::scope(path_prefix)
     web::scope(path_prefix).
         // get
         route("all", web::get().to(ProgramController::get_general_programs)).

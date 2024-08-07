@@ -17,30 +17,13 @@ impl AccountMysqlDal {
     pub async fn register_account(new_account_data: CompleteAccount) -> Result<(), AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
-        // connection.transaction::<_, diesel::result::Error, _>(|connection| {
         connection.transaction::<_, AppError, _>(|connection| {
-
-            // let insertion_result = diesel::insert_into(account::table)
-            //         .values(&new_account_data)
-            //         .execute(connection);
-            // return insertion_result;
             diesel::insert_into(account::table)
                     .values(&new_account_data)
                     .execute(connection)?;
             return Ok(());
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(_)) => Ok(()),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         match db_err_kind {
-        //             DatabaseErrorKind::UniqueViolation => Err(AppError::new(AppErrorType::UsernameAlreadyExists)),
-        //             unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-        //         }
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // }
         return manage_converted_dal_result(result);
     }
 
@@ -56,14 +39,6 @@ impl AccountMysqlDal {
 
         })
         }).await;
-        // return match found_account_result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Err(diesel_error)) => match diesel_error {
-        //         diesel::result::Error::NotFound => Err(AppError::new(AppErrorType::AccountNotFound)),
-        //         unknown_database_error => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", unknown_database_error)))))
-        //     },
-        //     Ok(Ok(returned_account)) => Ok(returned_account),
-        // }
         return manage_converted_dal_result(found_account_result);
     }
 
@@ -78,14 +53,6 @@ impl AccountMysqlDal {
             return Ok(());
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(_)) => Ok(()),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // };
         return manage_converted_dal_result(result);
     }
 
@@ -99,14 +66,6 @@ impl AccountMysqlDal {
             return Ok(());
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(_)) => Ok(()),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // };
         return manage_converted_dal_result(result);
     }
 
@@ -120,14 +79,6 @@ impl AccountMysqlDal {
             return Ok(found_account.is_ok());
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(user_refresh_token_exists)) => Ok(user_refresh_token_exists),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // };
         return manage_converted_dal_result(result);
     }
 
@@ -142,14 +93,6 @@ impl AccountMysqlDal {
             return Ok(());
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(_)) => Ok(()),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // };
         return manage_converted_dal_result(result);
     }
 
@@ -184,14 +127,6 @@ impl AccountMysqlDal {
             });
         })
         }).await;
-        // return match result {
-        //     Err(BlockingError) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::TaskSchedulingError))),
-        //     Ok(Ok(paged_organizations)) => Ok(paged_organizations),
-        //     Ok(Err(diesel::result::Error::DatabaseError(db_err_kind, info))) => {
-        //         Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown database error: {:?}", db_err_kind)))))
-        //     },
-        //     Ok(Err(err)) => Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UnknownError(format!("Unknown error: {:?}", err))))),
-        // };
         return manage_converted_dal_result(result);
     }
     

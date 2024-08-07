@@ -4,8 +4,6 @@ use async_trait::async_trait;
 use aws_sdk_s3 as s3;
 use aws_config::{self, meta::region::RegionProviderChain, Region};
 use s3::primitives::ByteStream;
-// use s3::primitives::ByteStream;
-// use std::path::Path;
 
 use crate::common::app_error::{AppError, AppErrorType, InternalServerErrorType};
 use super::file_storage::FileStorage;

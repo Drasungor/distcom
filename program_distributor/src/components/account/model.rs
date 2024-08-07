@@ -51,11 +51,6 @@ pub struct InitSession {
     pub refresh_token: String,
 }
 
-// #[derive(Serialize)]
-// pub struct Token {
-//     pub basic_token: GeneratedToken,
-// }
-
 #[derive(Serialize)]
 pub struct ReturnedOrganization {
     pub organization_id: String,

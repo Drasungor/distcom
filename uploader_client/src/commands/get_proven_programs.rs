@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use clap::{error::ErrorKind, Parser, Subcommand};
 
 use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{process_inputs::{process_previously_set_page_size, process_user_input}, verifying::{retrieve_my_proven_programs, verify_all_proven_executions, verify_some_proven_executions}}};
@@ -76,7 +74,6 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                     GetProvenProgramsCommands::Page{page, limit} => {
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
-                        // programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
                     },
                     GetProvenProgramsCommands::Verify{index, limit, page} => {
                         if index < programs_page.programs.len() {

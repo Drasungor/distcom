@@ -1,5 +1,3 @@
-use diesel::mysql::MysqlConnection;
-use diesel::r2d2::{ ConnectionManager, Pool };
 use uuid::Uuid;
 
 use crate::common::app_error::{AppError, AppErrorType};
@@ -49,10 +47,7 @@ impl AccountService {
 
     pub async fn refresh_basic_token(refresh_token_id: String, user_id: String) -> Result<GeneratedToken, AppError> {
         let refresh_token_exists = AccountMysqlDal::user_refresh_token_exists(refresh_token_id, user_id.clone()).await?;
-        if (refresh_token_exists) {
-            // return Ok(Token {
-            //     basic_token: generate_basic_token(&user_id),
-            // })
+        if refresh_token_exists {
             return Ok(generate_basic_token(&user_id));
         } else {
             return Err(AppError::new(AppErrorType::RefreshTokenNotfound));
@@ -65,19 +60,6 @@ impl AccountService {
     }
 
     pub async fn get_organizations(name_filter: Option<String>, limit: i64, page: i64) -> Result<PagedOrganizations, AppError> {
-        // let account_data = AccountMysqlDal::get_account_data_by_username(username).await?;
-        // if (!is_password_valid(password, account_data.password_hash)) {
-        //     return Err(AppError::new(AppErrorType::WrongCredentials));
-        // }
-        // let login_tokens = generate_login_tokens(&account_data.organization_id);
-        // let refresh_token_data = RefreshToken {
-        //     token_id: login_tokens.refresh_token.token_id.clone(),
-        //     user_id: account_data.organization_id,
-        // };
-        // return Ok(login_tokens);
         return AccountMysqlDal::get_organizations(name_filter, limit, page).await;
     }
-
-    // get_paged_organizations(limit: i64, page: i64) -> Result<PagedOrganizations, AppError>
-
 }

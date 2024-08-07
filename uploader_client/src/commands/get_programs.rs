@@ -89,7 +89,6 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                     GetProgramsCommands::Page{page, limit} => {
                         used_limit = process_previously_set_page_size(used_limit, limit);
                         used_page = page;
-                        // programs_page = retrieve_my_programs(used_limit, used_page).await;
                     },
                     GetProgramsCommands::PostInput{index, input_file_name} => {
                         if index < programs_page.programs.len() {

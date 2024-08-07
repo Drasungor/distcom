@@ -1,6 +1,7 @@
-use std::{fs::{self, File}, path::Path, thread, time::Duration};
-use actix_web::{HttpRequest, HttpResponse, Responder};
-use tar::{Builder, Archive};
+use std::fs::File;
+
+use actix_web::{HttpRequest, HttpResponse};
+use tar::Builder;
 
 use crate::{common::{app_error::AppError, app_http_response_builder::AppHttpResponseBuilder}, utils::actix_helpers::generate_named_file_response};
 

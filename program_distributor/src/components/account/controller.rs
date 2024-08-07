@@ -1,5 +1,4 @@
-use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
-use serde_derive::{Serialize, Deserialize};
+use actix_web::{web, Responder};
 
 use crate::common;
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;

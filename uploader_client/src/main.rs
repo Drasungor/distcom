@@ -79,7 +79,6 @@ enum GetProgramsCommands {
 
 async fn start_program_execution() {
     let mut should_continue_looping = true;
-    // loop {
     while should_continue_looping {
         println!("");
         println!("Please execute a command:");

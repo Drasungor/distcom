@@ -176,7 +176,6 @@ impl ProgramDistributorService {
             .part("file", Part::bytes(file_content).file_name("uploaded_methods.tar"));
         let post_methods_request_builder_clone = self.client.post(&post_program_url).multipart(form_clone);
 
-        // self.make_request_with_stream_upload_and_response_body::<()>(
         let uploaded_program_data = self.make_request_with_stream_upload_and_response_body::<UploadedProgramReturnedData>(
                                                                 post_methods_request_builder, post_methods_request_builder_clone).await?;
         let _ = fs::remove_file(compressed_folder_path);
@@ -338,7 +337,6 @@ impl ProgramDistributorService {
                 };
                 if (error_type == AppErrorType::InvalidToken) {
                     self.get_jwt().await;
-                    // let response = request_clone.send().await.expect("Error in get");
                     jwt_value = self.jwt.as_ref().expect("Jwt was not initialized").clone();
                     headers = HeaderMap::new();
                     headers.insert("token", HeaderValue::from_str(&jwt_value).unwrap());

@@ -51,13 +51,6 @@ pub async fn upload_files(mut payload: Multipart) -> Result<Vec<String>, String>
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field_is_file = true;
         let mut field = field_result;
@@ -85,13 +78,6 @@ T: DeserializeOwned,
     let mut received_object: Option<T> = None;
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
-
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
 
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field_is_file = true;
@@ -127,18 +113,7 @@ T: DeserializeOwned,
 
     let mut counter = 0;
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
-
-        // // TODO: manage this with an error instead of an assert
-        // assert!(counter < files_amount, "This endpoint expects {files_amount} files but more were sent");
-
         let mut field_is_file = true;
         let mut field = field_result;
         let filename = match field.content_disposition().get_filename() {
@@ -152,7 +127,6 @@ T: DeserializeOwned,
         println!("filename: {filename}");
 
         if (field_is_file) {
-
 
             // TODO: manage this with an error instead of an assert
             assert!(counter < files_amount, "This endpoint expects {files_amount} files but more ({counter}) were sent");
@@ -168,7 +142,6 @@ T: DeserializeOwned,
             assert!(received_object.is_none(), "More than one data attribute was received");
             received_object = Some(process_text_object_field::<T>(field).await);
         }
-        // counter += 1;
     }
 
     // TODO: manage this with an error instead of an assert
@@ -192,16 +165,7 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
     let mut files_names: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
-
     let mut counter = 0;
-
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
 
         // TODO: manage this with an error instead of an assert
