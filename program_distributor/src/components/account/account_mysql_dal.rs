@@ -7,6 +7,7 @@ use super::db_models::refresh_token::RefreshToken;
 use super::model::PagedOrganizations;
 use super::model::ReturnedOrganization;
 use crate::common::app_error::AppError;
+use crate::common::app_error::AppErrorType;
 use crate::schema::{account, refresh_token};
 use crate::utils::diesel_helpers::manage_converted_dal_result;
 
@@ -32,11 +33,14 @@ impl AccountMysqlDal {
         let found_account_result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
 
-            let found_account = account::table
+            let found_account_option: Option<CompleteAccount> = account::table
                 .filter(account::username.eq(username))
-                .first::<CompleteAccount>(connection)?;
-            return Ok(found_account);
-
+                .first::<CompleteAccount>(connection).optional()?;
+            if let Some(found_account) = found_account_option {
+                return Ok(found_account);
+            } else {
+                return Err(AppError::new(AppErrorType::AccountNotFound))
+            }
         })
         }).await;
         return manage_converted_dal_result(found_account_result);
