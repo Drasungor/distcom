@@ -61,7 +61,7 @@ impl ProgramDistributorService {
         let get_organizations_url = format!("{}/account/organizations", self.base_url);
         let get_organizations_request = self.client.get(get_organizations_url).query(&params);
         let response = self.make_request_with_response_body::<PagedOrganizations>(get_organizations_request).await?;
-        return Ok(response.data);
+        Ok(response.data)
     }
 
     pub async fn get_organization_programs(&self, organization_id: &String, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
@@ -75,7 +75,7 @@ impl ProgramDistributorService {
         let get_organization_programs_url = format!("{}/program/organization/{}", self.base_url, organization_id);
         let get_organization_programs_request = self.client.get(get_organization_programs_url).query(&params);
         let response = self.make_request_with_response_body::<PagedPrograms>(get_organization_programs_request).await?;
-        return Ok(response.data);
+        Ok(response.data)
     }
     
     pub async fn get_general_programs(&self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
@@ -89,7 +89,7 @@ impl ProgramDistributorService {
         let get_general_programs_url = format!("{}/program/all", self.base_url);
         let get_general_programs_request = self.client.get(get_general_programs_url).query(&params);
         let response = self.make_request_with_response_body::<PagedPrograms>(get_general_programs_request).await?;
-        return Ok(response.data);
+        Ok(response.data)
     }
     
     pub async fn get_program_and_input_group(&self, program_id: &String) -> Result<ProgramWithInputFiles, EndpointError> {
@@ -111,19 +111,19 @@ impl ProgramDistributorService {
             let path = unwrapped_entry.path();
             let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
             let path_string = path.to_str().expect("Error in conversion from path to string");
-            if (entry_name.contains(".tar")) {
+            if entry_name.contains(".tar") {
                 println!("tar path_string: {}", path_string);
                 decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
                 tar_file_name = Some(entry_name.clone());
             }
-            if (entry_name.contains(".csv")) {
+            if entry_name.contains(".csv") {
                 csv_file_name = Some(entry_name.clone());
             }
         }
-        return Ok(ProgramWithInputFiles {
+        Ok(ProgramWithInputFiles {
             input_file_name: csv_file_name.expect("No csv input file was received"),
             program_file_name: tar_file_name.expect("No tar program file was received"),
-        });
+        })
     }
 
     pub async fn upload_proof(&self, proof_file_path: &Path, uploaded_proof_data: UploadedProof) -> Result<(), EndpointError> {
@@ -143,7 +143,7 @@ impl ProgramDistributorService {
         let post_methods_request_builder = self.client.post(&upload_proof_url).multipart(form);
 
         let response = self.make_request_with_stream_upload_and_response_body::<()>(post_methods_request_builder).await;
-        return match response {
+        match response {
             Ok(_) => Ok(()),
             Err(error) => Err(error),
         }
@@ -154,14 +154,14 @@ impl ProgramDistributorService {
     // we need the same request from request stored in request_clone but built without the try_clone function
     async fn make_request_with_stream_upload_and_response_body<T: DeserializeOwned>(&self, request: RequestBuilder
                 ) -> Result<EndpointResult<T>, EndpointError> {
-        return self.make_request_with_response_body::<T>(request).await;
+        self.make_request_with_response_body::<T>(request).await
     }
 
     async fn make_request_with_response_body<T: DeserializeOwned>(&self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
 
         let response = request.send().await.expect("Error in request making");
         let response_parse_result = Self::parse_response_with_response_body::<T>(response).await;
-        return match response_parse_result {
+        match response_parse_result {
             Ok(good_response) => Ok(good_response),
             Err(error_response) => Err(error_response),
         }
@@ -170,20 +170,20 @@ impl ProgramDistributorService {
     async fn make_request_with_file_response(&self, request: RequestBuilder) -> Result<bytes::Bytes, EndpointError> {
         let response = request.send().await.expect("Error in request making");
         if response.status().is_success() {
-            return Ok(response.bytes().await.expect("Error while getting request bytes"));
+            Ok(response.bytes().await.expect("Error while getting request bytes"))
         } else {
             let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
-            return Err(endpoint_response);
+            Err(endpoint_response)
         }
     }
 
     async fn parse_response_with_response_body<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
         if response.status().is_success() {
             let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing JSON");
-            return Ok(endpoint_response);
+            Ok(endpoint_response)
         } else {
             let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
-            return Err(endpoint_response);
+            Err(endpoint_response)
         }
     }
 

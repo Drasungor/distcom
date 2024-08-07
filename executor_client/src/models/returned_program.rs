@@ -12,7 +12,7 @@ pub struct ReturnedProgram {
 
 pub fn print_programs_list(programs: &Vec<ReturnedProgram>) {
     let mut index = 0;
-    if programs.len() == 0 {
+    if programs.is_empty() {
         println!("No programs are available")
     }
     for program in programs {

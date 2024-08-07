@@ -46,11 +46,11 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
         panic!("Error in get organizations: {:?}", organizations_page_err);
     }
     let mut organizations_page = organizations_page_result.unwrap();
-    println!("");
+    println!();
     print_organizations_list(&organizations_page.organizations);
 
     loop { 
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
 
@@ -82,7 +82,7 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

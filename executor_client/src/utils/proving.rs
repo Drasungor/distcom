@@ -21,7 +21,7 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
                 .output()
                 .expect("Failed to execute child program");
         
-            let input_group_id = csv_file_name.split(".").collect::<Vec<&str>>()[0];
+            let input_group_id = csv_file_name.split('.').collect::<Vec<&str>>()[0];
         
             let _ = fs::remove_file(format!("./program_with_input/{csv_file_name}"));
             let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names_value.program_file_name));
@@ -34,11 +34,11 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
         
             if output.status.success() {
                 let after_proof_time = SystemTime::now();
-                println!("");
+                println!();
                 println!("Proof generated successfully.");
                 read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
                 println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
-                println!("");
+                println!();
                 let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names_value.program_file_name));
             } else {
                 println!("Process failed.");
@@ -65,7 +65,7 @@ pub async fn retrieve_programs(organization_option: Option<&str>, limit: Option<
     if let Err(received_error) = response {
         panic!("Error in programs retrieval: {:?}", received_error);
     }
-    return response.unwrap();
+    response.unwrap()
 }
 
 // Executes all the possible program inputs of each program that is iterated until the
@@ -76,13 +76,13 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
     let mut programs_page = retrieve_programs(organization_id, Some(page_size), Some(page_counter)).await;
     let mut programs_list = programs_page.programs;
     let mut programs_counter = 0;
-    while programs_list.len() != 0 && programs_counter < programs_amount {
+    while !programs_list.is_empty() && programs_counter < programs_amount {
         let mut current_page_iterator = 0;
         while current_page_iterator < programs_list.len() && programs_counter < programs_amount && current_page_iterator < programs_list.len() {
             let mut keep_same_program = true;
             let returned_program = &programs_list[current_page_iterator];
             while keep_same_program && programs_counter < programs_amount {
-                keep_same_program = download_and_run_program(&returned_program).await.is_ok();
+                keep_same_program = download_and_run_program(returned_program).await.is_ok();
                 if keep_same_program {
                     programs_counter += 1;
                 }

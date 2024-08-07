@@ -65,7 +65,7 @@ async fn run_all_organization_programs(organization_id: &str) {
     let mut programs_page = retrieve_programs(Some(organization_id), Some(page_size), Some(page_counter)).await;
     let mut programs_list = programs_page.programs;
 
-    while programs_list.len() != 0 {
+    while !programs_list.is_empty() {
         for returned_program in programs_list {
             run_all_program_inputs(&returned_program).await;
         }
@@ -86,11 +86,11 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_programs(Some(organization_id), Some(used_limit), Some(used_page)).await;
-    println!("");
+    println!();
     print_programs_list(&programs_page.programs);
 
     loop {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -111,7 +111,7 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
                     },
                     GetProgramsCommands::RunN{amount, index} => {
                         if let Some(index_value) = index {
-                            if (index_value < programs_page.programs.len()) {
+                            if index_value < programs_page.programs.len() {
                                 let chosen_program = &programs_page.programs[index_value];
                                 run_some_program_inputs(chosen_program, amount).await;
                             } else {
@@ -146,7 +146,7 @@ pub async fn select_organization_programs(organization_id: &str, first_received_
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")
