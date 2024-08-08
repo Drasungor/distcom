@@ -41,6 +41,10 @@ impl ProgramService {
         ProgramMysqlDal::delete_input_group_entry(organization_id, program_id, input_group_id).await
     }
 
+    pub async fn delete_program(organization_id: &String, program_id: &String) -> Result<(), AppError> {
+        ProgramMysqlDal::delete_program(organization_id, program_id).await
+    }
+
     pub async fn get_programs_with_proven_executions(organization_id: &String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         ProgramMysqlDal::get_programs_with_proven_executions(organization_id, limit, page).await
     }

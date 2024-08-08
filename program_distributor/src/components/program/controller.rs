@@ -178,6 +178,40 @@ impl ProgramController {
         AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response)
     }
 
+
+    pub async fn delete_program(req: HttpRequest, path: web::Path<String>) -> impl Responder {
+        let program_id = path.into_inner();
+
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+
+        let organization_id = &jwt_payload.organization_id;
+
+        let confirm_proof_validity_response = ProgramService::delete_program(organization_id, &program_id).await;
+
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+
+            // Even if the aws deletion fails we dont return failure since for the user it will seem like everything worked fine,
+            // we can manage the deletion in the error case manually
+            let proof_deletion_result = read_guard.delete_program(organization_id, &program_id).await;
+            if let Err(err) = proof_deletion_result {
+                println!("Error in proof deletion: {}", err);
+            }
+        }
+
+        AppHttpResponseBuilder::get_http_response(confirm_proof_validity_response)
+    }
+    
+
     pub async fn mark_proof_as_invalid(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
         let (program_id, input_group_id) = path.into_inner();
 

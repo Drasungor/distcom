@@ -300,6 +300,50 @@ impl ProgramMysqlDal {
         manage_converted_dal_result(result)
     }
 
+    pub async fn delete_program(organization_id: &String, program_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, AppError, _>(|connection| {
+
+            let found_program_option: Option<StoredProgram> = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(&cloned_organization_id)))
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
+
+            let found_input_groups_array: Vec<ProgramInputGroup> = program_input_group::table
+                .filter(program_input_group::program_id.eq(&cloned_program_id))
+                .load::<ProgramInputGroup>(connection)?;
+
+            let input_group_ids: Vec<String> = found_input_groups_array
+                .iter()
+                .map(|group| group.input_group_id.clone())
+                .collect();
+
+            diesel::delete(specific_program_input::table.filter(
+                specific_program_input::input_group_id.eq_any(input_group_ids)))
+                .execute(connection)?;
+
+            diesel::delete(program_input_group::table.filter(
+                program_input_group::program_id.eq(&cloned_program_id)))
+                .execute(connection)?;
+
+            diesel::delete(program_input_group::table.filter(
+                program_input_group::program_id.eq(&cloned_program_id)))
+                .execute(connection)?;
+
+            diesel::delete(program::table.filter(
+                program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(&cloned_organization_id))))
+                .execute(connection)?;
+
+            Ok(())
+        })
+        }).await;
+        manage_converted_dal_result(result)
+    }
 
     pub async fn delete_input_group_reservation(input_group_id: &String) -> Result<(), AppError> {
         let cloned_input_group_id = input_group_id.clone();

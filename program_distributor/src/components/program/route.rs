@@ -21,6 +21,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
         route("proof/{program_id}/{input_group_id}", web::patch().to(ProgramController::mark_proof_as_invalid).wrap(ValidateJwtMiddleware)).
 
         // delete
+        route("{program_id}", web::delete().to(ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
         route("proof/{program_id}/{input_group_id}", web::delete().to(ProgramController::confirm_proof_validity).wrap(ValidateJwtMiddleware)).
         
         // post
