@@ -16,11 +16,11 @@ impl ProgramService {
         Ok(())
     }
 
-    pub async fn add_program_input_group(organization_id: &String, program_id: &String, input_file_path: &String) -> Result<String, AppError> {
+    pub async fn add_program_input_group(organization_id: &String, program_id: &String, name: &String, input_file_path: &String) -> Result<String, AppError> {
         let file = File::open(input_file_path)?;
         let reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
         let input_group_id = Uuid::new_v4().to_string();
-        ProgramMysqlDal::add_input_group(organization_id, program_id, &input_group_id, reader).await?;
+        ProgramMysqlDal::add_input_group(organization_id, program_id, &input_group_id, name, reader).await?;
         Ok(input_group_id)
     }
 

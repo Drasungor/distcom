@@ -6,7 +6,7 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, UploadInputGroup, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
@@ -73,7 +73,11 @@ impl ProgramController {
 
     pub async fn add_inputs_group(req: HttpRequest, path: web::Path<String>, form: Multipart) -> impl Responder {
         let program_id = path.as_str().to_string();
-        let file_name = upload_one_file(form).await.expect("Failed file upload");
+        // let file_name = upload_one_file(form).await.expect("Failed file upload");
+        let (file_name, uploaded_inpu_group) = upload_one_file_with_body::<UploadInputGroup>(form).await.expect("Failed file upload");
+
+        // let (file_name, uploaded_program) = upload_one_file_with_body::<UploadProgram>(form).await.expect("Failed file upload");
+        // UploadInputGroup
 
         let jwt_payload;
         let extract_jwt_data_result = extract_jwt_data(&req);
@@ -87,7 +91,7 @@ impl ProgramController {
         }
 
         let file_path = format!("./uploads/{}", file_name);
-        let add_program_input_group_result = ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &file_path).await;
+        let add_program_input_group_result = ProgramService::add_program_input_group(&jwt_payload.organization_id, &program_id, &uploaded_inpu_group.name, &file_path).await;
         if add_program_input_group_result.is_err() {
             return AppHttpResponseBuilder::get_http_response(add_program_input_group_result);
         }

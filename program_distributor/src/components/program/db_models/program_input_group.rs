@@ -8,6 +8,7 @@ use serde_derive::Serialize;
 pub struct ProgramInputGroup {
     pub input_group_id: String,
     pub program_id: String,
+    pub name: String,
     pub last_reserved: Option<NaiveDateTime>,
     pub proven_datetime: Option<NaiveDateTime>,
 }

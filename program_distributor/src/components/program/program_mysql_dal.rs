@@ -79,7 +79,7 @@ impl ProgramMysqlDal {
         Ok(())
     }
 
-    pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, input_reader: Reader<File>) -> Result<(), AppError> {
+    pub async fn add_input_group(organization_id: &String, program_id: &String, input_group_id: &String, name: &String, input_reader: Reader<File>) -> Result<(), AppError> {
         let cloned_organization_id = organization_id.clone();
         let cloned_input_group_id = input_group_id.clone();
         let cloned_program_id = program_id.clone();
@@ -87,6 +87,7 @@ impl ProgramMysqlDal {
         let program_input_group = ProgramInputGroup {
             input_group_id: cloned_input_group_id.clone(),
             program_id: cloned_program_id.clone(),
+            name: name.clone(),
             last_reserved: None,
             proven_datetime: None,
         };

@@ -21,6 +21,11 @@ pub struct UploadProof {
 }
 
 #[derive(Deserialize)]
+pub struct UploadInputGroup {
+    pub name: String,
+}
+
+#[derive(Deserialize)]
 pub struct GetPagedPrograms {
     pub limit: Option<i64>,
     pub page: Option<i64>,
