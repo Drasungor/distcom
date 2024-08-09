@@ -46,18 +46,24 @@ async fn retrieve_my_programs(limit: usize, page: usize) -> PagedPrograms {
     write_guard.get_my_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs")
 }
 
-async fn post_input_group(program_id: &str, uploaded_input_group_file_path: &Path) -> String {
+async fn post_input_group(program_id: &str, input_group_name: &String, uploaded_input_group_file_path: &Path) -> String {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    write_guard.upload_input_group(program_id, uploaded_input_group_file_path).await.expect("Error while uploading program input group")
+    write_guard.upload_input_group(program_id, input_group_name, uploaded_input_group_file_path).await.expect("Error while uploading program input group")
 }
 
 async fn manage_input_group_upload(program_id: &str, uploaded_input_group_file_path: &Path) {
-    let input_group_id = post_input_group(program_id, uploaded_input_group_file_path).await;
-    let input_group_folder = format!("./programs_data/{program_id}/{input_group_id}");
-    create_folder(&input_group_folder);
-    let final_input_group_path = format!("{input_group_folder}/{}", uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap());
-    fs::copy(uploaded_input_group_file_path, final_input_group_path).expect("Error moving input file");
-    println!("Uploaded input group with path: {}", uploaded_input_group_file_path.to_str().unwrap());
+    let file_name = uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap();
+    let parts: Vec<&str> = file_name.split('.').collect();
+    if uploaded_input_group_file_path.exists() {
+        let input_group_id = post_input_group(program_id, &parts[0].to_string(), uploaded_input_group_file_path).await;
+        let input_group_folder = format!("./programs_data/{program_id}/{input_group_id}");
+        create_folder(&input_group_folder);
+        let final_input_group_path = format!("{input_group_folder}/{}", file_name);
+        fs::copy(uploaded_input_group_file_path, final_input_group_path).expect("Error moving input file");
+        println!("Uploaded input group with path: {}", uploaded_input_group_file_path.to_str().unwrap());
+    } else {
+        println!("The provided input file does not exist: {}", uploaded_input_group_file_path.to_str().unwrap());
+    }
 }
 
 async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
@@ -70,7 +76,7 @@ async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
             manage_input_group_upload(program_id, &current_path).await;
         }
     }
-}
+} 
 
 pub async fn select_my_programs(first_received_limit: usize, first_received_page: usize) -> bool {
     let mut used_limit = first_received_limit;

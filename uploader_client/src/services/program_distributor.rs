@@ -66,6 +66,11 @@ pub struct UploadedProgram {
     pub execution_timeout: i64
 }
 
+#[derive(Serialize)]
+pub struct UploadedInputGroup {
+    pub name: String,
+}
+
 impl ProgramDistributorService {
 
     pub fn new(base_url: &str) -> ProgramDistributorService {
@@ -182,7 +187,7 @@ impl ProgramDistributorService {
         Ok(uploaded_program_data.data.program_id)
     }
 
-    pub async fn upload_input_group(&mut self, program_id: &str, uploaded_input_group_file_path: &Path) -> Result<String, EndpointError> {
+    pub async fn upload_input_group(&mut self, program_id: &str, input_group_name: &String, uploaded_input_group_file_path: &Path) -> Result<String, EndpointError> {
         let post_program_input_group_url = format!("{}/program/inputs/{}", self.base_url, program_id);
         let uploaded_input_group_file_path_str = uploaded_input_group_file_path.to_str().expect("Error in get download path string");
 
@@ -190,11 +195,18 @@ impl ProgramDistributorService {
         let mut file_content = Vec::new();
         file.read_to_end(&mut file_content).expect("Error in reading compressed file content");
 
+        let input_group_name = UploadedInputGroup {
+            name: input_group_name.clone(),
+        };
+        let serialized = serde_json::to_string(&input_group_name).unwrap();
+
         let form = multipart::Form::new()
+            .text("data", serialized.clone())
             .part("file", Part::bytes(file_content.clone()).file_name("program_input_group.csv"));
         let post_program_input_group_builder = self.client.post(&post_program_input_group_url).multipart(form);
         
         let form_clone = multipart::Form::new()
+            .text("data", serialized)
             .part("file", Part::bytes(file_content).file_name("program_input_group_clone.csv"));
         let post_program_input_group_builder_clone = self.client.post(&post_program_input_group_url).multipart(form_clone);
 
