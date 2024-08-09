@@ -7,7 +7,7 @@ pub struct CompleteAccount {
     pub organization_id: String,
     pub name: String,
     pub description: String,
-    pub account_was_verified: bool,
+    // pub account_was_verified: bool,
     pub username: String,
     pub password_hash: String,
 }

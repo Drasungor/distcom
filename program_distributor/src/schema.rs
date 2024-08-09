@@ -14,7 +14,7 @@ diesel::table! {
         #[max_length = 700]
         description -> Varchar,
         
-        account_was_verified -> Bool,
+        // account_was_verified -> Bool,
         
         #[max_length = 255]
         username -> Varchar, // Set as unique in migration
@@ -74,7 +74,6 @@ diesel::table! {
         #[max_length = 255]
         name -> Varchar,
 
-        // last_reserved -> Timestamp,
         last_reserved -> Nullable<Datetime>,
 
         proven_datetime -> Nullable<Datetime>,

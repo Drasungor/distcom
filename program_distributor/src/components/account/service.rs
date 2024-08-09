@@ -23,8 +23,8 @@ impl AccountService {
             password_hash,
             name: new_account_data.name,
             description: new_account_data.description,
-            // account_was_verified: false,
-            account_was_verified: true,
+            // // account_was_verified: false,
+            // account_was_verified: true,
         };
 
         AccountMysqlDal::register_account(new_account).await?;

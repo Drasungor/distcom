@@ -106,7 +106,8 @@ impl AccountMysqlDal {
         connection.transaction::<_, AppError, _>(|connection| {
 
             let mut find_accounts_query = account::table
-                .offset((page - 1) * limit).limit(limit).into_boxed().filter(account::account_was_verified.eq(true));
+                // .offset((page - 1) * limit).limit(limit).into_boxed().filter(account::account_was_verified.eq(true));
+                .offset((page - 1) * limit).limit(limit).into_boxed();
 
             if let Some(name_string) = name_filter {
                 // We only use the % at the end of the "like" filter because otherwise the column index will not be used
@@ -115,7 +116,7 @@ impl AccountMysqlDal {
 
             let found_accounts: Vec<CompleteAccount> = find_accounts_query.load::<CompleteAccount>(connection)?;
             let count_of_matched_elements: i64 = account::table
-                .filter(account::account_was_verified.eq(true))
+                // .filter(account::account_was_verified.eq(true))
                 .count()
                 .get_result(connection)?;
             
