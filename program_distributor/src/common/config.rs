@@ -53,10 +53,8 @@ fn generate_connection_pool(database_url: &String) -> Pool<ConnectionManager<Mys
 fn get_database_connection_url(config: &Config) -> String {
     let url_env_variable = env::var("dockerized_database_url");
     if let Ok(ok_env_url) = url_env_variable {
-        println!("ok_env_url: {ok_env_url}");
         ok_env_url
     } else {
-        println!("config.database_url: {}", config.database_url.clone());
         config.database_url.clone()
     }
 }
