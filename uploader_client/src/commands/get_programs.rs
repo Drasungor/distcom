@@ -34,6 +34,13 @@ enum GetProgramsCommands {
         input_file_name: String,
     },
 
+    /// Deletes a program
+    Delete {
+        /// Index of the displayed program that will be deleted
+        #[clap(index = 1)]
+        index: usize,
+    },
+
     /// Goes back to the previous commands selection
     Back,
 
@@ -111,6 +118,9 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         } else {
                             println!("Index out of bounds, please choose one of the provided indexes.");
                         }
+                    },
+                    GetProgramsCommands::Delete{index} => {
+                        
                     },
                     GetProgramsCommands::Back => {
                         return true;

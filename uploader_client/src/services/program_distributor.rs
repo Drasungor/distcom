@@ -215,25 +215,43 @@ impl ProgramDistributorService {
         Ok(uploaded_input_group_data.data.input_group_id)
     }
 
-    pub async fn download_program(&self, program_id: &str, download_path: &Path) {
+    pub async fn download_program(&mut self, program_id: &str, download_path: &Path) -> Result <(), EndpointError> {
         let get_program_url = format!("{}/program/{}", self.base_url, program_id);
-        let response = reqwest::get(get_program_url).await.expect("Error in get");
+        // let response = reqwest::get(get_program_url).await.expect("Error in get");
+        let download_program_request_builder = self.client.get(get_program_url);
     
-        // Ensure the request was successful (status code 200)
-        if response.status().is_success() {
-            let file_path = "./aux_files/downloaded_program.tar";
+        // let patch_program_input_group_proof_request_builder = self.client.patch(patch_program_input_group_proof_url);
+        // self.make_request_with_response_body::<()>(patch_program_input_group_proof_request_builder).await?;
+        let bytes = self.make_request_with_file_response(download_program_request_builder).await?;
+        let file_path = "./aux_files/downloaded_program.tar";
 
-            // Open a file to write the downloaded content
-            let mut file = File::create(file_path).expect("Error in file creation");
-            file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
-            decompress_tar(file_path, download_path.to_str().unwrap()).expect("Error in downloaded file decompression");
+        // Open a file to write the downloaded content
+        let mut file = File::create(file_path).expect("Error in file creation");
+        file.write_all(&bytes).expect("Errors in file write");
+        decompress_tar(file_path, download_path.to_str().unwrap()).expect("Error in downloaded file decompression");
 
-            let _ = fs::remove_file(file_path);
+        let _ = fs::remove_file(file_path);
 
-        } else {
-            panic!("Failed to download file: {}", response.status());
-        }
+        Ok(())
+
+        // // Ensure the request was successful (status code 200)
+        // if response.status().is_success() {
+        //     let file_path = "./aux_files/downloaded_program.tar";
+
+        //     // Open a file to write the downloaded content
+        //     let mut file = File::create(file_path).expect("Error in file creation");
+        //     file.write_all(response.bytes().await.expect("Error in bytes get").as_ref()).expect("Errors in file write");
+        //     decompress_tar(file_path, download_path.to_str().unwrap()).expect("Error in downloaded file decompression");
+
+        //     let _ = fs::remove_file(file_path);
+
+        // } else {
+        //     panic!("Failed to download file: {}", response.status());
+        // }
     }
+
+    // route("{program_id}", web::delete().to(ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
+
 
     pub async fn mark_proof_as_invalid(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
         let patch_program_input_group_proof_url = format!("{}/program/proof/{program_id}/{input_group_id}", self.base_url);
