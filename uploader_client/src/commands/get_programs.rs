@@ -58,6 +58,12 @@ async fn post_input_group(program_id: &str, input_group_name: &String, uploaded_
     write_guard.upload_input_group(program_id, input_group_name, uploaded_input_group_file_path).await.expect("Error while uploading program input group")
 }
 
+async fn delete_program(program_id: &str) {
+    let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+    write_guard.delete_program(program_id).await.expect("Error while deleting program");
+}
+
+
 async fn manage_input_group_upload(program_id: &str, uploaded_input_group_file_path: &Path) {
     let file_name = uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap();
     let parts: Vec<&str> = file_name.split('.').collect();
@@ -120,7 +126,11 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         }
                     },
                     GetProgramsCommands::Delete{index} => {
-                        
+                        let chosen_program = &programs_page.programs[index];
+                        let program_id = &chosen_program.program_id;
+                        delete_program(&program_id).await;
+                        // We do not delete this program's folder because the user might not want to have the already 
+                        // verified inputs removed
                     },
                     GetProgramsCommands::Back => {
                         return true;
@@ -128,7 +138,6 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                     GetProgramsCommands::Exit => {
                         return false;
                     },
-                    // Add commands for program deletion
                 }
             },
             Err(err) => {

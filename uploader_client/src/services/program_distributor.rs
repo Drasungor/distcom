@@ -250,6 +250,13 @@ impl ProgramDistributorService {
         // }
     }
 
+    pub async fn delete_program(&mut self, program_id: &str) -> Result <(), EndpointError> {
+        let delete_program_url = format!("{}/program/{}", self.base_url, program_id);
+        let delete_program_request_builder = self.client.delete(delete_program_url);
+        self.make_request_with_response_body::<()>(delete_program_request_builder).await?;
+        Ok(())
+    }
+
     // route("{program_id}", web::delete().to(ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
 
 
