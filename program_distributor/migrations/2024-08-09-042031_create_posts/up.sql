@@ -18,7 +18,7 @@ CREATE TABLE `program`(
 	`name` VARCHAR(255) NOT NULL,
 	`description` VARCHAR(700) NOT NULL,
 	`input_lock_timeout` BIGINT NOT NULL,
-	INDEX `name_index` (`name`)
+	UNIQUE INDEX `name_index` (`name`)
 );
 
 CREATE TABLE `program_input_group`(

@@ -32,9 +32,9 @@ impl ProgramMysqlDal {
 
     pub async fn add_organization_program(organization_id: String, program_id: String, name: String, description: String, input_lock_timeout: i64) -> Result<(), AppError> {
         let stored_program = StoredProgram {
-            organization_id,
+            organization_id: organization_id.clone(),
             program_id,
-            name,
+            name: name.clone(),
             description,
             input_lock_timeout,
         };
@@ -42,9 +42,17 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-            diesel::insert_into(program::table)
-                        .values(&stored_program)
-                        .execute(connection)?;
+
+            let found_program_option: Option<StoredProgram> = program::table
+                .filter(program::name.eq(name).and(program::organization_id.eq(organization_id)))
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                diesel::insert_into(program::table)
+                            .values(&stored_program)
+                            .execute(connection)?;
+            } else {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
             Ok(())
 
         })

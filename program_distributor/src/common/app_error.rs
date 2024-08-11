@@ -39,6 +39,7 @@ impl InternalServerErrorType {
 pub enum AppErrorType {
     AccountNotFound,
     ProgramNotFound,
+    ProgramNameTaken,
     InputGroupNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
@@ -89,6 +90,7 @@ impl AppErrorType {
         match self {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
             AppErrorType::ProgramNotFound => String::from("PROGRAM_NOT_FOUND"),
+            AppErrorType::ProgramNameTaken => String::from("PROGRAM_NAME_TAKEN"),
             AppErrorType::InputGroupNotFound => String::from("INPUT_GROUP_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::EncodingNotBase64 => String::from("BAD_BASE_64_ENCODING"),
@@ -122,6 +124,10 @@ impl AppError {
             AppErrorType::ProgramNotFound => {
                 message_text = "Program not found";
                 status_code = StatusCode::NOT_FOUND;
+            },
+            AppErrorType::ProgramNameTaken => {
+                message_text = "Program name was taken";
+                status_code = StatusCode::CONFLICT;
             },
             AppErrorType::InputGroupNotFound => {
                 message_text = "Input group not found";
