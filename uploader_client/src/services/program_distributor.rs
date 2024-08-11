@@ -292,17 +292,21 @@ impl ProgramDistributorService {
         let mut data = HashMap::new();
         data.insert("username", username);
         data.insert("password", password);
-    
         let post_login_url = format!("{}/account/login", self.base_url);
 
-        // TODO: Ensure the request was successful (status code 200)
         let response = self.client.post(post_login_url).json(&data).send().await.expect("Error in get");
-        
         if response.status().is_success() {
             let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
             login_response
-        } else { 
-            panic!("Error in login");
+        } else {
+            let login_error: EndpointError = response.json().await.expect("Error deserializing JSON");
+            let app_error_type = login_error.error_code.parse::<AppErrorType>().unwrap();
+            if app_error_type == AppErrorType::AccountNotFound {
+                println!("Account not found");
+                std::process::exit(0);
+            } else {
+                panic!("Unexpected error in login: {:?}", login_error);
+            }
         }
     }
 
