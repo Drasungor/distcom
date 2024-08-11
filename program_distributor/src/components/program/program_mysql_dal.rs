@@ -51,7 +51,7 @@ impl ProgramMysqlDal {
                             .values(&stored_program)
                             .execute(connection)?;
             } else {
-                return Err(AppError::new(AppErrorType::ProgramNotFound))
+                return Err(AppError::new(AppErrorType::ProgramNameTaken))
             }
             Ok(())
 

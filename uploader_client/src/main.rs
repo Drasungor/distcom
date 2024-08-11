@@ -2,6 +2,7 @@ use std::path::Path;
 use clap::error::ErrorKind;
 use commands::get_programs::select_my_programs;
 use commands::get_proven_programs::select_my_proven_programs;
+use common::communication::AppErrorType;
 use services::program_distributor::UploadedProgram;
 use clap::{Parser, Subcommand};
 use utils::local_storage_helpers::create_folder;
@@ -107,7 +108,11 @@ async fn start_program_execution() {
                                 create_folder(&program_folder);
                             },
                             Err(received_error) => {
-                                panic!("Error while uploading methods: {:?}", received_error);
+                                if received_error.error_code.parse::<AppErrorType>().unwrap() == AppErrorType::ProgramNameTaken {
+                                    println!("Program name is already used by another of your programs");
+                                } else {
+                                    panic!("Unexpected error while uploading methods: {:?}", received_error);
+                                }
                             }
                         }
 

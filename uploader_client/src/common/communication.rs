@@ -18,6 +18,7 @@ pub struct EndpointError {
 pub enum AppErrorType {
     AccountNotFound,
     ProgramNotFound,
+    ProgramNameTaken,
     InputGroupNotFound,
     WrongCredentials,
     EncodingNotBase64,
@@ -35,6 +36,7 @@ impl FromStr for AppErrorType {
         match s {
             "ACCOUNT_NOT_FOUND" => Ok(AppErrorType::AccountNotFound),
             "PROGRAM_NOT_FOUND" => Ok(AppErrorType::ProgramNotFound),
+            "PROGRAM_NAME_TAKEN" => Ok(AppErrorType::ProgramNameTaken),
             "INPUT_GROUP_NOT_FOUND" => Ok(AppErrorType::InputGroupNotFound),
             "WRONG_CREDENTIALS" => Ok(AppErrorType::WrongCredentials),
             "BAD_BASE_64_ENCODING" => Ok(AppErrorType::EncodingNotBase64),
