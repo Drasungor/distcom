@@ -126,7 +126,17 @@ impl FileStorage for AwsS3Handler {
 
     async fn delete_program(&self, organization_id: &str, program_id: &str) -> Result<(), AppError> {
         let program_key = format!("{organization_id}/{program_id}");
-        self.delete_object(&program_key).await
+        let client_ref = self.s3_client.as_ref().expect("Client was not set");
+        let list_req = client_ref.list_objects_v2()
+                .bucket(self.bucket_name.clone())
+                .prefix(program_key.clone())
+                .send()
+                .await?;
+        let objects_list = list_req.contents();
+        for object in objects_list {
+            self.delete_object(&object.key.clone().expect("Object without a key")).await?;
+        }
+        Ok(())
     }
 
     async fn delete_proof(&self, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
