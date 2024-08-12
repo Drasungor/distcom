@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
     // let mut cron = CronJob::new("./downloads", clear_directory);
-    let mut cron = CronJob::new("", cron_clear_aux_directories);
+    let mut cron = CronJob::new("", cron_clear_aux_directories); 
 
     // TODO: make the cron run once per hour or day, maybe make it configurable
     cron.seconds("0");
