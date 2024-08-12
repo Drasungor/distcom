@@ -2,7 +2,20 @@ import csv
 import base64
 import random
 
-def write_big_endian_inputs_to_csv(number, file_path):
+def generate_miller_rabin_inputs(number, iterations_limit):
+    # Convert number to 4-byte big endian
+    big_endian_bytes = number.to_bytes(4, byteorder='big')
+    byte_array = bytearray(big_endian_bytes)
+
+    byte_array.extend(iterations_limit.to_bytes(4, byteorder='big'))
+
+    while len(byte_array) < 1024:
+        byte_array.extend(b'\x00')
+
+    base64_data = base64.b64encode(byte_array).decode('utf-8')
+    return base64_data
+
+def generate_fermat_inputs(number):
     # Convert number to 4-byte big endian
     big_endian_bytes = number.to_bytes(4, byteorder='big')
     
@@ -22,15 +35,13 @@ def write_big_endian_inputs_to_csv(number, file_path):
         byte_array.extend(b'\x00')
 
     base64_data = base64.b64encode(byte_array).decode('utf-8')
+    return base64_data
 
-    # Write to CSV file
-    with open(file_path, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([base64_data])
-
-# Example usage
 number = 561
-file_path = str(number) + '_fermat_big_endian.csv'
-write_big_endian_inputs_to_csv(number, file_path)
+file_path = str(number) + '_mixed_big_endian.csv'
+with open(file_path, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow([generate_fermat_inputs(number)])
+    writer.writerow([generate_miller_rabin_inputs(number, 1000)])
 
 print(f"Number {number} written in big endian format to {file_path} with padding.")
