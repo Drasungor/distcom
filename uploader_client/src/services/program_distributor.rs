@@ -399,7 +399,7 @@ impl ProgramDistributorService {
                 println!("Please log in to an account, choose one of the following options: ");
                 println!("1 - Register");
                 println!("2 - Login");
-                // io::stdout().flush().unwrap();
+                println!("3 - Exit");
                 let choice = get_input_string();
 
                 if choice == "1" {
@@ -408,6 +408,8 @@ impl ProgramDistributorService {
                 } else if choice == "2" {
                     returned_token = Some(self.interactive_login().await);
                     made_a_choice = true;
+                } else if choice == "3" {
+                    std::process::exit(0)
                 }
             }
         }
