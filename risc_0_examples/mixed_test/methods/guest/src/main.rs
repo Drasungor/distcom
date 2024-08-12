@@ -87,6 +87,7 @@ fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
         is_probably_prime,
         iterations_limit_reached: iteration_counter == iterations_limit,
     };
+    return outputs;
 }
 
 fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
@@ -110,7 +111,7 @@ fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
         tested_number: number_to_test,
         is_probably_prime: may_be_prime,
     }; 
-
+    return outputs;
 }
 
 

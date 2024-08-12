@@ -7,6 +7,6 @@ pub fn folder_exists(path: &str) -> bool {
 
 pub fn create_folder(path: &str) {
     if !folder_exists(path) {
-        fs::create_dir(path).expect("Error in uploads folder creation")
+        fs::create_dir_all(path).expect("Error in uploads folder creation")
     }
 }
