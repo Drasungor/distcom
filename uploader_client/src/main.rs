@@ -2,6 +2,7 @@ use std::path::Path;
 use clap::error::ErrorKind;
 use commands::get_programs::select_my_programs;
 use commands::get_proven_programs::select_my_proven_programs;
+use common::communication::AppErrorType;
 use services::program_distributor::UploadedProgram;
 use clap::{Parser, Subcommand};
 use utils::local_storage_helpers::create_folder;
@@ -79,9 +80,8 @@ enum GetProgramsCommands {
 
 async fn start_program_execution() {
     let mut should_continue_looping = true;
-    // loop {
     while should_continue_looping {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -108,7 +108,11 @@ async fn start_program_execution() {
                                 create_folder(&program_folder);
                             },
                             Err(received_error) => {
-                                panic!("Error while uploading methods: {:?}", received_error);
+                                if received_error.error_code.parse::<AppErrorType>().unwrap() == AppErrorType::ProgramNameTaken {
+                                    println!("Program name is already used by another of your programs");
+                                } else {
+                                    panic!("Unexpected error while uploading methods: {:?}", received_error);
+                                }
                             }
                         }
 
@@ -136,7 +140,7 @@ async fn start_program_execution() {
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

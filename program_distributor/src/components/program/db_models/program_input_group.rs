@@ -1,7 +1,5 @@
 use diesel::prelude::*;
-use chrono::{NaiveDateTime};
-use diesel::sql_types::Timestamp;
-use std::time::{SystemTime};
+use chrono::NaiveDateTime;
 use serde_derive::Serialize;
 
 #[derive(Queryable, Selectable, Insertable, Clone, Debug, Serialize)]
@@ -10,6 +8,7 @@ use serde_derive::Serialize;
 pub struct ProgramInputGroup {
     pub input_group_id: String,
     pub program_id: String,
+    pub name: String,
     pub last_reserved: Option<NaiveDateTime>,
     pub proven_datetime: Option<NaiveDateTime>,
 }

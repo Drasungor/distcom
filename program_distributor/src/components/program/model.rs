@@ -1,6 +1,5 @@
 use serde_derive::{Serialize, Deserialize};
 
-use crate::utils::jwt_helpers::GeneratedToken;
 
 use super::db_models::{program::StoredProgram, program_input_group::ProgramInputGroup};
 
@@ -19,6 +18,11 @@ pub struct UploadProof {
     pub organization_id: String,
     pub program_id: String,
     pub input_group_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct UploadInputGroup {
+    pub name: String,
 }
 
 #[derive(Deserialize)]

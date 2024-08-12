@@ -33,13 +33,12 @@ pub fn generate_jwt(secret: &str, organization_id: &str, expiration_secs: u64) -
     let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
                               .expect("Failed to create token");
 
-    return GeneratedToken {
+    GeneratedToken {
         token_id,
         token,
-    };
+    }
 }
 
-// pub fn validate_jwt(secret: &str, token: &str) -> Result<String, jsonwebtoken::errors::Error> {
 pub fn validate_jwt(secret: &str, token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let validation = Validation::new(Algorithm::HS256);
     let decoded = decode::<Claims>(token, &DecodingKey::from_secret(secret.as_ref()), &validation)?;
@@ -49,6 +48,5 @@ pub fn validate_jwt(secret: &str, token: &str) -> Result<Claims, jsonwebtoken::e
     if decoded.claims.exp < current_time {
         return Err(jsonwebtoken::errors::ErrorKind::ExpiredSignature.into());
     }
-    // return Ok(decoded.claims.organization_id);
-    return Ok(decoded.claims);
+    Ok(decoded.claims)
 }

@@ -1,11 +1,9 @@
-use std::{env, fs::File, io::{BufWriter, Write}, path::Path};
+use std::{fs::File, io::{BufWriter, Write}, path::Path};
 
 use async_trait::async_trait;
 use aws_sdk_s3 as s3;
-use aws_config::{self, meta::region::RegionProviderChain, Region};
+use aws_config::{self, Region};
 use s3::primitives::ByteStream;
-// use s3::primitives::ByteStream;
-// use std::path::Path;
 
 use crate::common::app_error::{AppError, AppErrorType, InternalServerErrorType};
 use super::file_storage::FileStorage;
@@ -32,7 +30,7 @@ impl FileStorage for AwsS3Handler {
     }
 
     async fn upload(&self, file_path: &Path, new_object_name: &str) -> Result<(), AppError> {
-        if (!file_path.exists()) {
+        if !file_path.exists() {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::UploadedFileNotFound)));
         }
         let key: &str;
@@ -68,7 +66,7 @@ impl FileStorage for AwsS3Handler {
     }
 
     async fn upload_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
-        if let None = file_path.to_str() {
+        if file_path.to_str().is_none() {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
         }
         let program_key = format!("{organization_id}/{program_id}/{input_group_id}.bin");
@@ -112,7 +110,7 @@ impl FileStorage for AwsS3Handler {
     }
 
     async fn download_proof(&self, file_path: &Path, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
-        if let None = file_path.to_str() {
+        if file_path.to_str().is_none() {
             return Err(AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::PathToStringConversionError)));
         }
         let program_key = format!("{organization_id}/{program_id}/{input_group_id}.bin");
@@ -128,7 +126,17 @@ impl FileStorage for AwsS3Handler {
 
     async fn delete_program(&self, organization_id: &str, program_id: &str) -> Result<(), AppError> {
         let program_key = format!("{organization_id}/{program_id}");
-        self.delete_object(&program_key).await
+        let client_ref = self.s3_client.as_ref().expect("Client was not set");
+        let list_req = client_ref.list_objects_v2()
+                .bucket(self.bucket_name.clone())
+                .prefix(program_key.clone())
+                .send()
+                .await?;
+        let objects_list = list_req.contents();
+        for object in objects_list {
+            self.delete_object(&object.key.clone().expect("Object without a key")).await?;
+        }
+        Ok(())
     }
 
     async fn delete_proof(&self, organization_id: &str, program_id: &str, input_group_id: &str) -> Result<(), AppError> {
@@ -142,14 +150,14 @@ impl AwsS3Handler {
 
     // s3_conection_data: "region:bucket_name:key_id:key_secret", variables cannot contain the ":" character
     pub fn new(s3_conection_data: &str) -> AwsS3Handler {
-        let connection_parameters: Vec<&str> = s3_conection_data.split(":").collect(); // TODO: make the separation character a config attribute
-        return AwsS3Handler {
+        let connection_parameters: Vec<&str> = s3_conection_data.split(':').collect(); // TODO: make the separation character a config attribute
+        AwsS3Handler {
             s3_client: None,
             region: connection_parameters[0].to_string(),
             bucket_name: connection_parameters[1].to_string(),
             key_id: connection_parameters[2].to_string(),
             key_secret: connection_parameters[3].to_string(),
-        };
+        }
     }
 
 }

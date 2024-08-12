@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize};
+use serde_derive::Deserialize;
 
 
 #[derive(Debug, Deserialize)]
@@ -11,7 +11,7 @@ pub struct ReturnedProgram {
 }
 
 pub fn print_programs_list(programs: &Vec<ReturnedProgram>) {
-    if programs.len() == 0 {
+    if programs.is_empty() {
         println!("No programs remaining");
     }
     let mut index = 0;

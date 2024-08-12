@@ -4,7 +4,7 @@ pub struct GeneralConstants {
 }
 
 pub fn get_general_constants() -> GeneralConstants {
-    return GeneralConstants {
+    GeneralConstants {
         page_default: 1,
         limit_default: 50,
     }

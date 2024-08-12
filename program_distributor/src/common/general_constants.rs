@@ -5,7 +5,7 @@ pub struct GeneralConstants {
 }
 
 pub fn get_general_constants() -> GeneralConstants {
-    return GeneralConstants {
+    GeneralConstants {
         page_min: 1,
         limit_min: 1,
         limit_max: 50,

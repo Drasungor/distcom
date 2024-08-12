@@ -46,11 +46,11 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
         panic!("Error in get organizations: {:?}", organizations_page_err);
     }
     let mut organizations_page = organizations_page_result.unwrap();
-    println!("");
+    println!();
     print_organizations_list(&organizations_page.organizations);
 
     loop { 
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
 
@@ -60,12 +60,6 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
                     GetOrganizationsCommands::Page{page, limit} => {
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
-                        // // get_organization_programs(organization_id: &String, limit: Option<u32>, page: Option<u32>)
-                        // organizations_page_result = read_guard.get_organizations(Some(used_limit), Some(used_page)).await;
-                        // if let Err(organizations_page_err) = organizations_page_result {
-                        //     panic!("Error in get organizations: {:?}", organizations_page_err);
-                        // }
-                        // organizations_page = organizations_page_result.unwrap();
                     },
                     GetOrganizationsCommands::Choose{index} => {
                         if index < organizations_page.organizations.len() {
@@ -88,7 +82,7 @@ pub async fn select_organizations(first_received_limit: usize, first_received_pa
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

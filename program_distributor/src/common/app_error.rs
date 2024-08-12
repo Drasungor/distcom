@@ -39,6 +39,7 @@ impl InternalServerErrorType {
 pub enum AppErrorType {
     AccountNotFound,
     ProgramNotFound,
+    ProgramNameTaken,
     InputGroupNotFound,
     WrongCredentials,
     UsernameAlreadyExists,
@@ -84,19 +85,12 @@ impl From<base64::DecodeError> for AppError {
     }
 }
 
-
-
-// impl From<std::error::Error> for AppError {
-//     fn from(error: ByteStreamError) -> Self {
-//         AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::ByteStreamGenerationError(error)))
-//     }
-// }
-
 impl AppErrorType {
     pub fn to_string(&self) -> String {
         match self {
             AppErrorType::AccountNotFound => String::from("ACCOUNT_NOT_FOUND"),
             AppErrorType::ProgramNotFound => String::from("PROGRAM_NOT_FOUND"),
+            AppErrorType::ProgramNameTaken => String::from("PROGRAM_NAME_TAKEN"),
             AppErrorType::InputGroupNotFound => String::from("INPUT_GROUP_NOT_FOUND"),
             AppErrorType::WrongCredentials => String::from("WRONG_CREDENTIALS"),
             AppErrorType::EncodingNotBase64 => String::from("BAD_BASE_64_ENCODING"),
@@ -131,6 +125,10 @@ impl AppError {
                 message_text = "Program not found";
                 status_code = StatusCode::NOT_FOUND;
             },
+            AppErrorType::ProgramNameTaken => {
+                message_text = "Program name was taken";
+                status_code = StatusCode::CONFLICT;
+            },
             AppErrorType::InputGroupNotFound => {
                 message_text = "Input group not found";
                 status_code = StatusCode::NOT_FOUND;
@@ -161,31 +159,31 @@ impl AppError {
             },
         };
 
-        return AppError {
+        AppError {
             error_type,
             message_text: message_text.to_string(),
             status_code,
-        };
+        }
 
     }
 
     pub fn message(&self) -> &String {
-        return &self.message_text;
+        &self.message_text
     }
 
     pub fn error_type(&self) -> String {
-        return self.error_type.to_string();
+        self.error_type.to_string()
     }
 
     pub fn unexpected_error_message(&self) -> Option<String> {
         if let AppErrorType::InternalServerError(internal_server_error_type) = &self.error_type {
             return Some(internal_server_error_type.to_string());
         }
-        return None;
+        None
     }
 
     pub fn status_code(&self) -> StatusCode {
-        return self.status_code;
+        self.status_code
     }
 }
 

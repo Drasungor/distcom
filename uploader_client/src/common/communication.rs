@@ -1,22 +1,11 @@
-// use std::str::{Bytes, FromStr};
 use std::str::FromStr;
-use std::fmt;
-use serde_derive::{Deserialize};
-use reqwest::Response;
-use bytes::Bytes;
-// use shlex::bytes::Bytes;
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct EndpointResult<T> {
     pub status: String,
     pub data: T,
 }
-
-// pub struct CompleteEndpointResponse<T> {
-//     pub response_body: EndpointResult<T>,
-//     // pub complete_response: Response,
-//     pub bytes: Bytes,
-// }
 
 #[derive(Debug, Deserialize)]
 pub struct EndpointError {
@@ -28,7 +17,11 @@ pub struct EndpointError {
 #[derive(Debug, PartialEq)]
 pub enum AppErrorType {
     AccountNotFound,
+    ProgramNotFound,
+    ProgramNameTaken,
+    InputGroupNotFound,
     WrongCredentials,
+    EncodingNotBase64,
     UsernameAlreadyExists,
     RefreshTokenNotfound,
     InvalidToken,
@@ -42,7 +35,11 @@ impl FromStr for AppErrorType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "ACCOUNT_NOT_FOUND" => Ok(AppErrorType::AccountNotFound),
+            "PROGRAM_NOT_FOUND" => Ok(AppErrorType::ProgramNotFound),
+            "PROGRAM_NAME_TAKEN" => Ok(AppErrorType::ProgramNameTaken),
+            "INPUT_GROUP_NOT_FOUND" => Ok(AppErrorType::InputGroupNotFound),
             "WRONG_CREDENTIALS" => Ok(AppErrorType::WrongCredentials),
+            "BAD_BASE_64_ENCODING" => Ok(AppErrorType::EncodingNotBase64),
             "USERNAME_ALREADY_EXISTS" => Ok(AppErrorType::UsernameAlreadyExists),
             "REFRESH_TOKEN_NOT_FOUND" => Ok(AppErrorType::RefreshTokenNotfound),
             "INVALID_TOKEN" => Ok(AppErrorType::InvalidToken),

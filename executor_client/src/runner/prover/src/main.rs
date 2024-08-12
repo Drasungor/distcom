@@ -8,8 +8,6 @@ use std::io::{self, Read};
 use bincode;
 use csv;
 
-// use basic_prime_test_core;
-
 fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
@@ -18,12 +16,6 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let program_input_file_name = args[1].parse::<String>().expect("The received input is not a positive integer");
-
-    // let env = ExecutorEnv::builder()
-    // .write(&tested_number)
-    // .unwrap()
-    // .build()
-    // .unwrap();
 
     let mut env_builder = ExecutorEnv::builder();
     let mut env_bulder_ref = &mut env_builder;
@@ -39,17 +31,8 @@ fn main() {
         let mut counter = 0;
 
         for value in line_iterator {
-            
-            // // let decoded_value = value;
-            // let decoded_value = base64::decode(value).expect("Failed to decode base64");
-            // let decoded_bytes = decoded_value.as_bytes();
-            // let bytes_vector = decoded_bytes.to_vec();
             let bytes_vector = base64::decode(value).expect("Failed to decode base64");
-
-            // // env_bulder_ref = env_bulder_ref.write(decoded_value.as_bytes()).unwrap();
-            // env_bulder_ref = env_bulder_ref.write(&decoded_bytes).unwrap();
             env_bulder_ref = env_bulder_ref.write(&bytes_vector).unwrap();
-
             counter += 1;
         }
         assert!(counter == 1, "There is more than one element per line");
@@ -65,20 +48,5 @@ fn main() {
 
     let receipt = &prove_info.receipt;
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
-
-    // let serialized_proof = bincode::serialize(receipt).expect("Error in proof serialization");
-    // let serialized_proof = bincode::serialize(&prove_info).expect("Error in proof serialization");
-
-    // println!("serialized_proof: {}", serialized_proof);
-
-
     std::fs::write("./proof.bin", serialized_proof);
-    // let _output: basic_prime_test_core::Outputs = receipt.journal.decode().unwrap();
-
-    // println!("The output of the journal is {:?}", _output);
-
-    // receipt
-    //     .verify(DOWNLOADED_GUEST_ID)
-    //     .expect("Proof verification failed");
-    // println!("Successful verification");
 }

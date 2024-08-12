@@ -1,5 +1,4 @@
-use actix_web::{web, HttpResponse, Responder, HttpResponseBuilder};
-use serde_derive::{Serialize, Deserialize};
+use actix_web::{web, Responder};
 
 use crate::common;
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
@@ -15,12 +14,12 @@ impl AccountController {
 
     pub async fn register(body: web::Json<ReceivedNewAccount>) -> impl Responder {
         let registration_result = AccountService::register(body.into_inner()).await;
-        return AppHttpResponseBuilder::get_http_response(registration_result);
+        AppHttpResponseBuilder::get_http_response(registration_result)
     }
 
     pub async fn login(body: web::Json<Credentials>) -> impl Responder {
         let login_result = AccountService::login(body.username.clone(), body.password.clone()).await;
-        return AppHttpResponseBuilder::get_http_response(login_result);
+        AppHttpResponseBuilder::get_http_response(login_result)
     }
 
     pub async fn refresh_basic_token(body: web::Json<RefreshToken>) -> impl Responder {
@@ -29,12 +28,12 @@ impl AccountController {
         let refresh_token_id = refresh_token_payload.token_id;
         let organization_id = refresh_token_payload.organization_id;
         let token_refreshment_result = AccountService::refresh_basic_token(refresh_token_id, organization_id).await;
-        return AppHttpResponseBuilder::get_http_response(token_refreshment_result);
+        AppHttpResponseBuilder::get_http_response(token_refreshment_result)
     }
 
     pub async fn delete_refresh_token(body: web::Json<TokenId>) -> impl Responder {
         let login_result = AccountService::delete_refresh_token(body.token_id.clone()).await;
-        return AppHttpResponseBuilder::get_http_response(login_result);
+        AppHttpResponseBuilder::get_http_response(login_result)
     }
     
     pub async fn get_paged_organizations(query_params: web::Query<GetPagedOrganizations>) -> impl Responder {
@@ -45,7 +44,7 @@ impl AccountController {
         };
         let paging_params = process_paging_inputs(paging);
         let get_organizations_result = AccountService::get_organizations(query_params.name_filter, paging_params.limit, paging_params.page).await;
-        return AppHttpResponseBuilder::get_http_response(get_organizations_result);
+        AppHttpResponseBuilder::get_http_response(get_organizations_result)
     }
     
 }

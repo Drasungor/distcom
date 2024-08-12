@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize};
+use serde_derive::Deserialize;
 
 
 #[derive(Debug, Deserialize)]
@@ -11,7 +11,7 @@ pub struct ReturnedProof {
 }
 
 pub fn print_proofs_list(proofs: &Vec<ReturnedProof>) {
-    if proofs.len() == 0 {
+    if proofs.is_empty() {
         println!("No proofs remaining");
     }
     let mut index = 0;

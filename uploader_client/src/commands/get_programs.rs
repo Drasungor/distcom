@@ -1,5 +1,5 @@
 use clap::{error::ErrorKind, Parser, Subcommand};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use crate::{common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
 
@@ -34,6 +34,13 @@ enum GetProgramsCommands {
         input_file_name: String,
     },
 
+    /// Deletes a program
+    Delete {
+        /// Index of the displayed program that will be deleted
+        #[clap(index = 1)]
+        index: usize,
+    },
+
     /// Goes back to the previous commands selection
     Back,
 
@@ -43,21 +50,33 @@ enum GetProgramsCommands {
 
 async fn retrieve_my_programs(limit: usize, page: usize) -> PagedPrograms {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.get_my_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs");
+    write_guard.get_my_programs(Some(limit), Some(page)).await.expect("Error while getting uploaded programs")
 }
 
-async fn post_input_group(program_id: &str, uploaded_input_group_file_path: &Path) -> String {
+async fn post_input_group(program_id: &str, input_group_name: &String, uploaded_input_group_file_path: &Path) -> String {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    return write_guard.upload_input_group(program_id, uploaded_input_group_file_path).await.expect("Error while uploading program input group");
+    write_guard.upload_input_group(program_id, input_group_name, uploaded_input_group_file_path).await.expect("Error while uploading program input group")
 }
+
+async fn delete_program(program_id: &str) {
+    let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+    write_guard.delete_program(program_id).await.expect("Error while deleting program");
+}
+
 
 async fn manage_input_group_upload(program_id: &str, uploaded_input_group_file_path: &Path) {
-    let input_group_id = post_input_group(program_id, uploaded_input_group_file_path).await;
-    let input_group_folder = format!("./programs_data/{program_id}/{input_group_id}");
-    create_folder(&input_group_folder);
-    let final_input_group_path = format!("{input_group_folder}/{}", uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap());
-    fs::copy(uploaded_input_group_file_path, final_input_group_path).expect("Error moving input file");
-    println!("Uploaded input group with path: {}", uploaded_input_group_file_path.to_str().unwrap());
+    let file_name = uploaded_input_group_file_path.file_name().unwrap().to_str().unwrap();
+    let parts: Vec<&str> = file_name.split('.').collect();
+    if uploaded_input_group_file_path.exists() {
+        let input_group_id = post_input_group(program_id, &parts[0].to_string(), uploaded_input_group_file_path).await;
+        let input_group_folder = format!("./programs_data/{program_id}/{input_group_id}");
+        create_folder(&input_group_folder);
+        let final_input_group_path = format!("{input_group_folder}/{}", file_name);
+        fs::copy(uploaded_input_group_file_path, final_input_group_path).expect("Error moving input file");
+        println!("Uploaded input group with path: {}", uploaded_input_group_file_path.to_str().unwrap());
+    } else {
+        println!("The provided input file does not exist: {}", uploaded_input_group_file_path.to_str().unwrap());
+    }
 }
 
 async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
@@ -70,17 +89,17 @@ async fn upload_inputs_folder(program_id: &str, folder_path: &Path) {
             manage_input_group_upload(program_id, &current_path).await;
         }
     }
-}
+} 
 
 pub async fn select_my_programs(first_received_limit: usize, first_received_page: usize) -> bool {
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_programs(used_limit, used_page).await;
-    println!("");
+    println!();
     print_programs_list(&programs_page.programs);
 
     loop {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
         match ProgramsArgs::try_parse_from(args.iter()) {
@@ -89,7 +108,6 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                     GetProgramsCommands::Page{page, limit} => {
                         used_limit = process_previously_set_page_size(used_limit, limit);
                         used_page = page;
-                        // programs_page = retrieve_my_programs(used_limit, used_page).await;
                     },
                     GetProgramsCommands::PostInput{index, input_file_name} => {
                         if index < programs_page.programs.len() {
@@ -107,19 +125,25 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                             println!("Index out of bounds, please choose one of the provided indexes.");
                         }
                     },
+                    GetProgramsCommands::Delete{index} => {
+                        let chosen_program = &programs_page.programs[index];
+                        let program_id = &chosen_program.program_id;
+                        delete_program(&program_id).await;
+                        // We do not delete this program's folder because the user might not want to have the already 
+                        // verified inputs removed
+                    },
                     GetProgramsCommands::Back => {
                         return true;
                     },
                     GetProgramsCommands::Exit => {
                         return false;
                     },
-                    // Add commands for program deletion
                 }
             },
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

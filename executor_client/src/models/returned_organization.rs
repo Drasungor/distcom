@@ -10,7 +10,7 @@ pub struct ReturnedOrganization {
 
 pub fn print_organizations_list(organizations: &Vec<ReturnedOrganization>) {
     let mut index = 0;
-    if organizations.len() == 0 {
+    if organizations.is_empty() {
         println!("No organizations are avaible");
     }
     for organization in organizations {

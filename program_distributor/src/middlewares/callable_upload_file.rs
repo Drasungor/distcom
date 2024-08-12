@@ -1,9 +1,8 @@
-use std::fs;
 use actix_web::web;
 use serde;
 use serde::de::DeserializeOwned;
 use std::fs::File;
-use actix_multipart::{Field, Multipart};
+use actix_multipart::{Multipart};
 use futures_util::stream::TryStreamExt;
 use std::io::Write; // Add import for Write
 use uuid::Uuid;
@@ -28,7 +27,7 @@ async fn process_file_field(mut field: actix_multipart::Field, uploads_folder: &
         web::block(move || file_pointer_clone.write_all(&chunk)).await.
                 expect("Error chunk creation task").expect("Error in chunk creation");
     }
-    return new_filename;
+    new_filename
 }
 
 async fn process_text_object_field<T>(mut field: actix_multipart::Field) -> T 
@@ -43,7 +42,7 @@ T: DeserializeOwned,
     let bytes_array = json_str_bytes.to_vec();
     let u8_vector = bytes_array.as_slice();
     let json_str = std::str::from_utf8(u8_vector).expect("Error in conversion to json string");
-    return serde_json::from_str::<T>(&json_str).expect("Error in conversion from string to struct");
+    serde_json::from_str::<T>(json_str).expect("Error in conversion from string to struct")
 }
 
 pub async fn upload_files(mut payload: Multipart) -> Result<Vec<String>, String> {
@@ -51,16 +50,9 @@ pub async fn upload_files(mut payload: Multipart) -> Result<Vec<String>, String>
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field_is_file = true;
-        let mut field = field_result;
+        let field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
             None => {
@@ -69,12 +61,12 @@ pub async fn upload_files(mut payload: Multipart) -> Result<Vec<String>, String>
             }
         };
         
-        if (field_is_file) {
+        if field_is_file {
             let new_filename = process_file_field(field, uploads_folder, &filename).await;
             files_names.push(new_filename);
         }
     }
-    return Ok(files_names);
+    Ok(files_names)
 }
 
 pub async fn upload_files_with_body<T>(mut payload: Multipart) -> Result<(Vec<String>, T), String>
@@ -86,16 +78,9 @@ T: DeserializeOwned,
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
         let mut field_is_file = true;
-        let mut field = field_result;
+        let field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
             None => {
@@ -104,7 +89,7 @@ T: DeserializeOwned,
             }
         };
 
-        if (field_is_file) {
+        if field_is_file {
             let new_filename = process_file_field(field, uploads_folder, &filename).await;
             files_names.push(new_filename);
         } else {
@@ -113,7 +98,7 @@ T: DeserializeOwned,
             received_object = Some(process_text_object_field::<T>(field).await);
         }
     }
-    return Ok((files_names, received_object.expect("No body was received")));
+    Ok((files_names, received_object.expect("No body was received")))
 }
 
 pub async fn upload_exact_amount_files_with_body<T>(mut payload: Multipart, files_amount: u64) -> Result<(Vec<String>, T), String>
@@ -127,20 +112,9 @@ T: DeserializeOwned,
 
     let mut counter = 0;
 
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
-
-        // // TODO: manage this with an error instead of an assert
-        // assert!(counter < files_amount, "This endpoint expects {files_amount} files but more were sent");
-
         let mut field_is_file = true;
-        let mut field = field_result;
+        let field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
             None => {
@@ -151,8 +125,7 @@ T: DeserializeOwned,
 
         println!("filename: {filename}");
 
-        if (field_is_file) {
-
+        if field_is_file {
 
             // TODO: manage this with an error instead of an assert
             assert!(counter < files_amount, "This endpoint expects {files_amount} files but more ({counter}) were sent");
@@ -168,23 +141,22 @@ T: DeserializeOwned,
             assert!(received_object.is_none(), "More than one data attribute was received");
             received_object = Some(process_text_object_field::<T>(field).await);
         }
-        // counter += 1;
     }
 
     // TODO: manage this with an error instead of an assert
     assert!(counter == files_amount, "This endpoint expects {files_amount} files but less ({counter}) were sent");
 
-    return Ok((files_names, received_object.expect("No body was received")));
+    Ok((files_names, received_object.expect("No body was received")))
 }
 
-pub async fn upload_one_file_with_body<T: DeserializeOwned>(mut payload: Multipart) -> Result<(String, T), String> {
+pub async fn upload_one_file_with_body<T: DeserializeOwned>(payload: Multipart) -> Result<(String, T), String> {
     let (files_array, returned_object) = upload_exact_amount_files_with_body::<T>(payload, 1).await?;
     let files_amount = files_array.len();
 
     // TODO: manage this with an error instead of an assert
     assert!(files_amount == 1, "This endpoint expects 1 file but {files_amount} were sent");
 
-    return Ok((files_array[0].clone(), returned_object));
+    Ok((files_array[0].clone(), returned_object))
 }
 
 
@@ -192,23 +164,14 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
     let mut files_names: Vec<String> = Vec::new();
     let uploads_folder = "./uploads";
     create_folder(uploads_folder);
-
     let mut counter = 0;
-
-    // let aux_result = payload.try_next().await;
-    // println!("PAyload next test: {:?}", aux_result);
-
-    // if let Err(e) = aux_result {
-    //     println!("Print aux_result match {}", e);
-    // }
-
     while let Ok(Some(field_result)) = payload.try_next().await {
 
         // TODO: manage this with an error instead of an assert
         assert!(counter < files_amount, "This endpoint expects {files_amount} files but more were sent");
 
         let mut field_is_file = true;
-        let mut field = field_result;
+        let field = field_result;
         let filename = match field.content_disposition().get_filename() {
             Some(cd) => cd.to_string(),
             None => {
@@ -217,7 +180,7 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
             }
         };
         
-        if (field_is_file) {
+        if field_is_file {
             let new_filename = process_file_field(field, uploads_folder, &filename).await;
             files_names.push(new_filename);
             counter += 1;
@@ -227,7 +190,7 @@ pub async fn upload_exact_amount_files(mut payload: Multipart, files_amount: u64
     // TODO: manage this with an error instead of an assert
     assert!(counter == files_amount, "This endpoint expects {files_amount} files but less were sent");
 
-    return Ok(files_names);
+    Ok(files_names)
 }
 
 pub async fn upload_one_file(payload: Multipart) -> Result<String, String> {
@@ -237,5 +200,5 @@ pub async fn upload_one_file(payload: Multipart) -> Result<String, String> {
     // TODO: manage this with an error instead of an assert
     assert!(files_amount == 1, "This endpoint expects 1 files but {files_amount} were sent");
 
-    return Ok(files_array[0].clone());
+    Ok(files_array[0].clone())
 }

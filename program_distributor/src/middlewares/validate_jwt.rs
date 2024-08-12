@@ -1,15 +1,14 @@
-use actix_web::body::{BoxBody, MessageBody};
-use actix_web::http::{self, StatusCode};
-use actix_web::{web, HttpMessage, HttpResponse, HttpResponseBuilder};
+use actix_web::body::{BoxBody};
+use actix_web::{HttpMessage};
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
 use std::future::{ready, Ready};
 use std::pin::Pin;
 
 use crate::common::app_error::{AppError, AppErrorType};
-use crate::common::app_http_response_builder::{AppHttpResponseBuilder, FailureResponse};
+use crate::common::app_http_response_builder::{AppHttpResponseBuilder};
 use crate::{common, RequestExtension};
-use crate::utils::jwt_helpers::{validate_jwt, Claims};
+use crate::utils::jwt_helpers::{validate_jwt};
 
 
 pub struct ValidateJwtMiddleware;
@@ -47,7 +46,7 @@ where
 
     forward_ready!(service);
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let headers = req.headers().clone();
         
         // TODO: manage this errors correctly instead of using expect
@@ -59,16 +58,6 @@ where
         if let Err(jwt_error) = jwt_payload_result {
             println!("Error in jwt validation: {}", jwt_error);
             let (request, _pl) = req.into_parts();
-
-            // let response = AppHttpResponseBuilder::get_http_response(Err(AppError::new(AppErrorType::InternalServerError)));
-
-            // let response = HttpResponse::build(StatusCode::NOT_FOUND).
-            //     json(FailureResponse { 
-            //         status: "error".to_string(), 
-            //         error_code: "error".to_string(), 
-            //         error_message: "error".to_string(),
-            // });
-
             let response = AppHttpResponseBuilder::generate_app_error_body(AppError::new(AppErrorType::InvalidToken));
 
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
@@ -82,7 +71,6 @@ where
             let mut cloned_extension = extensions_value.clone();
             cloned_extension.jwt_payload = Some(jwt_payload);
             extensions.insert(cloned_extension);
-            // println!("Extensions asdasdasdasdasd: {:?}", req.extensions().get::<RequestExtension>());
         }
         
         let fut = self.service.call(req);

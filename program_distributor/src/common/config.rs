@@ -1,4 +1,3 @@
-use futures_util::lock::Mutex;
 use serde_derive::{Serialize, Deserialize};
 use std::env;
 use std::fs::File;
@@ -11,7 +10,6 @@ use diesel::r2d2::{ ConnectionManager, Pool };
 use crate::common::general_constants;
 use crate::common::general_constants::GeneralConstants;
 use crate::services::files_storage::aws_s3_handler::AwsS3Handler;
-use crate::services::files_storage::file_storage::FileStorage;
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,7 +32,6 @@ lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&get_database_connection_url(&CONFIG_OBJECT));
     pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
-    // pub static ref GENERAL_CONSTANTS: RwLock<GeneralConstants> = RwLock::new(general_constants::get_general_constants());
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
 }
 
@@ -49,17 +46,15 @@ fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
 
 fn generate_connection_pool(database_url: &String) -> Pool<ConnectionManager<MysqlConnection>> {
     let manager = ConnectionManager::<MysqlConnection>::new(database_url);
-    let connection_pool = Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool");
-    return connection_pool;
+    
+    Pool::builder().test_on_check_out(true).build(manager).expect("Failed to create pool")
 }
 
 fn get_database_connection_url(config: &Config) -> String {
-    let url_env_variable = env::var("database_url");
+    let url_env_variable = env::var("dockerized_database_url");
     if let Ok(ok_env_url) = url_env_variable {
-        println!("ok_env_url: {ok_env_url}");
-        return ok_env_url;
+        ok_env_url
     } else {
-        println!("config.database_url: {}", config.database_url.clone());
-        return config.database_url.clone();
+        config.database_url.clone()
     }
 }

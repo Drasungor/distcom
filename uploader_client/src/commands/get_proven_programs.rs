@@ -1,8 +1,6 @@
-use std::path::Path;
-
 use clap::{error::ErrorKind, Parser, Subcommand};
 
-use crate::{commands::verify_proofs::select_proven_inputs, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{process_inputs::{process_previously_set_page_size, process_user_input}, verifying::{retrieve_my_proven_programs, verify_all_proven_executions, verify_some_proven_executions}}};
+use crate::{commands::verify_proofs::select_proven_inputs, models::returned_program::print_programs_list, utils::{process_inputs::{process_previously_set_page_size, process_user_input}, verifying::{retrieve_my_proven_programs, verify_all_proven_executions, verify_some_proven_executions}}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -62,11 +60,11 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
     let mut used_limit = first_received_limit;
     let mut used_page = first_received_page;
     let mut programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
-    println!("");
+    println!();
     print_programs_list(&programs_page.programs);
 
     loop {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
 
@@ -76,7 +74,6 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
                     GetProvenProgramsCommands::Page{page, limit} => {
                         used_page = page;
                         used_limit = process_previously_set_page_size(used_limit, limit);
-                        // programs_page = retrieve_my_proven_programs(used_limit, used_page).await;
                     },
                     GetProvenProgramsCommands::Verify{index, limit, page} => {
                         if index < programs_page.programs.len() {
@@ -109,7 +106,7 @@ pub async fn select_my_proven_programs(first_received_limit: usize, first_receiv
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")

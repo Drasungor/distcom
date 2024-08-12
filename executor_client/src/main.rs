@@ -54,7 +54,7 @@ async fn run_commands_loop() {
     let mut should_continue_looping = true;
     // loop {
     while should_continue_looping {
-        println!("");
+        println!();
         println!("Please execute a command:");
         let args = process_user_input();
 
@@ -77,7 +77,7 @@ async fn run_commands_loop() {
             Err(err) => {
                 match err.kind() {
                     ErrorKind::DisplayHelp => {
-                        println!("{}", err.to_string());
+                        println!("{}", err);
                     },
                     _ => {
                         println!("Invalid command, run the \"help\" command for usage information.")
