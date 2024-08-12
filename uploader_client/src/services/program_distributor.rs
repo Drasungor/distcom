@@ -288,6 +288,34 @@ impl ProgramDistributorService {
         login_response.data.basic_token.token
     }
 
+    async fn interactive_register(&self) -> String {
+        println!("You will be asked for a username and password, and an organization name and description");
+        println!();
+
+        print!("Please enter your username: ");
+        io::stdout().flush().unwrap();
+        let username = get_input_string();
+
+        let password = rpassword::prompt_password("Please enter your password: ").unwrap();
+
+        print!("Please enter your organization's name: ");
+        io::stdout().flush().unwrap();
+        let organization_name = get_input_string();
+
+        print!("Please enter your organization's description: ");
+        io::stdout().flush().unwrap();
+        let organization_description = get_input_string();
+
+        self.register(username.clone(), password.clone(), organization_name, organization_description).await;
+        let login_response = self.login(username, password).await;
+        let refresh_token_file = File::create("./refresh_token.bin").expect("Error in refresh token file creation");
+    
+        // TODO: do an encryption for the refresh token storage, probably needs to ask for the users pc password, just like
+        // in cellphones
+        serde_json::to_writer(refresh_token_file, &login_response.data.refresh_token).expect("Error while saving refresh token object");
+        login_response.data.basic_token.token
+    }
+
     async fn login(&self, username: String, password: String) -> EndpointResult<ReceivedTokens> {
         let mut data = HashMap::new();
         data.insert("username", username);
@@ -306,6 +334,31 @@ impl ProgramDistributorService {
                 std::process::exit(0);
             } else {
                 panic!("Unexpected error in login: {:?}", login_error);
+            }
+        }
+    }
+
+    async fn register(&self, username: String, password: String, name: String, description: String) {
+        let mut data = HashMap::new();
+        data.insert("username", username);
+        data.insert("password", password);
+        data.insert("name", name);
+        data.insert("description", description);
+        let post_login_url = format!("{}/account/register", self.base_url);
+
+        let response = self.client.post(post_login_url).json(&data).send().await.expect("Error in get");
+        if response.status().is_success() {
+            // let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
+            // login_response
+            let login_response: EndpointResult<()> = response.json().await.expect("Error deserializing JSON");
+        } else {
+            let login_error: EndpointError = response.json().await.expect("Error deserializing JSON");
+            let app_error_type = login_error.error_code.parse::<AppErrorType>().unwrap();
+            if app_error_type == AppErrorType::UsernameAlreadyExists {
+                println!("Username already exists");
+                std::process::exit(0);
+            } else {
+                panic!("Unexpected error in registration: {:?}", login_error);
             }
         }
     }
@@ -341,7 +394,22 @@ impl ProgramDistributorService {
             should_log_in = true;
         }
         if should_log_in {
-            returned_token = Some(self.interactive_login().await);
+            let mut made_a_choice = false;
+            while !made_a_choice {
+                println!("Please log in to an account, choose one of the following options: ");
+                println!("1 - Register");
+                println!("2 - Login");
+                // io::stdout().flush().unwrap();
+                let choice = get_input_string();
+
+                if choice == "1" {
+                    returned_token = Some(self.interactive_register().await);
+                    made_a_choice = true;
+                } else if choice == "2" {
+                    returned_token = Some(self.interactive_login().await);
+                    made_a_choice = true;
+                }
+            }
         }
         self.jwt = Some(returned_token.unwrap());
     }
