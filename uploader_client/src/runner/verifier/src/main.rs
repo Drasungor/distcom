@@ -1,6 +1,7 @@
 use methods::DOWNLOADED_GUEST_ID;
 use risc0_zkvm::ExecutorEnv;
 use std::env;
+use std::fs;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use bincode;
@@ -26,8 +27,11 @@ fn main() {
         .expect("Proof verification failed");
 
     let output: String = receipt.journal.decode().unwrap();
-    
-    let output_file_path = format!("../../programs_data/{program_id}/{input_group_id}/output.json");
+    let output_dir_path = format!("../../programs_data/{program_id}/{input_group_id}");
+    fs::create_dir_all(&output_dir_path).expect("Error creating directories");
+
+    // let output_file_path = format!("../../programs_data/{program_id}/{input_group_id}/output.json");
+    let output_file_path = format!("{output_dir_path}/output.json");
     
     let mut file = File::create(output_file_path).expect("Error in output file creation");
     file.write_all(output.as_bytes()).expect("Errors in file write");
