@@ -75,7 +75,7 @@ pub async fn select_general_programs(first_received_limit: usize, first_received
                             let _ = download_and_run_program(chosen_program).await;
                         } else {
                             println!("Index out of bounds, please choose one of the provided indexes.");
-                        }
+                        } 
                     },
                     GetProgramsCommands::RunN{amount, index} => {
                         if let Some(index_value) = index {

@@ -32,14 +32,14 @@ fn get_base_2_multiplier(tested_number: u32) -> u32 {
 
 fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
     let cast_base = base as u64;
-    if (exponent == 2) {
+    if exponent == 2 {
         return (base * base) % modulo;
     }
-    if (exponent == 1) {
+    if exponent == 1 {
         return base;
     }
     let sqrt = modular_exponentiation(base, exponent/2, modulo);
-    if (exponent % 2 == 0) {
+    if exponent % 2 == 0 {
         return (sqrt * sqrt) % modulo;
     } else {
         return (((sqrt * sqrt) % modulo) * base) % modulo;
@@ -51,7 +51,7 @@ fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
     let second_four_bytes = &input[4..8];
-    let iterations_limit = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
+    let iterations_limit = u32::from_be_bytes(second_four_bytes.try_into().expect("Error transforming into number from bytes"));
     let mut iteration_counter = 1;
     let mut was_result_obtained = false;
     let mut is_probably_prime = false;

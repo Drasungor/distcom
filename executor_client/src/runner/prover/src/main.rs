@@ -4,7 +4,7 @@ use methods::{
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use std::env;
 use std::fs::File;
-use std::io::{self, Read};
+// use std::io::{self, Read};
 use bincode;
 use csv;
 
@@ -24,7 +24,6 @@ fn main() {
     let file = File::open(program_input_path).expect("Error while reading file");
     let mut input_reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
 
-    let mut current_input = 0;
     for line in input_reader.records() {
         let line_ok = line.expect("Error in line reading");
         let line_iterator = line_ok.into_iter();
@@ -32,11 +31,13 @@ fn main() {
 
         for value in line_iterator {
             let bytes_vector = base64::decode(value).expect("Failed to decode base64");
+
+            // eprintln!("BORRAR: printed bytes_vector: {:?}", bytes_vector);
+
             env_bulder_ref = env_bulder_ref.write(&bytes_vector).unwrap();
             counter += 1;
         }
         assert!(counter == 1, "There is more than one element per line");
-        current_input += 1;
     }
 
     let executor_env = env_bulder_ref.build().unwrap();
@@ -48,5 +49,5 @@ fn main() {
 
     let receipt = &prove_info.receipt;
     let serialized_proof = bincode::serialize(&receipt).expect("Error in proof serialization");
-    std::fs::write("./proof.bin", serialized_proof);
+    std::fs::write("./proof.bin", serialized_proof).expect("Error writing proof to file");
 }

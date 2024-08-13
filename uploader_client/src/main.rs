@@ -123,7 +123,7 @@ async fn start_program_execution() {
                         if let Err(received_error) = download_template_result {
                             panic!("Error while downloading template methods: {:?}", received_error);
                         }
-                    },
+                    }, 
                     GetProgramsCommands::MyPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
                         should_continue_looping = select_my_programs(limit_value, page).await;

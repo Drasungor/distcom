@@ -19,6 +19,14 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
 
     let execution_args = vec![program_id, input_group_id];
 
+    // Command added because rust cannot detect accurately the change in the code's files
+    Command::new("touch")
+        .arg("./methods/guest/src/main.rs")
+        .current_dir("./src/runner")
+        .output()
+        .expect("Failed to execute child program");
+
+
     let output = Command::new("cargo")
         .arg("run")
         .args(execution_args)
