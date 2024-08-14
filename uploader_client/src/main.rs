@@ -137,7 +137,8 @@ async fn start_program_execution() {
                         should_continue_looping = select_my_proven_programs(limit_value, page).await;
                     },
                     GetProgramsCommands::Logout => {
-                        fs::remove_file("./refresh_token.bin").expect("Error in refresh token deletion");
+                        let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
+                        write_guard.logout().await;
                         should_continue_looping = false;
                     },
                     GetProgramsCommands::Exit => {

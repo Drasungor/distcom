@@ -35,7 +35,7 @@ impl FileStorage for AwsS3Handler {
         }
         let key: &str;
         match file_path.to_str() {
-            Some(stringified_path) => {
+            Some(_stringified_path) => {
                 key = new_object_name;
             },
             None => {
@@ -120,7 +120,7 @@ impl FileStorage for AwsS3Handler {
     async fn delete_object(&self, object_name: &str) -> Result<(), AppError> {
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
         let req = client_ref.delete_object().bucket(self.bucket_name.clone()).key(object_name);
-        let res = req.send().await?;
+        let _ = req.send().await?;
         Ok(())
     }
 
