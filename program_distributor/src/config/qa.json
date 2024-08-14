@@ -1,6 +1,4 @@
 {
-    "x": 50,
-    "y": 51,
     "database_url": "",
     "token": {
         "basic_token_secret": "",

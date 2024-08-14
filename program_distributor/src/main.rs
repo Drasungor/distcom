@@ -39,16 +39,11 @@ fn cron_clear_aux_directories(input: &str) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
- 
     compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
-
-    // println!("{:?}", common::config::CONFIG_OBJECT.x);
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
-    println!("ekisdddddddddddddddddddddddddddddddddddd");
 
-    // let mut cron = CronJob::new("./downloads", clear_directory);
     let mut cron = CronJob::new("", cron_clear_aux_directories); 
 
     // TODO: make the cron run once per hour or day, maybe make it configurable
@@ -61,7 +56,7 @@ async fn main() -> std::io::Result<()> {
         write_guard.set_up_connection().await.expect("Error in file storage connection setup");
     }
 
-    println!("pase el ping");
+    println!("Successfully connected to database");
 
     HttpServer::new(move || {
         App::new()
