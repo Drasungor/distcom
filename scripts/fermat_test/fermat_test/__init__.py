@@ -28,9 +28,9 @@ def write_big_endian_inputs_to_csv(number, file_path):
         writer = csv.writer(file)
         writer.writerow([base64_data])
 
-# Example usage
-number = 561
-file_path = str(number) + '_fermat_big_endian.csv'
-write_big_endian_inputs_to_csv(number, file_path)
+numbers_list = [561, 562]
+for number in numbers_list:
+    file_path = str(number) + '_fermat_big_endian.csv'
+    write_big_endian_inputs_to_csv(number, file_path)
 
-print(f"Number {number} written in big endian format to {file_path} with padding.")
+    print(f"Number {number} written in big endian format to {file_path} with padding.")
