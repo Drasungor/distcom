@@ -39,7 +39,7 @@ fn cron_clear_aux_directories(input: &str) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-
+ 
     compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
 
     // println!("{:?}", common::config::CONFIG_OBJECT.x);
@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
     println!("ekisdddddddddddddddddddddddddddddddddddd");
 
     // let mut cron = CronJob::new("./downloads", clear_directory);
-    let mut cron = CronJob::new("", cron_clear_aux_directories);
+    let mut cron = CronJob::new("", cron_clear_aux_directories); 
 
     // TODO: make the cron run once per hour or day, maybe make it configurable
     cron.seconds("0");

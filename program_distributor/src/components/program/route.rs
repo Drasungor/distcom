@@ -26,6 +26,6 @@ pub fn program_router(path_prefix: &str) -> Scope {
         
         // post
         route("upload", web::post().to(ProgramController::upload_program).wrap(ValidateJwtMiddleware)).
-        route("proof", web::post().to(ProgramController::upload_proof)).
+        route("proof", web::post().to(ProgramController::upload_proof)). 
         route("inputs/{program_id}", web::post().to(ProgramController::add_inputs_group).wrap(ValidateJwtMiddleware))
 }

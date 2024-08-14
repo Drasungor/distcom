@@ -6,7 +6,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Outputs {
+pub struct FermatOutputs {
+    pub tested_number: u32,
+    pub is_probably_prime: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct MillerRabinOutputs {
     pub tested_number: u32,
     pub is_probably_prime: bool,
     pub iterations_limit_reached: bool,
@@ -40,9 +46,8 @@ fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
     }
 }
 
-fn main() {
-    let input: Vec<u8> = env::read();
 
+fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
     let second_four_bytes = &input[4..8];
@@ -77,11 +82,56 @@ fn main() {
         iteration_counter += 1;
     } 
 
-    let outputs: Outputs = Outputs {
+    let outputs: MillerRabinOutputs = MillerRabinOutputs {
         tested_number: number_to_test,
         is_probably_prime,
         iterations_limit_reached: iteration_counter == iterations_limit,
+    };
+    return outputs;
+}
+
+fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
+    let first_four_bytes = &input[0..4];
+    let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
+    let mut randomly_generated_numbers: Vec<u32> = Vec::new();
+    let mut may_be_prime = true;
+    let mut iteration_counter: u32 = 0;
+
+    while may_be_prime && iteration_counter < 20 { // At 20 iterations, if not all tests are fools, then the chance of not being prime is really low
+        let current_byte_index = (4*(iteration_counter + 1)) as usize;
+        let last_number_byte_index_bound = (current_byte_index + 4) as usize;
+        let currently_analyzed_bytes: &[u8] = &input[current_byte_index..last_number_byte_index_bound];
+        let random_input = u32::from_be_bytes(currently_analyzed_bytes.try_into().expect("Error transforming into number from bytes"));
+        let divisor = modular_exponentiation(random_input, number_to_test - 1, number_to_test);
+        may_be_prime = divisor % number_to_test == 1;
+        iteration_counter += 1;
+    } 
+
+    let outputs: FermatOutputs = FermatOutputs {
+        tested_number: number_to_test,
+        is_probably_prime: may_be_prime,
     }; 
-    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
-    env::commit(&serialized_outputs);
+    return outputs;
+}
+
+
+fn main() {
+    let input1: Vec<u8> = env::read();
+    let probabilistic_fermat_result: FermatOutputs = probabilistic_fermat(input1);
+    
+    if !probabilistic_fermat_result.is_probably_prime {
+        let returned_output = MillerRabinOutputs {
+            tested_number: probabilistic_fermat_result.tested_number,
+            is_probably_prime: probabilistic_fermat_result.is_probably_prime,
+            iterations_limit_reached: false,
+        };
+        let serialized_outputs = to_string(&returned_output).expect("Error in fermat result struct serialization");
+        env::commit(&serialized_outputs);
+    } else {
+        let input2: Vec<u8> = env::read();
+        let miller_rabin_result: MillerRabinOutputs = miller_rabin(input2);
+        let serialized_outputs = to_string(&miller_rabin_result).expect("Error in miller rabin result struct serialization");
+        env::commit(&serialized_outputs);
+    }
+
 }

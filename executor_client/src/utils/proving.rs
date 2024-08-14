@@ -10,10 +10,20 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
         Ok(downloaded_files_names_value) => {
             let csv_file_name = downloaded_files_names_value.input_file_name;
     
+            // println!("BORRAR: csv_file_name: {csv_file_name}");
+
             let execution_args = vec![csv_file_name.clone()];
         
             let start_time = SystemTime::now();
         
+            // Command added because rust cannot detect accurately the change in the code's files
+            Command::new("touch")
+                .arg("./methods/guest/src/main.rs")
+                .current_dir("./src/runner")
+                .output()
+                .expect("Failed to execute child program");
+
+
             let output = Command::new("cargo")
                 .arg("run")
                 .args(execution_args)
@@ -36,6 +46,8 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
                 let after_proof_time = SystemTime::now();
                 println!();
                 println!("Proof generated successfully.");
+                // println!("Normal output: {}", String::from_utf8(output.stdout).unwrap());
+                // println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
                 read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
                 println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
                 println!();
