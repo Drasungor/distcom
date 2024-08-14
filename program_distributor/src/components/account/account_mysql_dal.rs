@@ -19,9 +19,19 @@ impl AccountMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-            diesel::insert_into(account::table)
-                    .values(&new_account_data)
-                    .execute(connection)?;
+
+            let existing_account_option: Option<CompleteAccount> = account::table
+                .filter(account::username.eq(&new_account_data.username))
+                .first::<CompleteAccount>(connection).optional()?;
+
+            if existing_account_option.is_none() {
+                diesel::insert_into(account::table)
+                        .values(&new_account_data)
+                        .execute(connection)?;
+            } else {
+                return Err(AppError::new(AppErrorType::UsernameAlreadyExists))
+            }
+
             Ok(())
         })
         }).await;

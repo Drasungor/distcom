@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 use clap::error::ErrorKind;
 use commands::get_programs::select_my_programs;
@@ -74,6 +75,9 @@ enum GetProgramsCommands {
         page: usize,
     },
 
+    /// Log out of the program and exit
+    Logout,
+
     /// Exit the program
     Exit,
 }
@@ -131,6 +135,10 @@ async fn start_program_execution() {
                     GetProgramsCommands::ProvenPrograms{limit, page} => {
                         let limit_value = process_page_size(limit);
                         should_continue_looping = select_my_proven_programs(limit_value, page).await;
+                    },
+                    GetProgramsCommands::Logout => {
+                        fs::remove_file("./refresh_token.bin").expect("Error in refresh token deletion");
+                        should_continue_looping = false;
                     },
                     GetProgramsCommands::Exit => {
                         should_continue_looping = false;
