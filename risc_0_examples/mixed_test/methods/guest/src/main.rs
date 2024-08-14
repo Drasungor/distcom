@@ -31,7 +31,6 @@ fn get_base_2_multiplier(tested_number: u32) -> u32 {
 }
 
 fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
-    let cast_base = base as u64;
     if exponent == 2 {
         return (base * base) % modulo;
     }
@@ -93,7 +92,6 @@ fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
 fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
-    let mut randomly_generated_numbers: Vec<u32> = Vec::new();
     let mut may_be_prime = true;
     let mut iteration_counter: u32 = 0;
 

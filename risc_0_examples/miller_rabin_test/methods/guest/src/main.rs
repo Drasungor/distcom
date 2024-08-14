@@ -25,7 +25,6 @@ fn get_base_2_multiplier(tested_number: u32) -> u32 {
 }
 
 fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
-    let cast_base = base as u64;
     if exponent == 2 {
         return (base * base) % modulo;
     }
