@@ -113,7 +113,7 @@ async fn start_program_execution() {
                             },
                             Err(received_error) => {
                                 if received_error.error_code.parse::<AppErrorType>().unwrap() == AppErrorType::ProgramNameTaken {
-                                    println!("Program name is already used by another of your programs");
+                                    println!("Program name is already used by another program");
                                 } else {
                                     panic!("Unexpected error while uploading methods: {:?}", received_error);
                                 }

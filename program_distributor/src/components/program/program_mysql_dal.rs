@@ -44,7 +44,8 @@ impl ProgramMysqlDal {
         connection.transaction::<_, AppError, _>(|connection| {
 
             let found_program_option: Option<StoredProgram> = program::table
-                .filter(program::name.eq(name).and(program::organization_id.eq(organization_id)))
+                // .filter(program::name.eq(name).and(program::organization_id.eq(organization_id)))
+                .filter(program::name.eq(name))
                 .first::<StoredProgram>(connection).optional()?;
             if found_program_option.is_none() {
                 diesel::insert_into(program::table)

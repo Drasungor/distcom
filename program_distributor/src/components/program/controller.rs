@@ -40,12 +40,18 @@ impl ProgramController {
         }
 
         let input_lock_timeout = uploaded_program.execution_timeout;
-        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id.clone(), 
+        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id.clone(), file_id.clone(), 
                                                                                                     uploaded_program.name, uploaded_program.description, 
                                                                                                     input_lock_timeout).await;
         let returned_body_result: Result<UploadedProgram, AppError>;
         if let Err(returned_error) = program_storage_result {
             returned_body_result = Err(returned_error);
+            {
+                println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+                read_guard.delete_program(&jwt_payload.organization_id, &program_id).await.expect("File upload error");
+                println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            }
         } else {
             let program_data = UploadedProgram {
                 program_id: file_id,
