@@ -6,5 +6,8 @@
         "refresh_token_secret": "",
         "refresh_token_days_duration": 360
     },
-    "uploaded_files_connection_string": ""
+    "files_storage": {
+        "connection_string": "",
+        "arguments_serarator": ""
+    }
 }
