@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{self, File};
 use actix_web::{HttpMessage, HttpRequest, HttpResponse};
 
 use crate::{common::{app_error::{AppError, AppErrorType, InternalServerErrorType}, app_http_response_builder::AppHttpResponseBuilder}, RequestExtension};
@@ -29,6 +29,7 @@ fn open_named_file(file_path: &str) ->  Result<actix_files::NamedFile, AppError>
 
 pub fn generate_named_file_response(req: &HttpRequest, file_path: &str) -> HttpResponse {
     let named_file_result = open_named_file(file_path);
+    let _ = fs::remove_file(file_path);
     let named_file;
     let open_named_file_result = named_file_result;
     match open_named_file_result {

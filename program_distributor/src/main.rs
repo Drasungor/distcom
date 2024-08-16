@@ -44,12 +44,12 @@ async fn main() -> std::io::Result<()> {
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
 
-    let mut cron = CronJob::new("", cron_clear_aux_directories); 
+    // let mut cron = CronJob::new("", cron_clear_aux_directories); 
+    // // TODO: make the cron run once per hour or day, maybe make it configurable
+    // cron.seconds("0");
+    // CronJob::start_job_threaded(cron);
 
-    // TODO: make the cron run once per hour or day, maybe make it configurable
-    cron.seconds("0");
-    CronJob::start_job_threaded(cron);
-
+    
     {
         // We establish the connection to s3
         let mut write_guard = common::config::FILES_STORAGE.write().expect("Error in rw lock");

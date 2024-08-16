@@ -315,7 +315,8 @@ impl ProgramController {
                 return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
             }
         }
-        let downloaded_program_file_path = format!("./aux_files/{}/{}", input_group_id, program_file_name);
+        let aux_files_folder = format!("./aux_files/{}", input_group_id);
+        let downloaded_program_file_path = format!("{}/{}", aux_files_folder, program_file_name);
         let object_name = format!("{}/{}/program.tar", organization_id.unwrap(), program_id);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
@@ -328,9 +329,10 @@ impl ProgramController {
                 }
             }
         }
-        manage_program_with_input_compression(&req, &program_id, &input_group_id, &downloaded_program_file_path, 
-                                                     &program_file_name, &input_file_path)
-        
+        let response = manage_program_with_input_compression(&req, &program_id, &input_group_id, &downloaded_program_file_path, 
+                                                     &program_file_name, &input_file_path);
+        fs::remove_dir_all(aux_files_folder).expect("Error in folder deletion");
+        response
     }
 
     pub async fn get_organization_programs(path: web::Path<String>, query_params: web::Query<PagingParameters>) -> impl Responder {
