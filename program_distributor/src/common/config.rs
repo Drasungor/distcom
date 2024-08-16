@@ -16,8 +16,7 @@ use crate::services::files_storage::aws_s3_handler::AwsS3Handler;
 pub struct Config {
    pub database_url: String,
    pub token: Token,
-   pub uploaded_files_connection_string: String, // String that defines where the files are stored, it is a single attribute so that different
-                                   // parameters can be formatted inside it
+   pub files_storage: FilesStorage,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -28,10 +27,16 @@ pub struct Token {
     pub refresh_token_days_duration: u64,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FilesStorage {
+    pub connection_string: String,
+    pub arguments_serarator: String,
+}
+
 lazy_static! {
     pub static ref CONFIG_OBJECT: Config = load_config("./src/config/dev.json").unwrap();
     pub static ref CONNECTION_POOL: Pool<ConnectionManager<MysqlConnection>> = generate_connection_pool(&get_database_connection_url(&CONFIG_OBJECT));
-    pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.uploaded_files_connection_string));
+    pub static ref FILES_STORAGE: RwLock<AwsS3Handler> = RwLock::new(AwsS3Handler::new(&CONFIG_OBJECT.files_storage));
     pub static ref GENERAL_CONSTANTS: GeneralConstants = general_constants::get_general_constants();
 }
 

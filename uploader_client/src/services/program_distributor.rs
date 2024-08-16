@@ -416,6 +416,20 @@ impl ProgramDistributorService {
         self.jwt = Some(returned_token.unwrap());
     }
 
+    pub async fn logout(&mut self) {
+        let refresh_token_file = File::open("./refresh_token.bin").expect("Error in refresh token file creation");
+        let refresh_token: Token = serde_json::from_reader(refresh_token_file).expect("Error in token object deserialization");
+        let refresh_token_id = refresh_token.token_id;
+
+        let mut data = HashMap::new();
+        data.insert("token_id", refresh_token_id);
+
+        let delete_refresh_token_url = format!("{}/account/refresh-token", self.base_url);
+        let delete_refresh_token_request_builder = self.client.delete(delete_refresh_token_url).json(&data);
+        self.make_request_with_response_body::<()>(delete_refresh_token_request_builder).await.expect("Error in refresh token deletion in server");
+        fs::remove_file("./refresh_token.bin").expect("Error in refresh token deletion");
+    }
+
     async fn make_request_with_response_body<T: DeserializeOwned>(&mut self, request: RequestBuilder) -> Result<EndpointResult<T>, EndpointError> {
         let request_clone = request.try_clone().expect("Error while cloning request");
         self.wrapper_make_request_with_response_body::<T>(request, request_clone).await

@@ -37,11 +37,12 @@ def generate_fermat_inputs(number):
     base64_data = base64.b64encode(byte_array).decode('utf-8')
     return base64_data
 
-number = 561
-file_path = str(number) + '_mixed_big_endian.csv'
-with open(file_path, mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow([generate_fermat_inputs(number)])
-    writer.writerow([generate_miller_rabin_inputs(number, 1000)])
+numbers_list = [561, 562]
+for number in numbers_list:
+    file_path = str(number) + '_mixed_big_endian.csv'
+    with open(file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([generate_fermat_inputs(number)])
+        writer.writerow([generate_miller_rabin_inputs(number, 1000)])
 
-print(f"Number {number} written in big endian format to {file_path} with padding.")
+    print(f"Number {number} written in big endian format to {file_path} with padding.")

@@ -1,0 +1,11 @@
+[package]
+# This is where the ELF and ID method element names are defined
+name = "downloaded_guest"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+serde = { version = "1.0", default-features = false }
+serde_json = "1.0.120"

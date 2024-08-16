@@ -5,7 +5,7 @@ use aws_sdk_s3 as s3;
 use aws_config::{self, Region};
 use s3::primitives::ByteStream;
 
-use crate::common::app_error::{AppError, AppErrorType, InternalServerErrorType};
+use crate::common::{app_error::{AppError, AppErrorType, InternalServerErrorType}, config::FilesStorage};
 use super::file_storage::FileStorage;
 
 pub struct AwsS3Handler {
@@ -35,7 +35,7 @@ impl FileStorage for AwsS3Handler {
         }
         let key: &str;
         match file_path.to_str() {
-            Some(stringified_path) => {
+            Some(_stringified_path) => {
                 key = new_object_name;
             },
             None => {
@@ -120,7 +120,7 @@ impl FileStorage for AwsS3Handler {
     async fn delete_object(&self, object_name: &str) -> Result<(), AppError> {
         let client_ref = self.s3_client.as_ref().expect("Client was not set");
         let req = client_ref.delete_object().bucket(self.bucket_name.clone()).key(object_name);
-        let res = req.send().await?;
+        let _ = req.send().await?;
         Ok(())
     }
 
@@ -148,9 +148,9 @@ impl FileStorage for AwsS3Handler {
 
 impl AwsS3Handler {
 
-    // s3_conection_data: "region:bucket_name:key_id:key_secret", variables cannot contain the ":" character
-    pub fn new(s3_conection_data: &str) -> AwsS3Handler {
-        let connection_parameters: Vec<&str> = s3_conection_data.split(':').collect(); // TODO: make the separation character a config attribute
+    // s3 connection string: "region:bucket_name:key_id:key_secret", variables cannot contain the ":" character
+    pub fn new(s3_conection_data: &FilesStorage) -> AwsS3Handler {
+        let connection_parameters: Vec<&str> = s3_conection_data.connection_string.split(&s3_conection_data.arguments_serarator).collect();
         AwsS3Handler {
             s3_client: None,
             region: connection_parameters[0].to_string(),

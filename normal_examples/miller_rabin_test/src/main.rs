@@ -1,7 +1,3 @@
-#![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-// #![no_std]  // std support is experimental
-
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 
@@ -11,10 +7,6 @@ pub struct Outputs {
     pub is_probably_prime: bool,
     pub iterations_limit_reached: bool,
 }
-
-use risc0_zkvm::guest::env;
-
-risc0_zkvm::guest::entry!(main);
 
 fn get_base_2_multiplier(tested_number: u32) -> u32 {
     let mut processed_number = tested_number - 1;

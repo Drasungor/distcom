@@ -2,7 +2,7 @@ use actix_multipart::Multipart;
 use actix_web::{web, HttpRequest, Responder};
 use std::{fs::{self}, path::Path};
 
-use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_file::{upload_one_file, upload_one_file_with_body}, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
+use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_file::upload_one_file_with_body, utils::{actix_helpers::{extract_jwt_data, generate_named_file_response}, file_helpers::{get_filename_without_suffix}, general_controller_helpers::{process_paging_inputs, PagingParameters}}};
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::services::files_storage::file_storage::FileStorage;
 
@@ -40,12 +40,16 @@ impl ProgramController {
         }
 
         let input_lock_timeout = uploaded_program.execution_timeout;
-        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id, file_id.clone(), 
+        let program_storage_result = ProgramService::add_organization_program(jwt_payload.organization_id.clone(), file_id.clone(), 
                                                                                                     uploaded_program.name, uploaded_program.description, 
                                                                                                     input_lock_timeout).await;
         let returned_body_result: Result<UploadedProgram, AppError>;
         if let Err(returned_error) = program_storage_result {
             returned_body_result = Err(returned_error);
+            {
+                let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+                read_guard.delete_program(&jwt_payload.organization_id, &program_id).await.expect("File upload error");
+            }
         } else {
             let program_data = UploadedProgram {
                 program_id: file_id,
