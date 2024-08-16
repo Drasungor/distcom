@@ -1,7 +1,3 @@
-#![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-// #![no_std]  // std support is experimental
-
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 
@@ -10,10 +6,6 @@ pub struct Outputs {
     pub tested_number: u32,
     pub is_probably_prime: bool,
 }
-
-use risc0_zkvm::guest::env;
-
-risc0_zkvm::guest::entry!(main);
 
 fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
     if exponent == 2 {
