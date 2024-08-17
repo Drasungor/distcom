@@ -112,7 +112,7 @@ impl ProgramDistributorService {
             let entry_name = unwrapped_entry.file_name().into_string().expect("Error in converion from OsString to string");
             let path_string = path.to_str().expect("Error in conversion from path to string");
             if entry_name.contains(".tar") {
-                println!("tar path_string: {}", path_string);
+                // println!("tar path_string: {}", path_string);
                 decompress_tar(path_string, "./src/runner/methods").expect("Error in code folder decompression");
                 tar_file_name = Some(entry_name.clone());
             }
