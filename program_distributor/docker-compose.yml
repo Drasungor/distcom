@@ -21,7 +21,9 @@ services:
       retries: 5
       start_period: 20s
     volumes:
-        - ${VOLUME_DIR}/db_data:/var/lib/mysql  # Add this line for the volume
+        - wsl_test:/var/lib/mysql  # Add this line for the volume
+        # - ${VOLUME_DIR}/db_data:/var/lib/mysql  # Add this line for the volume
+        # - ./db_data:/var/lib/mysql  # Add this line for the volume
     # networks:
     #   - app-network
 
@@ -67,3 +69,6 @@ services:
 # networks:
 #   app-network:
 #     driver: bridge
+
+volumes:
+  wsl_test:  # Define the named volume here
