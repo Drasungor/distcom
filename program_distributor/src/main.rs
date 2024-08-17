@@ -4,13 +4,12 @@ use actix_web::{App, HttpMessage, HttpServer};
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
-use cronjob::CronJob;
 use utils::local_storage_helpers::clear_aux_directories;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
 use crate::services::files_storage::file_storage::FileStorage;
-use crate::utils::local_storage_helpers::{compress_folder_contents};
+use crate::utils::local_storage_helpers::compress_folder_contents;
 
 // Copied implementation from
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
@@ -43,12 +42,6 @@ async fn main() -> std::io::Result<()> {
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
     pooled_connection.run_pending_migrations(MIGRATIONS).expect("The migration failed");
-
-    // let mut cron = CronJob::new("", cron_clear_aux_directories); 
-    // // TODO: make the cron run once per hour or day, maybe make it configurable
-    // cron.seconds("0");
-    // CronJob::start_job_threaded(cron);
-
     
     {
         // We establish the connection to s3
