@@ -3,13 +3,12 @@
 all: run_all
 
 run_all:
-	sudo rm -rf aux_files uploads downloads
-	mkdir -p aux_files uploads downloads
 	docker-compose up
 
 clear_build:
-	sudo rm -rf target
-	echo "Deleted build folders"
+	docker-compose down
+	docker volume rm program_distributor_program_distributor_volume
+	echo "Deleted build files"
 
 clear_aux_folders:
 	sudo rm -rf aux_files uploads downloads
@@ -20,6 +19,7 @@ clear_docker:
 	docker-compose down --rmi all
 
 clear_db:
-	docker-compose down --volumes
+	docker-compose down
+	docker volume rm program_distributor_persisted_database
 
 clear_all: clear_aux_folders clear_build clear_docker
