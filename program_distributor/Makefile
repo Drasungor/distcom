@@ -1,4 +1,4 @@
-.PHONY: all run_all clear_build clear_aux_folders clear_docker clear_all
+.PHONY: all run_all clear_build clear_aux_folders clear_docker clear_all clear_db
 
 all: run_all
 
@@ -18,5 +18,8 @@ clear_aux_folders:
 clear_docker:
 	docker-compose rm -s -f
 	docker-compose down --rmi all
+
+clear_db:
+	docker-compose down --volumes
 
 clear_all: clear_aux_folders clear_build clear_docker
