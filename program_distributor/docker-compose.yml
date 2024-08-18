@@ -42,7 +42,8 @@ services:
 
     volumes:
       # - ./:/app
-      - program_distributor_volume:/app
+      # - program_distributor_volume:/app
+      - program_distributor_volume:/app/target
     depends_on:
       db:
         condition: service_healthy
