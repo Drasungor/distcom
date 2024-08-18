@@ -8,7 +8,6 @@ services:
     environment:
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
-      # - ./:/app
       - executor_volume:/app
     extra_hosts:
         - "host.docker.internal:host-gateway"

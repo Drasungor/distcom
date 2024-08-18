@@ -7,7 +7,6 @@ services:
     environment:
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
-      # - ./:/app
       - uploader_volume:/app
       - ./programs_data:/app/programs_data
       - ./uploads:/app/uploads
