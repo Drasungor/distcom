@@ -3,17 +3,20 @@
 all: run_all
 
 run_all:
-	sudo rm -rf aux_files downloads
-	mkdir -p uploads programs_data aux_files downloads
+	# sudo rm -rf aux_files downloads
+	# mkdir -p uploads programs_data aux_files downloads
+	mkdir -p uploads programs_data
 	docker-compose run --rm rust-app-uploader
 
 clear_build:
-	sudo rm -rf target src/runner/target
+	# sudo rm -rf target src/runner/target
+	docker-compose down
+	docker volume rm uploader_client_uploader_volume
 	echo "Deleted build folders"
 
-clear_aux_folders:
-	sudo rm -rf aux_files downloads
-	echo "Deleted aux folders"
+# clear_aux_folders:
+# 	# sudo rm -rf aux_files downloads
+# 	echo "Deleted aux folders"
 
 clear_docker:
 	docker-compose rm -s -f

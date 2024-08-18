@@ -7,7 +7,12 @@ services:
     environment:
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
-      - ./:/app
-
+      # - ./:/app
+      - uploader_volume:/app
+      - ./programs_data:/app/programs_data
+      - ./uploads:/app/uploads
     extra_hosts:
         - "host.docker.internal:host-gateway"
+
+volumes:
+  uploader_volume:

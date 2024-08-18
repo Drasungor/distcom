@@ -1,10 +1,12 @@
 
+use std::fs::create_dir;
+
 use actix_web::dev::Service;
 use actix_web::{App, HttpMessage, HttpServer};
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
-use utils::local_storage_helpers::clear_aux_directories;
+use utils::local_storage_helpers::{clear_aux_directories, create_folder};
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
@@ -31,6 +33,11 @@ pub struct RequestExtension {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    create_folder("./downloads");
+    create_folder("./uploads");
+    create_folder("./aux_files");
+
     compress_folder_contents("./proven_code_template/template", "./proven_code_template/compressed_template.tar").expect("Compression failed");
     let connection_pool = &common::config::CONNECTION_POOL;
     let mut pooled_connection = connection_pool.get().expect("asdasdas");
@@ -43,7 +50,6 @@ async fn main() -> std::io::Result<()> {
     }
 
     println!("Successfully connected to database");
-
     HttpServer::new(move || {
         App::new()
             .wrap_fn(|req, srv| {

@@ -32,7 +32,7 @@ impl ProgramController {
         let program_id = get_filename_without_suffix(&file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.upload_program(Path::new(&file_path), &jwt_payload.organization_id, &program_id).await.expect("File upload error");
+            read_guard.upload_program(Path::new(&file_path), &jwt_payload.organization_id, &program_id).await.expect("program upload error");
         }
         
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
@@ -48,7 +48,7 @@ impl ProgramController {
             returned_body_result = Err(returned_error);
             {
                 let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-                read_guard.delete_program(&jwt_payload.organization_id, &program_id).await.expect("File upload error");
+                read_guard.delete_program(&jwt_payload.organization_id, &program_id).await.expect("Program deletion error");
             }
         } else {
             let program_data = UploadedProgram {
@@ -64,7 +64,7 @@ impl ProgramController {
         let file_path = format!("./uploads/{}", file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.upload_proof(Path::new(&file_path), &uploaded_program.organization_id, &uploaded_program.program_id, &uploaded_program.input_group_id).await.expect("File upload error");
+            read_guard.upload_proof(Path::new(&file_path), &uploaded_program.organization_id, &uploaded_program.program_id, &uploaded_program.input_group_id).await.expect("Proof upload error");
         }
         
         if let Err(file_deletion_error) = fs::remove_file(file_path) {
@@ -122,7 +122,7 @@ impl ProgramController {
         let program_id = get_filename_without_suffix(&file_name);
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.download_program(Path::new(&download_file_path), organization_id.as_ref().unwrap(), &program_id).await.expect("File upload error");
+            read_guard.download_program(Path::new(&download_file_path), organization_id.as_ref().unwrap(), &program_id).await.expect("Program download error");
         }
 
         generate_named_file_response(&req, &download_file_path)
@@ -148,7 +148,7 @@ impl ProgramController {
 
         {
             let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
-            read_guard.download_proof(Path::new(&download_file_path), organization_id, &program_id, &input_group_id).await.expect("File upload error");
+            read_guard.download_proof(Path::new(&download_file_path), organization_id, &program_id, &input_group_id).await.expect("Proof download error");
         }
 
         generate_named_file_response(&req, &download_file_path)
