@@ -27,13 +27,6 @@ mod utils;
 #[derive(Clone, Debug)]
 pub struct RequestExtension {
     pub jwt_payload: Option<Claims>,
-    // pub files_names: Option<Vec<String>>,
-}
-
-
-
-fn cron_clear_aux_directories(input: &str) {
-    clear_aux_directories();
 }
 
 #[actix_web::main]
