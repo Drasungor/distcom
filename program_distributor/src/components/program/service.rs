@@ -53,6 +53,14 @@ impl ProgramService {
         ProgramMysqlDal::get_input_groups_with_proven_executions(organization_id, program_id, limit, page).await
     }
 
+    pub async fn get_input_groups(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
+        ProgramMysqlDal::get_input_groups(organization_id, program_id, limit, page).await
+    }
+
+    pub async fn delete_input_group(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        ProgramMysqlDal::delete_input_group(organization_id, program_id, input_group_id).await
+    }
+
     pub async fn get_program_uploader_id(program_id: &String) -> Result<String, AppError> {
         let organization_id = ProgramMysqlDal::get_program_uploader_id(program_id).await?;
         Ok(organization_id)
