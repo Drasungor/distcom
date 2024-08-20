@@ -482,7 +482,7 @@ impl ProgramMysqlDal {
                 specific_program_input::input_group_id.eq(&cloned_input_group_id)))
                 .execute(connection)?;
             diesel::delete(program_input_group::table.filter(
-                program_input_group::program_id.eq(&cloned_input_group_id)))
+                program_input_group::input_group_id.eq(&cloned_input_group_id)))
                 .execute(connection)?;
             Ok(())
         })

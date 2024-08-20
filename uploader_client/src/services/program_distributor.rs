@@ -152,7 +152,7 @@ impl ProgramDistributorService {
         if let Some(page_value) = page {
             params.push(("page", page_value))
         }
-        let get_my_programs_url = format!("{}/program/inputs/{program_id}", self.base_url);
+        let get_my_programs_url = format!("{}/program/inputs/all/{program_id}", self.base_url);
         let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
         let get_my_programs_response = self.make_request_with_response_body::<PagedProgramInputGroups>(get_my_programs_request_builder).await?;
         Ok(get_my_programs_response.data)
@@ -498,10 +498,10 @@ impl ProgramDistributorService {
 
     async fn parse_response_with_response_body<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
         if response.status().is_success() {
-            let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing JSON");
+            let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing ok JSON");
             Ok(endpoint_response)
         } else {
-            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
+            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing error JSON");
             Err(endpoint_response)
         }
     }

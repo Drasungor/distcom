@@ -147,7 +147,9 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                         let chosen_program = &programs_page.programs[index];
                         let program_id = &chosen_program.program_id;
                         let get_inputs_limit = process_previously_set_page_size(used_limit, limit);
-                        select_input_groups(program_id, page, get_inputs_limit).await;
+                        if !select_input_groups(program_id, get_inputs_limit, page).await {
+                            return false;
+                        }
                     },
                     GetProgramsCommands::Delete{index} => {
                         let chosen_program = &programs_page.programs[index];

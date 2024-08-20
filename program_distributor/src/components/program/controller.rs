@@ -6,7 +6,7 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadInputGroup, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, PagedProgramInputGroups, UploadInputGroup, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 

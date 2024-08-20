@@ -18,4 +18,4 @@ clear_docker:
 	docker-compose rm -s -f
 	docker-compose down --rmi all
 
-clear_all: clear_build clear_docker
+clear_all: clear_docker clear_build
