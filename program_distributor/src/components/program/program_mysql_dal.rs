@@ -433,15 +433,67 @@ impl ProgramMysqlDal {
         manage_converted_dal_result(result)
     }
 
+    pub async fn get_input_groups(organization_id: &String, program_id: &String, limit: i64, page: i64) -> Result<PagedProgramInputGroups, AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, AppError, _>(|connection| {
+            let found_program_option: Option<StoredProgram> = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
+
+            let proven_input_groups: Vec<ProgramInputGroup> = program_input_group::table
+                .filter(program_input_group::program_id.eq(&cloned_program_id))
+                .offset((page - 1) * limit).limit(limit)
+                .load::<ProgramInputGroup>(connection)?;
+
+            let count_of_matched_elements = program_input_group::table
+                .filter(program_input_group::program_id.eq(cloned_program_id))
+                .count().get_result(connection)?;
+                
+            Ok(PagedProgramInputGroups {
+                program_input_groups: proven_input_groups,
+                total_elements_amount: count_of_matched_elements,
+            })
+        })
+        }).await;
+        manage_converted_dal_result(result)
+    }
+
+    pub async fn delete_input_group(organization_id: &String, program_id: &String, input_group_id: &String) -> Result<(), AppError> {
+        let cloned_organization_id = organization_id.clone();
+        let cloned_program_id = program_id.clone();
+        let cloned_input_group_id = input_group_id.clone();
+        let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
+        let result = web::block(move || {
+        connection.transaction::<_, AppError, _>(|connection| {
+            // We check that the received input group belongs to a program owned by the requesting user
+            let found_program_option: Option<StoredProgram> = program::table
+                .filter(program::program_id.eq(&cloned_program_id).and(program::organization_id.eq(cloned_organization_id)))
+                .first::<StoredProgram>(connection).optional()?;
+            if found_program_option.is_none() {
+                return Err(AppError::new(AppErrorType::ProgramNotFound))
+            }
+            diesel::delete(specific_program_input::table.filter(
+                specific_program_input::input_group_id.eq(&cloned_input_group_id)))
+                .execute(connection)?;
+            diesel::delete(program_input_group::table.filter(
+                program_input_group::input_group_id.eq(&cloned_input_group_id)))
+                .execute(connection)?;
+            Ok(())
+        })
+        }).await;
+        manage_converted_dal_result(result)
+    }
 
     pub async fn get_organization_programs(organization_id: String, limit: i64, page: i64) -> Result<PagedPrograms, AppError> {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-            // account::table
-            //     .filter(account::account_was_verified.eq(true))
-            //     .first::<CompleteAccount>(connection)?;
-
             let found_account_option: Option<CompleteAccount> = account::table
                 .filter(account::organization_id.eq(&organization_id))
                 .first::<CompleteAccount>(connection).optional()?;

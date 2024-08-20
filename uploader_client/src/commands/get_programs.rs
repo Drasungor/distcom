@@ -1,7 +1,7 @@
 use clap::{error::ErrorKind, Parser, Subcommand};
 use std::{fs, path::Path};
 
-use crate::{common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
+use crate::{commands::get_input_groups::select_input_groups, common, models::returned_program::print_programs_list, services::program_distributor::PagedPrograms, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]
@@ -34,8 +34,26 @@ enum GetProgramsCommands {
         input_file_name: String,
     },
 
+    /// Gets the selected program input groups,
+    /// moves the execution to another commands set
+    GetInputs {
+
+        /// Index of the displayed program for which an input group wants to be uploaded
+        #[clap(index = 1)]
+        index: usize,
+
+        /// Amount displayed
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<usize>,
+
+        /// Page number
+        #[clap(short = 'p', long = "page", default_value = "1")]
+        page: usize,
+    },
+
     /// Deletes a program
     Delete {
+
         /// Index of the displayed program that will be deleted
         #[clap(index = 1)]
         index: usize,
@@ -123,6 +141,14 @@ pub async fn select_my_programs(first_received_limit: usize, first_received_page
                             }
                         } else {
                             println!("Index out of bounds, please choose one of the provided indexes.");
+                        }
+                    },
+                    GetProgramsCommands::GetInputs{index, page, limit} => {
+                        let chosen_program = &programs_page.programs[index];
+                        let program_id = &chosen_program.program_id;
+                        let get_inputs_limit = process_previously_set_page_size(used_limit, limit);
+                        if !select_input_groups(program_id, get_inputs_limit, page).await {
+                            return false;
                         }
                     },
                     GetProgramsCommands::Delete{index} => {

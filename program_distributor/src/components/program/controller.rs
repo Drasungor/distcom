@@ -6,7 +6,7 @@ use crate::{common::{self, app_error::AppError}, middlewares::callable_upload_fi
 use crate::common::app_http_response_builder::AppHttpResponseBuilder;
 use crate::services::files_storage::file_storage::FileStorage;
 
-use super::{model::{GetPagedPrograms, UploadInputGroup, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
+use super::{model::{GetPagedPrograms, PagedProgramInputGroups, UploadInputGroup, UploadProgram, UploadProof, UploadedInputGroup, UploadedProgram}, service::ProgramService, utils::manage_program_with_input_compression};
 
 pub struct ProgramController;
 
@@ -273,6 +273,51 @@ impl ProgramController {
         }
         let organization_id = &jwt_payload.organization_id;
         let found_input_groups_result = ProgramService::get_input_groups_with_proven_executions(organization_id, &program_id, paging_params.limit, paging_params.page).await;
+        AppHttpResponseBuilder::get_http_response(found_input_groups_result)
+    }
+
+    pub async fn get_program_input_groups(req: HttpRequest, path: web::Path<String>, query_params: web::Query<PagingParameters>) -> impl Responder {
+        let paging_params = process_paging_inputs(query_params.into_inner());
+        let program_id = path.as_str().to_string();
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+        let organization_id = &jwt_payload.organization_id;
+        let found_input_groups_result = ProgramService::get_input_groups(organization_id, &program_id, paging_params.limit, paging_params.page).await;
+        AppHttpResponseBuilder::get_http_response(found_input_groups_result)
+    }
+
+    pub async fn delete_input_group(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
+        let (program_id, input_group_id) = path.into_inner();
+        let jwt_payload;
+        let extract_jwt_data_result = extract_jwt_data(&req);
+        match extract_jwt_data_result {
+            Ok(ok_jwt_payload) => {
+                jwt_payload = ok_jwt_payload;
+            },
+            Err(error_response) => {
+                return error_response;
+            }
+        }
+        let organization_id = &jwt_payload.organization_id;
+        let found_input_groups_result = ProgramService::delete_input_group(organization_id, &program_id, &input_group_id).await;
+        {
+            let read_guard = common::config::FILES_STORAGE.read().expect("Error in rw lock");
+
+            // Even if the aws deletion fails we dont return failure since for the user it will seem like everything worked fine,
+            // we can manage the deletion in the error case manually
+            let proof_deletion_result = read_guard.delete_proof(organization_id, &program_id, &input_group_id).await;
+            if let Err(err) = proof_deletion_result {
+                println!("Error in proof deletion: {}", err);
+            }
+        }
         AppHttpResponseBuilder::get_http_response(found_input_groups_result)
     }
 

@@ -18,4 +18,4 @@ clear_db:
 	docker-compose down
 	docker volume rm program_distributor_persisted_database
 
-clear_all: clear_build clear_docker
+clear_all: clear_docker clear_build

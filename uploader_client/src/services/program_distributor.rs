@@ -144,6 +144,27 @@ impl ProgramDistributorService {
         Ok(get_my_programs_response.data)
     }
 
+    pub async fn get_program_input_groups(&mut self, program_id: &str, limit: Option<usize>, page: Option<usize>) -> Result<PagedProgramInputGroups, EndpointError> {
+        let mut params: Vec<(&str, usize)> = Vec::new();
+        if let Some(limit_value) = limit {
+            params.push(("limit", limit_value))
+        }
+        if let Some(page_value) = page {
+            params.push(("page", page_value))
+        }
+        let get_my_programs_url = format!("{}/program/inputs/all/{program_id}", self.base_url);
+        let get_my_programs_request_builder = self.client.get(get_my_programs_url).query(&params);
+        let get_my_programs_response = self.make_request_with_response_body::<PagedProgramInputGroups>(get_my_programs_request_builder).await?;
+        Ok(get_my_programs_response.data)
+    }
+
+    pub async fn delete_input_group(&mut self, program_id: &str, input_group_id: &str) -> Result<(), EndpointError> {
+        let get_my_programs_url = format!("{}/program/input/{program_id}/{input_group_id}", self.base_url);
+        let get_my_programs_request_builder = self.client.delete(get_my_programs_url);
+        self.make_request_with_response_body::<()>(get_my_programs_request_builder).await?;
+        Ok(())
+    }
+
     pub async fn get_my_proven_programs(&mut self, limit: Option<usize>, page: Option<usize>) -> Result<PagedPrograms, EndpointError> {
         let mut params: Vec<(&str, usize)> = Vec::new();
         if let Some(limit_value) = limit {
@@ -477,10 +498,10 @@ impl ProgramDistributorService {
 
     async fn parse_response_with_response_body<T: DeserializeOwned>(response: Response) -> Result<EndpointResult<T>, EndpointError> {
         if response.status().is_success() {
-            let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing JSON");
+            let endpoint_response: EndpointResult<T> = response.json().await.expect("Error deserializing ok JSON");
             Ok(endpoint_response)
         } else {
-            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing JSON");
+            let endpoint_response: EndpointError = response.json().await.expect("Error deserializing error JSON");
             Err(endpoint_response)
         }
     }

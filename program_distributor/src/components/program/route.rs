@@ -10,6 +10,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
         route("mine", web::get().to(ProgramController::get_my_programs).wrap(ValidateJwtMiddleware)).
         route("template", web::get().to(ProgramController::retrieve_program_template)).
         route("inputs/{program_id}", web::get().to(ProgramController::retrieve_input_group)).
+        route("inputs/all/{program_id}", web::get().to(ProgramController::get_program_input_groups).wrap(ValidateJwtMiddleware)).
         route("program-and-inputs/{program_id}", web::get().to(ProgramController::retrieve_program_and_input_group)).
         route("organization/{organization_id}", web::get().to(ProgramController::get_organization_programs)).
         route("proof/{program_id}/{input_group_id}", web::get().to(ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
@@ -23,6 +24,7 @@ pub fn program_router(path_prefix: &str) -> Scope {
         // delete
         route("{program_id}", web::delete().to(ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
         route("proof/{program_id}/{input_group_id}", web::delete().to(ProgramController::confirm_proof_validity).wrap(ValidateJwtMiddleware)).
+        route("input/{program_id}/{input_group_id}", web::delete().to(ProgramController::delete_input_group).wrap(ValidateJwtMiddleware)).
         
         // post
         route("upload", web::post().to(ProgramController::upload_program).wrap(ValidateJwtMiddleware)).
