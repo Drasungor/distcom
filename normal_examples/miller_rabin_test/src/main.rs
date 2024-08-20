@@ -1,5 +1,8 @@
+use std::fs::{self, File};
+
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
+use base64::prelude::*;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Outputs {
@@ -31,8 +34,7 @@ fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
     }
 }
 
-fn main() {
-    let input: Vec<u8> = env::read();
+fn execute_miller_rabin(input: Vec<u8>) {
 
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
@@ -73,6 +75,26 @@ fn main() {
         is_probably_prime,
         iterations_limit_reached: iteration_counter == iterations_limit,
     }; 
-    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
-    env::commit(&serialized_outputs);
+}
+
+fn main() {
+    let dir_entries = fs::read_dir("./inputs").expect("Failed reading the inputs folder");
+    for entry in dir_entries {
+        let dir_entry = entry.expect("Error in entry parsing");
+        let current_path = dir_entry.path();
+        let file = File::open(current_path).expect("Failed opening input file");
+        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
+
+        for line in reader.records() {
+            let line_ok = line.expect("Error in read line");
+            let line_iterator = line_ok.into_iter();
+            let mut counter = 0;
+            for value in line_iterator {
+                counter += 1;
+                execute_miller_rabin(BASE64_STANDARD.decode(value).expect("Error in input base 64 decoding"));
+            }
+            assert!(counter == 1, "There is more than one element per line");
+        }
+
+    }
 }
