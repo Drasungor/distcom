@@ -494,10 +494,6 @@ impl ProgramMysqlDal {
         let mut connection = crate::common::config::CONNECTION_POOL.get().expect("get connection failure");
         let found_account_result = web::block(move || {
         connection.transaction::<_, AppError, _>(|connection| {
-            // account::table
-            //     .filter(account::account_was_verified.eq(true))
-            //     .first::<CompleteAccount>(connection)?;
-
             let found_account_option: Option<CompleteAccount> = account::table
                 .filter(account::organization_id.eq(&organization_id))
                 .first::<CompleteAccount>(connection).optional()?;
