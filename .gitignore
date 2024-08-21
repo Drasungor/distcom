@@ -17,3 +17,4 @@ program_with_input
 methods_test
 *dev.json
 local_files
+normal_examples/miller_rabin_test/outputs
