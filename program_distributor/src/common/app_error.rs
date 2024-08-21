@@ -80,8 +80,8 @@ impl From<csv::Error> for AppError {
 }
 
 impl From<base64::DecodeError> for AppError {
-    fn from(error: base64::DecodeError) -> Self {
-        AppError::new(AppErrorType::InternalServerError(InternalServerErrorType::CsvError(error.to_string())))
+    fn from(_error: base64::DecodeError) -> Self {
+        AppError::new(AppErrorType::EncodingNotBase64)
     }
 }
 

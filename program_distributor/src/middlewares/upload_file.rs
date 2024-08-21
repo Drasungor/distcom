@@ -1,4 +1,3 @@
-use std::fs; // Add import for File
 use actix_web::HttpMessage;
 use actix_web::dev::{ServiceRequest, Transform, forward_ready};
 use actix_web::{dev::Service, dev::ServiceResponse, Error};
@@ -57,16 +56,5 @@ where
             let res = fut.await?;
             Ok(res)
         })
-    }
-}
-
-
-fn folder_exists(path: &str) -> bool {
-    fs::metadata(path).is_ok()
-}
-
-fn create_folder(path: &str) {
-    if !folder_exists(path) {
-        fs::create_dir(path).expect("Error in uploads folder creation")
     }
 }

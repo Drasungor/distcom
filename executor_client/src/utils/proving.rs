@@ -46,8 +46,6 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
                 let after_proof_time = SystemTime::now();
                 println!();
                 println!("Proof generated successfully.");
-                // println!("Normal output: {}", String::from_utf8(output.stdout).unwrap());
-                // println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
                 read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
                 println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
                 println!();

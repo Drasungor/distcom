@@ -1,5 +1,5 @@
 use std::fs;
-use tar::{Builder};
+use tar::Builder;
 use std::fs::File;
 use std::io;
 
@@ -14,37 +14,37 @@ pub fn create_folder(path: &str) {
     }
 }
 
-pub fn clear_directory(folder_path: &str) {
-    // let downloads_folder_path = "./downloads";
+// pub fn clear_directory(folder_path: &str) {
+//     // let downloads_folder_path = "./downloads";
 
-    let entries = fs::read_dir(folder_path).expect("Failed reading the downloads folder");
+//     let entries = fs::read_dir(folder_path).expect("Failed reading the downloads folder");
 
-    for entry in entries {
-        let dir_entry = entry.expect("Error in entry parsing");
-        let current_path = dir_entry.path();
+//     for entry in entries {
+//         let dir_entry = entry.expect("Error in entry parsing");
+//         let current_path = dir_entry.path();
 
-        // Check if it's a file
-        if current_path.is_file() {
-            // Attempt to delete the file
+//         // Check if it's a file
+//         if current_path.is_file() {
+//             // Attempt to delete the file
 
-            // If the file deletion fails it might be because the file is being used by the server, it can be deleted
-            // in another moment
-            let _ = fs::remove_file(&current_path);
-        } else if current_path.is_dir() {
-            fs::remove_dir_all(current_path);
-        }
-    }
-}
+//             // If the file deletion fails it might be because the file is being used by the server, it can be deleted
+//             // in another moment
+//             let _ = fs::remove_file(&current_path);
+//         } else if current_path.is_dir() {
+//             fs::remove_dir_all(current_path);
+//         }
+//     }
+// }
 
-pub fn clear_aux_directories() {
-    let downloads_folder = "./downloads";
-    create_folder(downloads_folder);
-    clear_directory(downloads_folder);
+// pub fn clear_aux_directories() {
+//     let downloads_folder = "./downloads";
+//     create_folder(downloads_folder);
+//     clear_directory(downloads_folder);
 
-    let aux_files_folder = "./aux_files";
-    create_folder(aux_files_folder);
-    clear_directory(aux_files_folder);
-}
+//     let aux_files_folder = "./aux_files";
+//     create_folder(aux_files_folder);
+//     clear_directory(aux_files_folder);
+// }
 
 
 pub fn compress_folder_contents(folder_path: &str, output_path: &str) -> io::Result<()> {

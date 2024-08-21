@@ -1,12 +1,10 @@
 
-use std::fs::create_dir;
-
 use actix_web::dev::Service;
 use actix_web::{App, HttpMessage, HttpServer};
 use diesel_migrations::{ embed_migrations, EmbeddedMigrations, MigrationHarness };
 use futures_util::FutureExt;
 use utils::jwt_helpers::Claims;
-use utils::local_storage_helpers::{clear_aux_directories, create_folder};
+use utils::local_storage_helpers::create_folder;
 
 use crate::components::account::route::account_router;
 use crate::components::program::route::program_router;
@@ -17,8 +15,6 @@ use crate::utils::local_storage_helpers::compress_folder_contents;
 // https://github.com/diesel-rs/diesel/blob/master/guide_drafts/migration_guide.md
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
-
-mod handlers;
 mod middlewares;
 mod common;
 mod services;

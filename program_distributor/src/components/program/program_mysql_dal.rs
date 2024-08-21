@@ -204,7 +204,7 @@ impl ProgramMysqlDal {
             std::fs::create_dir_all(format!("./aux_files/{}", input_group_id))?;
 
 
-            let file = File::create(file_path.clone())?;
+            File::create(file_path.clone())?;
         }
         let mut writer = csv::Writer::from_path(file_path.clone())?;
         while let Some(input_tuple) = current_input {
@@ -227,7 +227,7 @@ impl ProgramMysqlDal {
             let now_naive_datetime = get_current_naive_datetime();
             let input_group_id = Self::get_available_input_group_id(connection, &cloned_program_id, &now_naive_datetime)?;
             let file_path = format!("./aux_files/{}/{}.csv", input_group_id, input_group_id);
-            Self::store_input_group_in_csv(connection, &file_path, &input_group_id);
+            Self::store_input_group_in_csv(connection, &file_path, &input_group_id)?;
             Ok((input_group_id, file_path))
         })
         }).await;
