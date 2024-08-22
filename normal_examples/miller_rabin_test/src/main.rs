@@ -112,6 +112,5 @@ fn main() {
             }
             assert!(counter == 1, "There is more than one element per line");
         }
-
     }
 }
