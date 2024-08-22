@@ -9,13 +9,12 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
     match downloaded_files_names_result {
         Ok(downloaded_files_names_value) => {
             let csv_file_name = downloaded_files_names_value.input_file_name;
-    
-            // println!("BORRAR: csv_file_name: {csv_file_name}");
-
             let execution_args = vec![csv_file_name.clone()];
         
+            
+            println!("Running program {} from organization {}", program.name, program.organization_id);
             let start_time = SystemTime::now();
-        
+
             // Command added because rust cannot detect accurately the change in the code's files
             Command::new("touch")
                 .arg("./methods/guest/src/main.rs")

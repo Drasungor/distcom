@@ -1,4 +1,4 @@
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path, process::Command, time::SystemTime};
 
 use crate::{common, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}};
 
@@ -11,7 +11,6 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
         return Err(());
     }
 
-    // let download_path = "../downloads/proof.bin";
     let download_path = "./downloads/proof.bin";
     let download_proof_result = write_guard.download_proof(program_id, input_group_id, Path::new(download_path)).await;
     
@@ -20,7 +19,9 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
         return Err(());
     }
 
-    println!("Starting proof verification");
+    
+    println!("Starting proof verification of program {} with input group {}", program_id, input_group_id);
+    let start_time = SystemTime::now();
 
     let execution_args = vec![program_id, input_group_id];
 
@@ -44,6 +45,8 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
         println!("Proof verified successfully.");
         write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
         println!();
+        let after_verification_time = SystemTime::now();
+        println!("Proof was verified, total seconds passed: {}", after_verification_time.duration_since(start_time).expect("Time went backwards").as_secs());
     } else {
         println!("Process failed.");
         println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
