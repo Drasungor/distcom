@@ -2,20 +2,21 @@ use std::{fs, path::Path, process::Command, time::SystemTime};
 
 use crate::{common::{self, communication::EndpointError}, models::returned_program::ReturnedProgram, services::program_distributor::{PagedPrograms, UploadedProof}};
 
-pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), ()> {
+// Returns error if there was an error in the endpoints called, and ok with a boolean indicating if the executed program threw an error
+// or not
+pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<bool, ()> {
     let read_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.read().expect("Error in rw lock");
     let downloaded_files_names_result = read_guard.get_program_and_input_group(&program.program_id).await;
 
     match downloaded_files_names_result {
         Ok(downloaded_files_names_value) => {
             let csv_file_name = downloaded_files_names_value.input_file_name;
-    
-            // println!("BORRAR: csv_file_name: {csv_file_name}");
-
             let execution_args = vec![csv_file_name.clone()];
         
+            
+            println!("Running program \"{}\" from organization  with id \"{}\"", program.name, program.organization_id);
             let start_time = SystemTime::now();
-        
+
             // Command added because rust cannot detect accurately the change in the code's files
             Command::new("touch")
                 .arg("./methods/guest/src/main.rs")
@@ -46,17 +47,16 @@ pub async fn download_and_run_program(program: &ReturnedProgram) -> Result<(), (
                 let after_proof_time = SystemTime::now();
                 println!();
                 println!("Proof generated successfully.");
-                // println!("Normal output: {}", String::from_utf8(output.stdout).unwrap());
-                // println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
                 read_guard.upload_proof(Path::new("./src/runner/proof.bin"), uploaded_proof_data).await.expect("Error uploading proof");
                 println!("Proof was uploaded, total seconds passed: {}", after_proof_time.duration_since(start_time).expect("Time went backwards").as_secs());
                 println!();
                 let _ = fs::remove_file(format!("./program_with_input/{}", downloaded_files_names_value.program_file_name));
+                Ok(true)
             } else {
                 println!("Process failed.");
                 println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
+                Ok(false)
             }
-            Ok(())
         },
         Err(received_error) => {
             println!("Error while requesting the program with an input group: {:?}", received_error);

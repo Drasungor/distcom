@@ -19,7 +19,7 @@ def write_big_endian_inputs_to_csv(number, iterations_limit, file_path):
         writer = csv.writer(file)
         writer.writerow([base64_data])
 
-numbers_list = [561, 562]
+numbers_list = [7237, 7243, 7247, 7253, 7283, 7297, 7307, 7309, 7321, 7331, 7333, 7349, 7351, 7369, 7393, 7411]
 for number in numbers_list:
     file_path = str(number) + '_miller_rabin_big_endian.csv'
     write_big_endian_inputs_to_csv(number, 1000, file_path)

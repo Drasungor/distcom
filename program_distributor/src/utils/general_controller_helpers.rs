@@ -17,15 +17,28 @@ pub struct MandatoryPagingParameters {
 pub fn process_paging_inputs(paging_params: PagingParameters) -> MandatoryPagingParameters {
     let limit;
     let page;
+    let limit_max = common::config::GENERAL_CONSTANTS.limit_max;
+    let limit_min = common::config::GENERAL_CONSTANTS.limit_min;
+    let page_min = common::config::GENERAL_CONSTANTS.page_min;
 
     if let Some(received_limit) = paging_params.limit {
-        limit = received_limit;
+        if received_limit > limit_max {
+            limit = limit_max;
+        } else if received_limit < limit_min {
+            limit = limit_min;
+        } else {
+            limit = received_limit;
+        }
     } else {
-        limit = common::config::GENERAL_CONSTANTS.limit_max;
+        limit = limit_max;
     }
 
     if let Some(received_page) = paging_params.page {
-        page = received_page;
+        if received_page < page_min {
+            page = page_min;
+        } else {
+            page = received_page;
+        }
     } else {
         page = common::config::GENERAL_CONSTANTS.page_min;
     }

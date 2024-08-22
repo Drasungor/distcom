@@ -1,0 +1,16 @@
+[package]
+# This is where the ELF and ID method element names are defined
+name = "downloaded_guest"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+# If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
+# risc0-zkvm = { version = "1.0.1", default-features = false, features = ["std"] }
+# risc0-zkvm = { version = "0.21", default-features = false }
+# risc0-zkvm = { version = "1.0.1", default-features = false }
+risc0-zkvm = { version = "1.0.5", default-features = false }
+serde = { version = "1.0", default-features = false }
+# serde_json = "1.0.120"

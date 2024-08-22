@@ -31,9 +31,6 @@ fn main() {
 
         for value in line_iterator {
             let bytes_vector = base64::decode(value).expect("Failed to decode base64");
-
-            // eprintln!("BORRAR: printed bytes_vector: {:?}", bytes_vector);
-
             env_bulder_ref = env_bulder_ref.write(&bytes_vector).unwrap();
             counter += 1;
         }

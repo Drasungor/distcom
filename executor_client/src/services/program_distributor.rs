@@ -19,6 +19,8 @@ pub struct ProgramDistributorService {
 #[derive(Debug, Deserialize)]
 pub struct PagedOrganizations {
     pub organizations: Vec<ReturnedOrganization>,
+
+    #[allow(dead_code)]
     pub total_elements_amount: i64,
 }
 
@@ -26,6 +28,8 @@ pub struct PagedOrganizations {
 #[derive(Debug, Deserialize)]
 pub struct PagedPrograms {
     pub programs: Vec<ReturnedProgram>,
+
+    #[allow(dead_code)]
     pub total_elements_amount: i64,
 }
 

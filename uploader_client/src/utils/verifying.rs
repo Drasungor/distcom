@@ -1,21 +1,27 @@
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path, process::Command, time::SystemTime};
 
 use crate::{common, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}};
 
 pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> Result<(), ()> {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
+    // write_guard.download_program(program_id, Path::new("./src/runner/methods")).await.expect("Error downloading program code");
+    let download_program_result = write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
+    if let Err(received_error) = download_program_result {
+        println!("Error while downloading program code: {:?}", received_error);
+        return Err(());
+    }
 
-    // let download_path = "../downloads/proof.bin";
     let download_path = "./downloads/proof.bin";
     let download_proof_result = write_guard.download_proof(program_id, input_group_id, Path::new(download_path)).await;
     
     if let Err(received_error) = download_proof_result {
-        println!("Error while downloading input group proof");
+        println!("Error while downloading input group proof: {:?}", received_error);
         return Err(());
     }
 
-    println!("Starting proof verification");
+    
+    println!("Starting proof verification of program with id \"{}\" with input group with id \"{}\"", program_id, input_group_id);
+    let start_time = SystemTime::now();
 
     let execution_args = vec![program_id, input_group_id];
 
@@ -35,9 +41,10 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
         .expect("Failed to execute child program");
 
     if output.status.success() {
-        println!();
-        println!("Proof verified successfully.");
         write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
+        let after_verification_time = SystemTime::now();
+        println!("Proof was verified, total seconds passed: {}", after_verification_time.duration_since(start_time).expect("Time went backwards").as_secs());
+        println!();
         println!();
     } else {
         println!("Process failed.");
