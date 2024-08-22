@@ -19,3 +19,4 @@ methods_test
 local_files
 normal_examples/miller_rabin_test/outputs
 normal_examples/modular_probabilistic_fermat_test/outputs
+normal_examples/mixed_test/outputs

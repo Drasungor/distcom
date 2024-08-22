@@ -1,5 +1,8 @@
+use std::fs::{self, File};
+
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
+use base64::prelude::*;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct FermatOutputs {
@@ -12,6 +15,16 @@ pub struct MillerRabinOutputs {
     pub tested_number: u32,
     pub is_probably_prime: bool,
     pub iterations_limit_reached: bool,
+}
+
+pub fn folder_exists(path: &str) -> bool {
+    fs::metadata(path).is_ok()
+}
+
+pub fn create_folder(path: &str) {
+    if !folder_exists(path) {
+        fs::create_dir_all(path).expect("Error in uploads folder creation")
+    }
 }
 
 fn get_base_2_multiplier(tested_number: u32) -> u32 {
@@ -38,7 +51,7 @@ fn modular_exponentiation(base: u32, exponent: u32, modulo: u32) -> u32 {
 }
 
 
-fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
+fn miller_rabin(input: &Vec<u8>) -> MillerRabinOutputs {
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
     let second_four_bytes = &input[4..8];
@@ -81,7 +94,7 @@ fn miller_rabin(input: Vec<u8>) -> MillerRabinOutputs {
     return outputs;
 }
 
-fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
+fn probabilistic_fermat(input: &Vec<u8>) -> FermatOutputs {
     let first_four_bytes = &input[0..4];
     let number_to_test = u32::from_be_bytes(first_four_bytes.try_into().expect("Error transforming into number from bytes"));
     let mut may_be_prime = true;
@@ -104,24 +117,46 @@ fn probabilistic_fermat(input: Vec<u8>) -> FermatOutputs {
     return outputs;
 }
 
-
-fn main() {
-    let input1: Vec<u8> = env::read();
+fn execute_mixed_test(input1: &Vec<u8>, input2: &Vec<u8>) -> MillerRabinOutputs {
     let probabilistic_fermat_result: FermatOutputs = probabilistic_fermat(input1);
-    
     if !probabilistic_fermat_result.is_probably_prime {
         let returned_output = MillerRabinOutputs {
             tested_number: probabilistic_fermat_result.tested_number,
             is_probably_prime: probabilistic_fermat_result.is_probably_prime,
             iterations_limit_reached: false,
         };
-        let serialized_outputs = to_string(&returned_output).expect("Error in fermat result struct serialization");
-        env::commit(&serialized_outputs);
+        returned_output
     } else {
-        let input2: Vec<u8> = env::read();
         let miller_rabin_result: MillerRabinOutputs = miller_rabin(input2);
-        let serialized_outputs = to_string(&miller_rabin_result).expect("Error in miller rabin result struct serialization");
-        env::commit(&serialized_outputs);
+        miller_rabin_result
     }
+}
 
+fn main() {
+    let dir_entries = fs::read_dir("./inputs").expect("Failed reading the inputs folder");
+    let _ = fs::remove_dir_all("./outputs");
+    create_folder("./outputs");
+    for entry in dir_entries {
+        let dir_entry = entry.expect("Error in entry parsing");
+        let current_path = dir_entry.path();
+        let file = File::open(current_path.clone()).expect("Failed opening input file");
+        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(file);
+        let mut lines_values = Vec::<Vec<u8>>::new();
+        
+        let mut counter = 0;
+        for line in reader.records() {
+            let line_ok = line.expect("Error in read line");
+            let line_iterator = line_ok.into_iter();
+            for value in line_iterator {
+                lines_values.push(BASE64_STANDARD.decode(value).expect("Error in input base 64 decoding"));
+            }
+            counter += 1;
+        }
+        assert!(counter == 2, "Invalid file format");
+        let output = execute_mixed_test(&lines_values[0], &lines_values[1]);
+        let serialized_outputs = to_string(&output).expect("Error in struct serialization");
+        let input_file_name = current_path.file_name().expect("There is no file in this path");
+        let file_name_string = input_file_name.to_str().unwrap().split(".").collect::<Vec<&str>>()[0];
+        std::fs::write(format!("./outputs/{file_name_string}.json"), serialized_outputs).expect("Error writing proof to file");
+    }
 }
