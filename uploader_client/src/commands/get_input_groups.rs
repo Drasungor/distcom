@@ -1,7 +1,6 @@
 use clap::{error::ErrorKind, Parser, Subcommand};
-use std::{fs, path::Path};
 
-use crate::{common, models::{returned_input_group::print_input_groups_list, returned_program::print_programs_list}, services::program_distributor::{PagedProgramInputGroups, PagedPrograms}, utils::{local_storage_helpers::create_folder, process_inputs::{process_previously_set_page_size, process_user_input}}};
+use crate::{common, models::returned_input_group::print_input_groups_list, services::program_distributor::PagedProgramInputGroups, utils::process_inputs::{process_previously_set_page_size, process_user_input}};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, bin_name = "")]

@@ -27,12 +27,16 @@ pub struct ProgramDistributorService {
 #[derive(Debug, Deserialize)]
 pub struct PagedPrograms {
     pub programs: Vec<ReturnedProgram>,
+
+    #[allow(dead_code)]
     pub total_elements_amount: i64,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PagedProgramInputGroups {
     pub program_input_groups: Vec<ReturnedInputGroup>,
+
+    #[allow(dead_code)]
     pub total_elements_amount: i64,
 }
 
@@ -369,9 +373,7 @@ impl ProgramDistributorService {
 
         let response = self.client.post(post_login_url).json(&data).send().await.expect("Error in get");
         if response.status().is_success() {
-            // let login_response: EndpointResult<ReceivedTokens> = response.json().await.expect("Error deserializing JSON");
-            // login_response
-            let login_response: EndpointResult<()> = response.json().await.expect("Error deserializing JSON");
+            let _login_response: EndpointResult<()> = response.json().await.expect("Error deserializing JSON");
         } else {
             let login_error: EndpointError = response.json().await.expect("Error deserializing JSON");
             let app_error_type = login_error.error_code.parse::<AppErrorType>().unwrap();

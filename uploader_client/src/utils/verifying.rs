@@ -4,14 +4,19 @@ use crate::{common, services::program_distributor::{PagedProgramInputGroups, Pag
 
 pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> Result<(), ()> {
     let mut write_guard = common::config::PROGRAM_DISTRIBUTOR_SERVICE.write().expect("Error in rw lock");
-    write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
+    // write_guard.download_program(program_id, Path::new("./src/runner/methods")).await.expect("Error downloading program code");
+    let download_program_result = write_guard.download_program(program_id, Path::new("./src/runner/methods")).await;
+    if let Err(received_error) = download_program_result {
+        println!("Error while downloading program code: {:?}", received_error);
+        return Err(());
+    }
 
     // let download_path = "../downloads/proof.bin";
     let download_path = "./downloads/proof.bin";
     let download_proof_result = write_guard.download_proof(program_id, input_group_id, Path::new(download_path)).await;
     
     if let Err(received_error) = download_proof_result {
-        println!("Error while downloading input group proof");
+        println!("Error while downloading input group proof: {:?}", received_error);
         return Err(());
     }
 

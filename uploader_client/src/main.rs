@@ -1,4 +1,3 @@
-use std::fs;
 use std::path::Path;
 use clap::error::ErrorKind;
 use commands::get_programs::select_my_programs;
