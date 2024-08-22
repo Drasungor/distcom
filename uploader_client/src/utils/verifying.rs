@@ -20,7 +20,7 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
     }
 
     
-    println!("Starting proof verification of program {} with input group {}", program_id, input_group_id);
+    println!("Starting proof verification of program with id \"{}\" with input group with id \"{}\"", program_id, input_group_id);
     let start_time = SystemTime::now();
 
     let execution_args = vec![program_id, input_group_id];
@@ -41,12 +41,11 @@ pub async fn verify_proven_execution(program_id: &str, input_group_id: &str) -> 
         .expect("Failed to execute child program");
 
     if output.status.success() {
-        println!();
-        println!("Proof verified successfully.");
         write_guard.confirm_proof_validity(program_id, input_group_id).await.expect("Error confirming proof validity");
-        println!();
         let after_verification_time = SystemTime::now();
         println!("Proof was verified, total seconds passed: {}", after_verification_time.duration_since(start_time).expect("Time went backwards").as_secs());
+        println!();
+        println!();
     } else {
         println!("Process failed.");
         println!("Error output: {}", String::from_utf8(output.stderr).unwrap());
