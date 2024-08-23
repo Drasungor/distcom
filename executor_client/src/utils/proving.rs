@@ -122,7 +122,6 @@ pub async fn run_some_programs(organization_id: Option<&str>, programs_amount: u
             let mut keep_same_program = true;
             let returned_program = &programs_list[current_page_iterator];
             while keep_running && keep_same_program && programs_counter < programs_amount {
-                // keep_same_program = download_and_run_program(returned_program).await.is_ok();
                 let run_program_result = interactive_download_and_run_program(returned_program).await;
                 if let Ok(run_pending_executions) = run_program_result {
                     keep_running = run_pending_executions;
@@ -146,14 +145,9 @@ pub async fn run_some_program_inputs(chosen_program: &ReturnedProgram, programs_
     let mut keep_running_program = true;
     let mut programs_counter = 0;
     while keep_running_program && programs_counter < programs_amount {
-        // keep_running_program = download_and_run_program(chosen_program).await.is_ok();
-        // if keep_running_program {
-        //     programs_counter += 1;
-        // }
         let run_program_result = interactive_download_and_run_program(chosen_program).await;
         if let Ok(run_pending_executions) = run_program_result {
             keep_running_program = run_pending_executions;
-            // keep_running_program = true;
         } else {
             keep_running_program = false;
         }
