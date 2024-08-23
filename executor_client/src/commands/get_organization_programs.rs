@@ -2,7 +2,7 @@ use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 
 use crate::utils::process_inputs::process_previously_set_page_size;
-use crate::utils::proving::{download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
+use crate::utils::proving::{download_and_run_program, interactive_download_and_run_program, retrieve_programs, run_some_program_inputs, run_some_programs};
 use crate::{common, models::returned_program::{print_programs_list, ReturnedProgram}, utils::process_inputs::process_user_input};
 
 #[derive(Parser)]
@@ -78,7 +78,13 @@ async fn run_all_organization_programs(organization_id: &str) {
 async fn run_all_program_inputs(chosen_program: &ReturnedProgram) {
     let mut keep_executing_program = true;
     while keep_executing_program {
-        keep_executing_program = download_and_run_program(chosen_program).await.is_ok();
+        // keep_executing_program = download_and_run_program(chosen_program).await.is_ok();
+        let run_program_result = interactive_download_and_run_program(chosen_program).await;
+        if let Ok(run_pending_executions) = run_program_result {
+            keep_executing_program = run_pending_executions;
+        } else {
+            keep_executing_program = false;
+        }
     }
 }
 
