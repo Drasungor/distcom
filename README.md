@@ -54,7 +54,13 @@ sudo snap install docker
 In windows, you can either install [Docker desktop](https://www.docker.com/products/docker-desktop/), or use the 
 previous command inside [wsl](https://learn.microsoft.com/en-us/windows/wsl/install).
 
-If make is not installed in the computer, try executing the command `sudo apt-get install build-essential`
+If make is not installed in the computer, try executing the command 
+```
+sudo apt-get install build-essential
+```
+
+If for any the makefiles cannot be executed, then you can execute each command individually.
+
 
 ## Program distributor
 
