@@ -219,7 +219,7 @@ Query parameters:
 ```
 limit: i64, // Optional, Integer from 1 to 50
 page: i64, // Optional, Integer from 1 onwards
-name_filter: String, // Optional, String of the beginning of the organization to filter the returned organizations
+name_filter: String, // Optional, String of the beginning of the organization's name to filter the returned organizations
 ```
 <br>
 
@@ -256,11 +256,75 @@ Response:
 
 #### Program
 
-- `GET` `/program/all`
-ProgramController::get_general_programs)).
+- `GET` `/program/all`  
+
+Endpoint to get all the programs stored in the server with pagination
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+name_filter: String, // Optional, String of the beginning of the program's name to filter the returned organizations
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        "programs": [
+            {
+                "organization_id": String, // Program's owner organization id
+                "program_id": String, // Program's id
+                "name": String, // Program's name
+                "description": String, // Program's description
+                "input_lock_timeout": i64, // How many seconds will pass until the server considers the
+                                           // reservation of the program input as dropped
+            },
+            ...
+        ],
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
+                                      // returned if there was no pagination
+    }
+}
+```
+<br>
 
 - `GET` `/program/mine`
-ProgramController::get_my_programs).wrap(ValidateJwtMiddleware)).
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        "programs": [
+            {
+                "organization_id": String, // Program's owner organization id
+                "program_id": String, // Program's id
+                "name": String, // Program's name
+                "description": String, // Program's description
+                "input_lock_timeout": i64, // How many seconds will pass until the server considers the
+                                           // reservation of the program input as dropped
+            },
+            ...
+        ],
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
+                                      // returned if there was no pagination
+    }
+}
+```
+<br>
 
 - `GET` `/program/template`
 ProgramController::retrieve_program_template)).
