@@ -169,6 +169,23 @@ Json body format:
     password: String, // Password chosen by the user logging in
 }
 ```
+
+Response: 
+```
+{
+    "status": "success",
+    "data": {
+        "basic_token": {
+            "token_id": String, // Id of the jwt token
+            "token": String, // Jwt token
+        },
+        "refresh_token": {
+            "token_id": String, // id of the refresh token
+            "token": String, // Refresh token
+        }
+    }
+}
+```
 <br>
 
 - `POST` `/account/refresh-token`
@@ -181,6 +198,18 @@ Json body format:
     pub refresh_token: String,
 }
 ```
+
+Response: 
+```
+{
+    "status": "success",
+    "data": {
+        "token_id": String, // Id of the jwt token
+        "token": String, // Jwt token
+    }
+}
+```
+<br>
 
 - `GET` `/account/organizations`
 
@@ -202,6 +231,25 @@ Json body format:
 ```
 {
     token_id: String, // Id of the refresh token that is being deleted
+}
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        "organizations": [
+            {
+                "organization_id": String, // Organization's id
+                "name": String, // Organization's public id
+                "description": String, // Organization's description
+            },
+            ...
+        ],
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
+                                      // returned if there was no pagination
+    }
 }
 ```
 <br>
