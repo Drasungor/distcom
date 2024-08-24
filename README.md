@@ -82,7 +82,187 @@ The http server can be accessed (if the `SERVER_EXTERNAL_PORT` environment varia
 
 ### Endpoints
 
-asdas
+Responses formats:
+
+- Ok with response body:
+
+```
+{
+    "status": "success",
+    "data": null | Object, // Data returned by the endpoint
+}
+```
+
+- Error with response body:
+```
+{
+    "status": "error",
+    "error_code": String, // Error code
+    "error_message": String, // Error description
+}
+```
+Error codes:
+
+1. "ACCOUNT_NOT_FOUND"  
+Status_code: 404, NOT_FOUND
+
+2. "PROGRAM_NOT_FOUND"  
+Status_code: 404, NOT_FOUND
+
+3. "PROGRAM_NAME_TAKEN"  
+Status_code: 409, CONFLICT
+
+4. "INPUT_GROUP_NOT_FOUND"  
+Status_code: 404, NOT_FOUND
+
+5. "BAD_BASE_64_ENCODING"  
+Status_code: 422, UNPROCESSABLE_ENTITY
+
+6. "WRONG_CREDENTIALS",  
+Status_code: 403, FORBIDDEN
+
+7. "USERNAME_ALREADY_EXISTS"  
+Status_code: 409, CONFLICT
+
+8. "REFRESH_TOKEN_NOT_FOUND"  
+Status_code: 404, NOT_FOUND
+
+9. "INVALID_TOKEN"  
+Status_code: 403, FORBIDDEN
+
+10. "INTERNAL_SERVER_ERROR"  
+Status_code: 500, INTERNAL_SERVER_ERROR
+
+#### Account
+
+- `POST` `/account/register`
+
+Endpoint for account registration
+
+Json body format: 
+```
+{
+    username: String, // Username chosen by the registering user
+    password: String, // Password chosen by the registering user
+    name: String, // Name of the organization, this value is public
+    description: String, // Name of the organization, this value is public
+}
+```
+
+Response: 
+```
+{
+    "status": "success",
+    "data": null
+}
+```
+<br>
+
+- `POST` `/account/login`
+
+Endpoint for account login
+
+Json body format: 
+```
+{
+    username: String, // Username chosen by the user logging in
+    password: String, // Password chosen by the user logging in
+}
+```
+<br>
+
+- `POST` `/account/refresh-token`
+
+Endpoint for jwt token refreshment
+
+Json body format: 
+```
+{
+    pub refresh_token: String,
+}
+```
+
+- `GET` `/account/organizations`
+
+Endpoint to get the registered accounts
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+name_filter: String, // Optional, String of the beginning of the organization to filter the returned organizations
+```
+<br>
+
+- `DELETE` `/account/refresh-token`
+
+Endpoint to delete a refresh token, that is, logging out
+
+Json body format: 
+```
+{
+    token_id: String, // Id of the refresh token that is being deleted
+}
+```
+<br>
+
+#### Program
+
+- `GET` `/program/all`
+ProgramController::get_general_programs)).
+
+- `GET` `/program/mine`
+ProgramController::get_my_programs).wrap(ValidateJwtMiddleware)).
+
+- `GET` `/program/template`
+ProgramController::retrieve_program_template)).
+
+- `GET` `/program/inputs/{program_id}`
+ProgramController::retrieve_input_group)).
+
+- `GET` `/program/inputs/all/{program_id}`
+ProgramController::get_program_input_groups).wrap(ValidateJwtMiddleware)).
+
+- `GET` `/program/program-and-inputs/{program_id}`
+ProgramController::retrieve_program_and_input_group)).
+
+- `GET` `/program/organization/{organization_id}`
+ProgramController::get_organization_programs)).
+
+- `GET` `/program/proof/{program_id}/{input_group_id}`
+ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
+
+- `GET` `/program/proofs`
+ProgramController::get_programs_with_proven_executions).wrap(ValidateJwtMiddleware)).
+
+- `GET` `/program/proofs/{program_id}`
+ProgramController::get_input_groups_with_proven_executions).wrap(ValidateJwtMiddleware)).
+
+- `GET` `/program/{program_id}`
+ProgramController::download_program)).
+
+
+- `PATCH` `/program/proof/{program_id}/{input_group_id}`
+ProgramController::mark_proof_as_invalid).wrap(ValidateJwtMiddleware)).
+
+- `DELETE` `/program/{program_id}`
+ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
+
+- `DELETE` `/program/proof/{program_id}/{input_group_id}`
+ProgramController::confirm_proof_validity).wrap(ValidateJwtMiddleware)).
+
+- `DELETE` `/program/input/{program_id}/{input_group_id}`
+ProgramController::delete_input_group).wrap(ValidateJwtMiddleware)).
+
+- `POST` `/program/upload"`
+ProgramController::upload_program).wrap(ValidateJwtMiddleware)).
+
+- `POST` `/program/proof`
+ProgramController::upload_proof)). 
+
+- `POST` `/program/inputs/{program_id}`
+ProgramController::add_inputs_group).wrap(ValidateJwtMiddleware))
+
 
 ## Executor client
 
