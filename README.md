@@ -1,3 +1,5 @@
+# Introduction
+
 &nbsp;&nbsp;&nbsp;&nbsp;There are networks like [IBM World Community Grid](https://www.worldcommunitygrid.org/) where various institutions upload projects for which 
 they need to perform simulations or tests on a large scale, requiring substantial computing power. 
 Generally, these projects that distribute their calculations contribute to scientific work, so it is 
@@ -40,3 +42,22 @@ allowing another client to generate the program proof, will also be provided.
 
 ![System diagram](imgs/translated_system_diagram.jpg)
 
+# Usage
+
+This set of programs make use of docker, docker-compose and makefiles.
+
+To install docker and docker-compose, you can use the following command in ubuntu:  
+```
+sudo snap install docker
+```
+
+In windows, you can either install [Docker desktop](https://www.docker.com/products/docker-desktop/), or use the 
+previous command inside [wsl](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+If make is not installed in the computer, try executing the command `sudo apt-get install build-essential`
+
+## Program distributor
+
+## Executor client
+
+## Uploader client
