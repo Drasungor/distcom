@@ -59,11 +59,33 @@ If make is not installed in the computer, try executing the command
 sudo apt-get install build-essential
 ```
 
-If for any the makefiles cannot be executed, then you can execute each command individually.
+If for any reason the makefiles cannot be executed, then you can execute each command individually.
 
 
 ## Program distributor
 
+The server that manages the uploaders' accounts, programs, inputs and proofs. It runs an http server
+and it's makefile has the following command options:
+
+- `make`: the same as make `run_all`
+- `make run_all`: executes the docker compose file, setting up the database (which has a named volume), a phpmyadmin instance for database management, and the server itself.
+- `make clear_build`: clears the server's containers and building named volume making it so that the program will have to be rebuilt from zero the next time it is executed.
+- `make clear_docker`: clears the containers.
+- `make clear_all`: runs `clear_docker` and `clear_build`.
+- `make clear_db`: deletes the volume dedicated to the database data, clearing all the stored information.
+
+The phpmyadmin mysql database manager can be accessed (if the `PHPMYADMIN_EXTERNAL_PORT` environment variable is not modified) by entering the following url in the browser:
+[http://localhost:9000/](http://localhost:9000/).
+
+The http server can be accessed (if the `SERVER_EXTERNAL_PORT` environment variable is not modified) by entering the following url in the browser:
+[http://localhost:8080/](http://localhost:8080/).
+
+### Endpoints
+
+asdas
+
 ## Executor client
+
+
 
 ## Uploader client
