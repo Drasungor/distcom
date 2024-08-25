@@ -219,7 +219,8 @@ Query parameters:
 ```
 limit: i64, // Optional, Integer from 1 to 50
 page: i64, // Optional, Integer from 1 onwards
-name_filter: String, // Optional, String of the beginning of the organization's name to filter the returned organizations
+name_filter: String, // Optional, String of the beginning of the organization's 
+                     // name to filter the returned organizations
 ```
 <br>
 
@@ -264,7 +265,8 @@ Query parameters:
 ```
 limit: i64, // Optional, Integer from 1 to 50
 page: i64, // Optional, Integer from 1 onwards
-name_filter: String, // Optional, String of the beginning of the program's name to filter the returned organizations
+name_filter: String, // Optional, String of the beginning of the program's 
+                     // name to filter the returned organizations
 ```
 
 Response:
@@ -278,19 +280,21 @@ Response:
                 "program_id": String, // Program's id
                 "name": String, // Program's name
                 "description": String, // Program's description
-                "input_lock_timeout": i64, // How many seconds will pass until the server considers the
-                                           // reservation of the program input as dropped
+                "input_lock_timeout": i64, // How many seconds will pass until the server considers 
+                                           // the reservation of the program input as dropped
             },
             ...
         ],
-        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
-                                      // returned if there was no pagination
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that 
+                                      // would be returned if there was no pagination
     }
 }
 ```
 <br>
 
 - `GET` `/program/mine`
+
+Returns a list with the programs uploaded by the logged in account.  
 
 Headers:
 ```
@@ -326,20 +330,96 @@ Response:
 ```
 <br>
 
-- `GET` `/program/template`
-ProgramController::retrieve_program_template)).
+- `GET` `/program/template`  
 
-- `GET` `/program/inputs/{program_id}`
-ProgramController::retrieve_input_group)).
+Returns a template for guest code implementation  
 
-- `GET` `/program/inputs/all/{program_id}`
-ProgramController::get_program_input_groups).wrap(ValidateJwtMiddleware)).
+Response: `.tar` filestream
 
-- `GET` `/program/program-and-inputs/{program_id}`
-ProgramController::retrieve_program_and_input_group)).
+<br>
 
-- `GET` `/program/organization/{organization_id}`
-ProgramController::get_organization_programs)).
+- `GET` `/program/inputs/{program_id}`  
+
+Returns the file of one of the program's input group  
+
+Response: `.csv` filestream
+
+<br>
+
+- `GET` `/program/inputs/all/{program_id}`  
+Returns the input groups uploaded for the user's program.  
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        program_input_groups: [
+            {
+                input_group_id: String, // Input group's id
+                program_id: String, // Program's id
+                name: String, // Program's name
+                last_reserved: null | String, // Last time this input group was reserved
+                proven_datetime: null | String, // Time when this input group was proven
+            },
+            ...
+        ],
+            total_elements_amount: i64, // Positive integer or 0, the total amount of elements that would be
+                                        // returned if there was no pagination
+        }
+}
+```
+<br>
+
+
+- `GET` `/program/program-and-inputs/{program_id}`  
+Returns the program's code and the file of an input group  
+
+Response: `.tar` filestream
+
+<br>
+
+- `GET` `/program/organization/{organization_id}`  
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        "programs": [
+            {
+                "organization_id": String, // Program's owner organization id
+                "program_id": String, // Program's id
+                "name": String, // Program's name
+                "description": String, // Program's description
+                "input_lock_timeout": i64, // How many seconds will pass until the server considers the
+                                           // reservation of the program input as dropped
+            },
+            ...
+        ],
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
+                                      // returned if there was no pagination
+    }
+}
+```
+
+<br>
 
 - `GET` `/program/proof/{program_id}/{input_group_id}`
 ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
