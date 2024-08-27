@@ -423,7 +423,7 @@ Response:
 
 <br>
 
-- `GET` `/program/proof/{program_id}/{input_group_id}`
+- `GET` `/program/proof/{program_id}/{input_group_id}`  
 Returns the file of the program execution for a program input's proof uploaded by a donor.  
 
 Headers:
@@ -435,7 +435,7 @@ Response: `.bin` filestream
 
 <br>
 
-- `GET` `/program/proofs`
+- `GET` `/program/proofs`  
 Returns the uploaded programs of the user that have at least one proven input that needs to be verified
 
 Headers:
@@ -471,7 +471,7 @@ Response:
 }
 ```
 
-- `GET` `/program/proofs/{program_id}`
+- `GET` `/program/proofs/{program_id}`  
 Returns the input groups uploaded for the user's program that have a proven execution.  
 
 Headers:
@@ -507,14 +507,14 @@ Response:
 ```
 <br>
 
-- `GET` `/program/{program_id}`
+- `GET` `/program/{program_id}`  
 Returns the program's code  
 
 Response: `.tar` filestream
 
 <br>
 
-- `PATCH` `/program/proof/{program_id}/{input_group_id}`
+- `PATCH` `/program/proof/{program_id}/{input_group_id}`  
 Deletes the uploaded proof and makes it so that another user can immediately make a reservation on it   
 
 Headers:
@@ -531,14 +531,56 @@ Response:
 ```
 <br>
 
-- `DELETE` `/program/{program_id}`
-ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
+- `DELETE` `/program/{program_id}`  
+Deletes the user's uploaded program along with all the uploaded proofs and inputs   
 
-- `DELETE` `/program/proof/{program_id}/{input_group_id}`
-ProgramController::confirm_proof_validity).wrap(ValidateJwtMiddleware)).
+Headers:
+```
+token: String, // Jwt token
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": null,
+}
+```
+<br>
+
+- `DELETE` `/program/proof/{program_id}/{input_group_id}`  
+Deletes the user's input group uploaded proof, therefore confirming propper verification on the caller's part   
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": null,
+}
+```
+<br>
 
 - `DELETE` `/program/input/{program_id}/{input_group_id}`
-ProgramController::delete_input_group).wrap(ValidateJwtMiddleware)).
+Deletes the user's program input group along with the uploaded proof if there was any   
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": null,
+}
+```
+<br>
 
 - `POST` `/program/upload"`
 ProgramController::upload_program).wrap(ValidateJwtMiddleware)).
