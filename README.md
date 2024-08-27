@@ -391,6 +391,8 @@ Response: `.tar` filestream
 <br>
 
 - `GET` `/program/organization/{organization_id}`  
+Returns the programs uploaded by a specific organization
+
 Query parameters:
 ```
 limit: i64, // Optional, Integer from 1 to 50
@@ -422,20 +424,112 @@ Response:
 <br>
 
 - `GET` `/program/proof/{program_id}/{input_group_id}`
-ProgramController::download_proof).wrap(ValidateJwtMiddleware)).
+Returns the file of the program execution for a program input's proof uploaded by a donor.  
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Response: `.bin` filestream
+
+<br>
 
 - `GET` `/program/proofs`
-ProgramController::get_programs_with_proven_executions).wrap(ValidateJwtMiddleware)).
+Returns the uploaded programs of the user that have at least one proven input that needs to be verified
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        "programs": [
+            {
+                "organization_id": String, // Program's owner organization id
+                "program_id": String, // Program's id
+                "name": String, // Program's name
+                "description": String, // Program's description
+                "input_lock_timeout": i64, // How many seconds will pass until the server considers the
+                                           // reservation of the program input as dropped
+            },
+            ...
+        ],
+        "total_elements_amount": i64, // Positive integer or 0, the total amount of elements that would be
+                                      // returned if there was no pagination
+    }
+}
+```
 
 - `GET` `/program/proofs/{program_id}`
-ProgramController::get_input_groups_with_proven_executions).wrap(ValidateJwtMiddleware)).
+Returns the input groups uploaded for the user's program that have a proven execution.  
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Query parameters:
+```
+limit: i64, // Optional, Integer from 1 to 50
+page: i64, // Optional, Integer from 1 onwards
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        program_input_groups: [
+            {
+                input_group_id: String, // Input group's id
+                program_id: String, // Program's id
+                name: String, // Program's name
+                last_reserved: null | String, // Last time this input group was reserved
+                proven_datetime: null | String, // Time when this input group was proven
+            },
+            ...
+        ],
+            total_elements_amount: i64, // Positive integer or 0, the total amount of elements that would be
+                                        // returned if there was no pagination
+    }
+}
+```
+<br>
 
 - `GET` `/program/{program_id}`
-ProgramController::download_program)).
+Returns the program's code  
 
+Response: `.tar` filestream
+
+<br>
 
 - `PATCH` `/program/proof/{program_id}/{input_group_id}`
-ProgramController::mark_proof_as_invalid).wrap(ValidateJwtMiddleware)).
+Deletes the uploaded proof and makes it so that another user can immediately make a reservation on it   
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": null,
+}
+```
+<br>
 
 - `DELETE` `/program/{program_id}`
 ProgramController::delete_program).wrap(ValidateJwtMiddleware)).
