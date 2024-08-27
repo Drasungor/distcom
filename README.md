@@ -583,14 +583,85 @@ Response:
 <br>
 
 - `POST` `/program/upload"`
-ProgramController::upload_program).wrap(ValidateJwtMiddleware)).
+Uploads a user program   
+
+Headers:
+```
+token: String, // Jwt token
+```
+
+Form data:
+```
+file: File, // Tar file of the program's methods folder
+data: Text, // Stringified json of the following struct:
+{
+    name: String, // Program's name
+    description: String, // Program's description
+    execution_timeout: i64, // Input group reservation timeout
+}
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        program_id: String, // Id of the uploaded program
+    },
+}
+```
+<br>
 
 - `POST` `/program/proof`
-ProgramController::upload_proof)). 
+Uploads a proof of execution of a program's input group  
+
+Form data:
+```
+file: File, // Tar file of the program's methods folder
+data: Text, // Stringified json of the following struct:
+{
+    organization_id: String, // Id of the organization that uploaded the proven program
+    program_id: String, // Id of the program whose input group was proven
+    input_group_id: String, // Id of the input group that was proven
+}
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": null,
+}
+```
+<br>
 
 - `POST` `/program/inputs/{program_id}`
-ProgramController::add_inputs_group).wrap(ValidateJwtMiddleware))
+Lets a user upload an input group for the specified program   
 
+Headers:
+```
+token: String, // Jwt token
+```
+
+Form data:
+```
+file: File, // Tar file of the program's methods folder
+data: Text, // Stringified json of the following struct:
+{
+    name: String, // Input group's name
+}
+```
+
+Response:
+```
+{
+    "status": "success",
+    "data": {
+        input_group_id: String, // Id of the uploaded input group
+    },
+}
+```
+<br>
 
 ## Executor client
 
