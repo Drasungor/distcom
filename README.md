@@ -80,6 +80,56 @@ The phpmyadmin mysql database manager can be accessed (if the `PHPMYADMIN_EXTERN
 The http server can be accessed (if the `SERVER_EXTERNAL_PORT` environment variable is not modified) by entering the following url in the browser:
 [http://localhost:8080/](http://localhost:8080/).
 
+### Configuration
+
+#### dev.json
+
+Inside the `src/config` folder you will find a file called qa.json, this contains a bare bones version of the config file that
+must be put inside that folder under the `dev.json` name. The configuration file then must follow this format:  
+
+```
+{
+    "database_url": String, // Database connection url
+    "token": {
+        "basic_token_secret": String, // Jwt token secret
+        "basic_token_minutes_duration": u64, // Minutes between jwt token renovations
+        "refresh_token_secret": String, // Refresh token secret
+        "refresh_token_days_duration": u64 // Days until user is forced to log in again
+    },
+    "files_storage": {
+        "connection_string": String, // S3 connection data in format "region{arguments_serarator}bucket_name{arguments_serarator}key_id{arguments_serarator}key_secret"
+        "arguments_serarator": String // String that separates the arguments of connection_string
+    }
+}
+```
+
+In this implementation the server uses S3 for the program code and proofs storage, however, the user may implement another
+interface for files storage if he desires. With the current implementation it is recommended to use the `:` character as
+separator, resulting in a connection string of the format `region:bucket_name:key_id:key_secret`
+
+#### .env
+
+The `.env` contains variables assuming the database will be run with docker compose with the program distributor server, 
+and it has the following format:
+
+```
+
+MYSQL_ROOT_PASSWORD=example
+MYSQL_DATABASE=my_database
+SERVER_EXTERNAL_PORT=8080
+PHPMYADMIN_EXTERNAL_PORT=9000
+
+DOCKERIZED_DATABASE_URL=mysql://root:example@db:3306/my_database
+
+# This env variable is for diesel and should be used only to test the database schema generation
+DATABASE_URL=mysql://root:example@127.0.0.1:3306/my_database
+```
+
+Please note that the program distributor server prioritizes the values of the environment variables over the
+ones from the config file, so the variable `dockerized_database_url` from the docker compose file should never
+be set if the user wants to connect to a remote database and set the value in dev.json, or set the value of `.env`'s
+`DOCKERIZED_DATABASE_URL` with the remote database connection url.
+
 ### Endpoints
 
 Responses formats:
