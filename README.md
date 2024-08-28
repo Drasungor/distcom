@@ -769,6 +769,10 @@ of the program will also be affected, if you want to have a fast first build and
 you can execute the program for the first time with a high amount of cpus, and then kill it and executed with the amount
 of cpus that will generally be used.
 
+### Aditional information
+
+- Usable commands can be accessed by typing `help` and `<command> -h`
+
 ## Uploader client
 
 The client that uploads the programs and their inputs so that other people can donate the result with a proof of integrity. It connects to the program distributor server via HTTP and its makefile has the following command options:
@@ -810,3 +814,18 @@ Please note that the program distributor server prioritizes the values of the en
 ones from the config file, so the variable `program_distributor_url` from the docker compose file should never
 be set if the user wants to use the value from dev.json, or set the value of `.env`'s
 `PROGRAM_DISTRIBUTOR_URL` with the alternative server connection url.
+
+### Aditional information
+
+- Usable commands can be accessed by typing `help` and `<command> -h`
+
+- When a program is uploaded, a folder with its id as a name will be created inside the `programs_data` directory.
+
+- When a program input group is uploaded, a folder with its id as a name will be created inside the `programs_data` directory,
+inside the directory named by program's id. The uploaded input group csv file will be stored inside that folder, and the result
+of the execution when it is properly verified.
+
+- The outputs of all the uploaded programs must be serializable via `serde_json`.
+
+- All methods folders, input files and input folders to be uploaded must be inserted in the `uploads` folder. The input
+files can be uploaded in batches if stored inside a folder, and must always be single column csv files.
