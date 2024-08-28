@@ -799,3 +799,14 @@ must be put inside that folder under the `dev.json` name. The configuration file
 ```
 
 #### .env
+
+The `.env` file has the following format:
+
+```
+EXECUTOR_CPUS: positive float // The amount of cpus destined to the executor client docker container execution
+```
+
+Please note that the program distributor server prioritizes the values of the environment variables over the
+ones from the config file, so the variable `program_distributor_url` from the docker compose file should never
+be set if the user wants to use the value from dev.json, or set the value of `.env`'s
+`PROGRAM_DISTRIBUTOR_URL` with the alternative server connection url.
