@@ -30,7 +30,7 @@ until the user that uploaded the program for execution requests and properly ver
 power to choose which project to contribute to and start doing so. A small example of a project to be distributed, implemented 
 in rust, will also be included.
 
-![System diagram](imgs/translated_system_diagram.jpg)
+![System diagram](imgs/translated_system_diagram.png)
 
 # Usage
 
