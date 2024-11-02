@@ -1,6 +1,8 @@
 target
 uploads
 downloads
+template
+template_methods
 aux_files
 programs_data
 db_data

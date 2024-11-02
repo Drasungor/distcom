@@ -10,6 +10,7 @@ services:
       - uploader_volume:/app
       - ./programs_data:/app/programs_data
       - ./uploads:/app/uploads
+      - ./template_methods:/app/downloads/template
     extra_hosts:
         - "host.docker.internal:host-gateway"
 
