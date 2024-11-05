@@ -8,7 +8,6 @@ run_all:
 clear_build:
 	docker-compose down
 	docker volume rm executor_client_executor_volume
-	echo "Deleted build folders"
 
 clear_docker:
 	docker-compose rm -s -f

@@ -4,7 +4,7 @@ services:
   rust-app-executor:
     build:
       context: ./
-    cpus: "${MY_SERVICE_CPUS}"
+    cpus: "${EXECUTOR_CPUS}"
     environment:
       program_distributor_url: ${PROGRAM_DISTRIBUTOR_URL}
     volumes:
