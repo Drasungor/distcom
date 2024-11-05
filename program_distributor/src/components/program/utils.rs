@@ -32,6 +32,6 @@ pub fn manage_program_with_input_compression(req: &HttpRequest, program_id: &str
             return AppHttpResponseBuilder::get_http_response::<()>(Err(app_error));
         },
     }
-    generate_named_file_response(req, &tar_file_path)
+    generate_named_file_response(req, &tar_file_path, true)
 }
 

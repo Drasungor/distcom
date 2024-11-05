@@ -27,9 +27,11 @@ fn open_named_file(file_path: &str) ->  Result<actix_files::NamedFile, AppError>
     Ok(named_file)
 }
 
-pub fn generate_named_file_response(req: &HttpRequest, file_path: &str) -> HttpResponse {
+pub fn generate_named_file_response(req: &HttpRequest, file_path: &str, delete_file: bool) -> HttpResponse {
     let named_file_result = open_named_file(file_path);
-    let _ = fs::remove_file(file_path);
+    if delete_file {
+        let _ = fs::remove_file(file_path);
+    }
     let named_file;
     let open_named_file_result = named_file_result;
     match open_named_file_result {

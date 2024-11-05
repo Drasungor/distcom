@@ -125,7 +125,7 @@ impl ProgramController {
             read_guard.download_program(Path::new(&download_file_path), organization_id.as_ref().unwrap(), &program_id).await.expect("Program download error");
         }
 
-        generate_named_file_response(&req, &download_file_path)
+        generate_named_file_response(&req, &download_file_path, true)
     }
 
     pub async fn download_proof(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
@@ -151,7 +151,7 @@ impl ProgramController {
             read_guard.download_proof(Path::new(&download_file_path), organization_id, &program_id, &input_group_id).await.expect("Proof download error");
         }
 
-        generate_named_file_response(&req, &download_file_path)
+        generate_named_file_response(&req, &download_file_path, true)
     }
 
     pub async fn confirm_proof_validity(req: HttpRequest, path: web::Path<(String, String)>) -> impl Responder {
@@ -333,12 +333,12 @@ impl ProgramController {
                 return AppHttpResponseBuilder::get_http_response::<()>(Err(error));
             }
         }
-        generate_named_file_response(&req, &input_file_name)
+        generate_named_file_response(&req, &input_file_name, true)
     }
 
     pub async fn retrieve_program_template(req: HttpRequest) -> impl Responder {
         let input_file_name = "./proven_code_template/compressed_template.tar";
-        generate_named_file_response(&req, input_file_name)
+        generate_named_file_response(&req, input_file_name, false)
     }
 
     pub async fn retrieve_program_and_input_group(req: HttpRequest, path: web::Path<String>) -> impl Responder {
