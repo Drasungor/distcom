@@ -1,3 +1,8 @@
+enum SudokuCell {
+    FixedValue(u8),
+    AssignedValue(u8)
+}
+
 fn validate_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) {
     let lines_amount = sudoku_to_solve.len();
     assert!(lines_amount != 0, "The sudoku must have at least one line");
