@@ -3,7 +3,7 @@ enum SudokuCell {
     AssignedValue(u8)
 }
 
-fn validate_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) {
+fn validate_initial_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) {
     let lines_amount = sudoku_to_solve.len();
     assert!(lines_amount != 0, "The sudoku must have at least one line");
     let line_length_sqrt = (lines_amount as f64).sqrt().round() as usize;
@@ -18,8 +18,27 @@ fn validate_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) {
     }
 }
 
+fn build_sudoku_with_cells(raw_sudoku: Vec<Vec<u8>>) -> Vec<Vec<SudokuCell>> {
+    let mut used_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
+    let mut i: usize = 0;
+    for line in raw_sudoku {
+        used_sudoku.push(Vec::new());
+        for number in line {
+            if number == 0 {
+                used_sudoku[i].push(SudokuCell::AssignedValue(0));
+            } else {
+                used_sudoku[i].push(SudokuCell::FixedValue(number));
+            }
+        }
+        i += 1;
+    }
+    return used_sudoku;
+}
+
 fn solve_sudoku(sudoku_to_solve: Vec<Vec<u8>>) {
-    validate_sudoku(&sudoku_to_solve);
+    validate_initial_sudoku(&sudoku_to_solve);
+    let built_sudoku = build_sudoku_with_cells(sudoku_to_solve);
+
 }
 
 
