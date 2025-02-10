@@ -48,14 +48,9 @@ fn build_sudoku_with_cells(raw_sudoku: Vec<Vec<u8>>) -> Vec<Vec<SudokuCell>> {
     return used_sudoku;
 }
 
-// fn check_line_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, line: usize) -> bool {
 fn check_line_validity(sudoku_to_solve: &Vec<Vec<u8>>, line: usize) -> bool {
     let mut visited_elements = HashSet::new();
     for element in &sudoku_to_solve[line] {
-        // let current_value = match *element {
-        //     SudokuCell::AssignedValue(assigned_value) => assigned_value,
-        //     SudokuCell::FixedValue(fixed_value) => fixed_value,
-        // };
         let current_value = *element;
         if current_value != 0 {
             if visited_elements.contains(&current_value) {
@@ -68,14 +63,9 @@ fn check_line_validity(sudoku_to_solve: &Vec<Vec<u8>>, line: usize) -> bool {
     return true;
 }
 
-// fn check_column_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, column: usize) -> bool {
 fn check_column_validity(sudoku_to_solve: &Vec<Vec<u8>>, column: usize) -> bool {
     let mut visited_elements = HashSet::new();
     for i in 0..sudoku_to_solve.len() {
-        // let current_value = match sudoku_to_solve[i][column] {
-        //     SudokuCell::AssignedValue(assigned_value) => assigned_value,
-        //     SudokuCell::FixedValue(fixed_value) => fixed_value,
-        // };
         let current_value = sudoku_to_solve[i][column];
         if current_value != 0 {
             if visited_elements.contains(&current_value) {
@@ -88,23 +78,78 @@ fn check_column_validity(sudoku_to_solve: &Vec<Vec<u8>>, column: usize) -> bool 
     return true;
 }
 
-// fn check_subsection_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, line: usize, column: usize) -> bool{
 fn check_subsection_validity(sudoku_to_solve: &Vec<Vec<u8>>, subsection_size: usize, line: usize, column: usize) -> bool{
     let mut visited_elements = HashSet::new();
     let initial_column = column - column % subsection_size;
     let initial_line = line - line % subsection_size;
     for i in initial_line..initial_line+subsection_size {
         for j in initial_column..initial_column+subsection_size {
-            // let current_value = match sudoku_to_solve[i][j] {
-            //     SudokuCell::AssignedValue(assigned_value) => assigned_value,
-            //     SudokuCell::FixedValue(fixed_value) => fixed_value,
-            // };
-            let current_value = sudoku_to_solve[i][j]
+            let current_value = sudoku_to_solve[i][j];
             if current_value != 0 {
                 if visited_elements.contains(&current_value) {
                     return false;
                 } else {
                     visited_elements.insert(current_value);
+                }
+            }
+        }
+    }
+    return true;
+}
+
+fn check_line_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, checked_value: u8, line: usize) -> bool {
+    let mut found_value = false;
+    for current_cell in &sudoku_to_solve[line] {
+        let current_value = match *current_cell {
+            SudokuCell::AssignedValue(value) => value,
+            SudokuCell::FixedValue(value) => value,
+        };
+        if current_value == checked_value {
+            if found_value {
+                return false
+            } else {
+                found_value = true;
+            }
+        }
+    }
+    return true;
+}
+
+fn check_column_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, checked_value: u8, column: usize) -> bool {
+    let mut found_value = false;
+    for i in 0..sudoku_to_solve.len() {
+        let current_cell = &sudoku_to_solve[i][column];
+        let current_value = match *current_cell {
+            SudokuCell::AssignedValue(value) => value,
+            SudokuCell::FixedValue(value) => value,
+        };
+        if current_value == checked_value {
+            if found_value {
+                return false
+            } else {
+                found_value = true;
+            }
+        }
+    }
+    return true;
+}
+
+fn check_subsection_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, checked_value: u8, line: usize, column: usize) -> bool{
+    let mut found_value = false;
+    let initial_column = column - column % subsection_size;
+    let initial_line = line - line % subsection_size;
+    for i in initial_line..initial_line+subsection_size {
+        for j in initial_column..initial_column+subsection_size {
+            let current_cell = &sudoku_to_solve[i][j];
+            let current_value = match *current_cell {
+                SudokuCell::AssignedValue(value) => value,
+                SudokuCell::FixedValue(value) => value,
+            };
+            if current_value == checked_value {
+                if found_value {
+                    return false
+                } else {
+                    found_value = true;
                 }
             }
         }
