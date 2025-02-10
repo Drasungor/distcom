@@ -157,16 +157,25 @@ fn check_subsection_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, s
     return true;
 }
 
-fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, line: usize, column: usize) {
-    
+fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, line: usize, column: usize) -> bool {
+    let value = match sudoku_to_solve[line][column] {
+        SudokuCell::AssignedValue(aux_value) => aux_value,
+        SudokuCell::FixedValue(aux_value) => aux_value,
+    };
+    return check_line_validity_for_value(sudoku_to_solve, value, line) &&
+        check_column_validity_for_value(sudoku_to_solve, value, column) &&
+        check_subsection_validity_for_value(sudoku_to_solve, subsection_size, value, line, column);
 }
 
-fn wrapper_execute_solving(sudoku_to_solve: &Vec<Vec<SudokuCell>>, tried_value: u8, line: usize, column: usize) -> bool {
-    match sudoku_to_solve[line][column] {
-        SudokuCell::FixedValue(_) => panic!("Tried to set a fixed cell"),
-        _ => {},
+fn wrapper_execute_solving(sudoku_to_solve: &Vec<Vec<SudokuCell>>, tried_value: u8, starting_line: usize, starting_column: usize) -> bool {
+    if let SudokuCell::FixedValue(_) = sudoku_to_solve[starting_line][starting_column] {
+        panic!("Tried to set a fixed cell");
     }
-
+    for i in starting_line..sudoku_to_solve.len() {
+        for j in starting_column..sudoku_to_solve.len() {
+            
+        }
+    }
 }
 
 fn execute_solving(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize) {
