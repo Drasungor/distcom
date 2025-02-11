@@ -167,15 +167,47 @@ fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsecti
         check_subsection_validity_for_value(sudoku_to_solve, subsection_size, value, line, column);
 }
 
-fn wrapper_execute_solving(sudoku_to_solve: &Vec<Vec<SudokuCell>>, tried_value: u8, starting_line: usize, starting_column: usize) -> bool {
+fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, tried_value: u8, starting_line: usize, starting_column: usize) -> bool {
     if let SudokuCell::FixedValue(_) = sudoku_to_solve[starting_line][starting_column] {
         panic!("Tried to set a fixed cell");
     }
-    for i in starting_line..sudoku_to_solve.len() {
-        for j in starting_column..sudoku_to_solve.len() {
-            
+    // for i in starting_line..sudoku_to_solve.len() {
+    //     for j in starting_column..sudoku_to_solve.len() {
+    //         if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
+    //             for current_value in 1..sudoku_to_solve.len() + 1 {
+                    
+    //             }
+    //         }
+    //     }
+    // }
+    let mut next_cell_column = starting_column + 1;
+    let mut next_cell_line = starting_line;
+    if next_cell_column == sudoku_to_solve.len() {
+        next_cell_column = 0;
+        next_cell_line += 1;
+    }
+    let next_cell_to_assign: (usize, usize); // assign -1 -1 first
+    for i in next_cell_line..sudoku_to_solve.len() {
+        for j in 0..sudoku_to_solve.len() {
+            if i != next_cell_line || j >= next_cell_column {
+                if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
+                    next_cell_to_assign = (i, j);
+                    break;
+                }
+            }
         }
     }
+    for current_value in 1..sudoku_to_solve.len() + 1 {
+        let cast_current_value = current_value as u8;
+        sudoku_to_solve[starting_line][starting_column] = SudokuCell::AssignedValue(cast_current_value);
+        let is_cell_valid = check_line_validity_for_value(sudoku_to_solve, cast_current_value, starting_line) &&
+            check_column_validity_for_value(sudoku_to_solve, cast_current_value, starting_column) &&
+            check_subsection_validity_for_value(sudoku_to_solve, subsection_size, cast_current_value, starting_line, starting_column);
+        if is_cell_valid {
+            // recursive call if the cell is valid and there is a next cell
+        }
+    }
+    return false;
 }
 
 fn execute_solving(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize) {
