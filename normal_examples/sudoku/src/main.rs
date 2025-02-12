@@ -172,38 +172,54 @@ fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsecti
         check_subsection_validity_for_value(sudoku_to_solve, subsection_size, value, line, column);
 }
 
-// fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, tried_value: u8, starting_line: usize, starting_column: usize) -> bool {
-fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, starting_line: usize, starting_column: usize) -> bool {
-    if let SudokuCell::FixedValue(_) = sudoku_to_solve[starting_line][starting_column] {
-        panic!("Tried to set a fixed cell");
-    }
-    // for i in starting_line..sudoku_to_solve.len() {
-    //     for j in starting_column..sudoku_to_solve.len() {
-    //         if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
-    //             for current_value in 1..sudoku_to_solve.len() + 1 {
-                    
-    //             }
-    //         }
-    //     }
-    // }
+fn get_next_assignable_value(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, starting_line: usize, starting_column: usize) -> (usize, usize) {
     let mut next_cell_column = starting_column + 1;
     let mut next_cell_line = starting_line;
     if next_cell_column == sudoku_to_solve.len() {
         next_cell_column = 0;
         next_cell_line += 1;
     }
-    // let next_cell_to_assign: (usize, usize); // assign -1 -1 first
     let mut next_cell_to_assign: (usize, usize) = (usize::MAX, usize::MAX);
     for i in next_cell_line..sudoku_to_solve.len() {
         for j in 0..sudoku_to_solve.len() {
             if i != next_cell_line || j >= next_cell_column {
                 if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
+                    println!("i: {}, j: {}", i, j);
                     next_cell_to_assign = (i, j);
-                    break;
+                    return next_cell_to_assign;
                 }
             }
         }
     }
+    // if we reach this point then next_cell_to_assign = (usize::MAX, usize::MAX)
+    next_cell_to_assign
+}
+
+// fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, tried_value: u8, starting_line: usize, starting_column: usize) -> bool {
+fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, starting_line: usize, starting_column: usize) -> bool {
+    if let SudokuCell::FixedValue(_) = sudoku_to_solve[starting_line][starting_column] {
+        panic!("Tried to set a fixed cell");
+    }
+    // let mut next_cell_column = starting_column + 1;
+    // let mut next_cell_line = starting_line;
+    // if next_cell_column == sudoku_to_solve.len() {
+    //     next_cell_column = 0;
+    //     next_cell_line += 1;
+    // }
+    // let mut next_cell_to_assign: (usize, usize) = (usize::MAX, usize::MAX);
+    // for i in next_cell_line..sudoku_to_solve.len() {
+    //     for j in 0..sudoku_to_solve.len() {
+    //         if i != next_cell_line || j >= next_cell_column {
+    //             if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
+    //                 println!("i: {}, j: {}", i, j);
+    //                 next_cell_to_assign = (i, j);
+    //                 break;
+    //             }
+    //         }
+    //     }
+
+    // }
+    let next_cell_to_assign = get_next_assignable_value(sudoku_to_solve, starting_line, starting_column);
     for current_value in 1..sudoku_to_solve.len() + 1 {
         let cast_current_value = current_value as u8;
         sudoku_to_solve[starting_line][starting_column] = SudokuCell::AssignedValue(cast_current_value);
@@ -211,6 +227,9 @@ fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsectio
             check_column_validity_for_value(sudoku_to_solve, cast_current_value, starting_column) &&
             check_subsection_validity_for_value(sudoku_to_solve, subsection_size, cast_current_value, starting_line, starting_column);
         if is_cell_valid {
+            println!("starting_line: {}, starting_column: {}", starting_line, starting_column);
+            println!("current_value: {}", current_value);
+            println!("next_cell_to_assign: {:?}", next_cell_to_assign);
             // recursive call if the cell is valid and there is a next cell
             if let (usize::MAX, usize::MAX) = next_cell_to_assign {
                 return true;
@@ -228,6 +247,7 @@ fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsectio
     // if let (usize::MAX, usize::MAX) = next_cell_to_assign {
                 
     // }
+    println!("Reset value");
     sudoku_to_solve[starting_line][starting_column] = SudokuCell::AssignedValue(0);
     return false;
 }
@@ -236,6 +256,7 @@ fn execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: 
     for i in 0..sudoku_to_solve.len() {
         for j in 0..sudoku_to_solve.len() {
             if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
+                // println!("i: {}, j: {}", i, j);
                 return wrapper_execute_solving(sudoku_to_solve, subsection_size, i, j)
             }
         }
@@ -264,7 +285,18 @@ fn process_result(solved_sudoku: &Vec<Vec<SudokuCell>>) {
 }
 
 fn read_sudoku() -> Vec<Vec<u8>> {
-
+    let v: Vec<Vec<u8>> = vec![
+        vec![5, 3, 0, 0, 7, 0, 0, 0, 0],
+        vec![6, 0, 0, 1, 9, 5, 0, 0, 0],
+        vec![0, 9, 8, 0, 0, 0, 0, 6, 0],
+        vec![8, 0, 0, 0, 6, 0, 0, 0, 3],
+        vec![4, 0, 0, 8, 0, 3, 0, 0, 1],
+        vec![7, 0, 0, 0, 2, 0, 0, 0, 6],
+        vec![0, 6, 0, 0, 0, 0, 2, 8, 0],
+        vec![0, 0, 0, 4, 1, 9, 0, 0, 5],
+        vec![0, 0, 0, 0, 8, 0, 0, 7, 9]
+    ];
+    v
 }
 
 fn main() {
