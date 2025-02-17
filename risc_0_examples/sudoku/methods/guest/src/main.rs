@@ -1,3 +1,16 @@
+#![no_main]
+// If you want to try std support, also update the guest Cargo.toml file
+// #![no_std]  // std support is experimental
+
+use serde::{Deserialize, Serialize};
+use serde_json::to_string;
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Outputs {
+    // pub starting_sudoku: Vec<Vec<u8>>,
+    pub solved_sudoku: Vec<Vec<u8>>,
+}
+
 use std::collections::HashSet;
 
 enum SudokuCell {
@@ -237,21 +250,25 @@ fn solve_sudoku(sudoku_to_solve: Vec<Vec<u8>>) -> Vec<Vec<SudokuCell>> {
     return built_sudoku;
 }
 
-fn process_result(solved_sudoku: &Vec<Vec<SudokuCell>>) {
+fn process_result(solved_sudoku: &Vec<Vec<SudokuCell>>) -> Vec<Vec<u8>> {
+    let mut v: Vec<Vec<u8>> = Vec::new();
     for i in 0..solved_sudoku.len() {
+        v.push(Vec::new());
         for j in 0..solved_sudoku.len() {
             let current_value = match solved_sudoku[i][j] {
                 SudokuCell::AssignedValue(assigned_value) => assigned_value,
                 SudokuCell::FixedValue(fixed_value) => fixed_value,
             };
-            if current_value < 10 {
-                print!("  {current_value}");
-            } else {
-                print!(" {current_value}");
-            }
+            // if current_value < 10 {
+            //     print!("  {current_value}");
+            // } else {
+            //     print!(" {current_value}");
+            // }
+            v[i].push(current_value);
         }
         println!("");
     }
+    return v;
 }
 
 fn read_sudoku() -> Vec<Vec<u8>> {
@@ -360,8 +377,21 @@ fn read_sudoku() -> Vec<Vec<u8>> {
     v
 }
 
+use risc0_zkvm::guest::env;
+
+risc0_zkvm::guest::entry!(main);
+
 fn main() {
+    let input: Vec<u8> = env::read();
+
     let sudoku_to_solve = read_sudoku();
     let solved_sudoku = solve_sudoku(sudoku_to_solve);
-    process_result(&solved_sudoku);
+    let processed_sudoku = process_result(&solved_sudoku);
+
+    let outputs: Outputs = Outputs {
+        // starting_sudoku: sudoku_to_solve,
+        solved_sudoku: processed_sudoku,
+    }; 
+    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
+    env::commit(&serialized_outputs);
 }
