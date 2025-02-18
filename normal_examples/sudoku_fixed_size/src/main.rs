@@ -1,18 +1,6 @@
-#![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-// #![no_std]  // std support is experimental
-
-use serde::{Deserialize, Serialize};
-use serde_json::to_string;
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Outputs {
-    // pub starting_sudoku: Vec<Vec<u8>>,
-    pub solved_sudoku: Vec<Vec<u8>>,
-}
-
 use std::collections::HashSet;
 
+#[derive(Clone, Copy)]
 enum SudokuCell {
     FixedValue(u8),
     AssignedValue(u8)
@@ -22,7 +10,7 @@ fn subsection_index_to_coordinates(subsection_size: usize, subsection_index: usi
     return (subsection_index / subsection_size, subsection_index % subsection_size)
 }
 
-fn validate_initial_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) -> usize {
+fn validate_initial_sudoku(sudoku_to_solve: &[[u8; 16]; 16]) -> usize {
     let lines_amount = sudoku_to_solve.len();
     assert!(lines_amount != 0, "The sudoku must have at least one line");
     let line_length_sqrt = (lines_amount as f64).sqrt().round() as usize;
@@ -50,27 +38,45 @@ fn validate_initial_sudoku(sudoku_to_solve: &Vec<Vec<u8>>) -> usize {
     return line_length_sqrt;
 }
 
-fn build_sudoku_with_cells(raw_sudoku: Vec<Vec<u8>>) -> Vec<Vec<SudokuCell>> {
-    let mut used_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
-    let mut i: usize = 0;
-    for line in raw_sudoku {
-        used_sudoku.push(Vec::new());
-        for number in line {
-            if number == 0 {
-                used_sudoku[i].push(SudokuCell::AssignedValue(0));
-            } else {
-                used_sudoku[i].push(SudokuCell::FixedValue(number));
+fn build_sudoku_with_cells(raw_sudoku: [[u8; 16]; 16]) -> [[SudokuCell; 16]; 16] {
+    // let mut used_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
+    let mut used_sudoku: [[SudokuCell; 16]; 16] = [[SudokuCell::AssignedValue(0); 16]; 16];
+    // let mut i: usize = 0;
+    for i in 0..raw_sudoku.len() {
+        for j in 0..raw_sudoku[i].len() {
+            if raw_sudoku[i][j] != 0 {
+                used_sudoku[i][j] = SudokuCell::FixedValue(raw_sudoku[i][j]);
             }
         }
-        i += 1;
     }
+    // for line in raw_sudoku {
+    //     used_sudoku.push(Vec::new());
+    //     for number in line {
+    //         if number == 0 {
+    //             used_sudoku[i].push(SudokuCell::AssignedValue(0));
+    //         } else {
+    //             used_sudoku[i].push(SudokuCell::FixedValue(number));
+    //         }
+    //     }
+    //     i += 1;
+    // }
     return used_sudoku;
 }
 
-fn check_line_validity(sudoku_to_solve: &Vec<Vec<u8>>, line: usize) -> bool {
+fn check_line_validity(sudoku_to_solve: &[[u8; 16]; 16], line: usize) -> bool {
     let mut visited_elements = HashSet::new();
-    for element in &sudoku_to_solve[line] {
-        let current_value = *element;
+    // for element in &sudoku_to_solve[line] {
+    //     let current_value = *element;
+    //     if current_value != 0 {
+    //         if visited_elements.contains(&current_value) {
+    //             return false;
+    //         } else {
+    //             visited_elements.insert(current_value);
+    //         }
+    //     }
+    // }
+    for i in 0..sudoku_to_solve[line].len() {
+        let current_value = sudoku_to_solve[line][i];
         if current_value != 0 {
             if visited_elements.contains(&current_value) {
                 return false;
@@ -82,7 +88,7 @@ fn check_line_validity(sudoku_to_solve: &Vec<Vec<u8>>, line: usize) -> bool {
     return true;
 }
 
-fn check_column_validity(sudoku_to_solve: &Vec<Vec<u8>>, column: usize) -> bool {
+fn check_column_validity(sudoku_to_solve: &[[u8; 16]; 16], column: usize) -> bool {
     let mut visited_elements = HashSet::new();
     for i in 0..sudoku_to_solve.len() {
         let current_value = sudoku_to_solve[i][column];
@@ -97,7 +103,7 @@ fn check_column_validity(sudoku_to_solve: &Vec<Vec<u8>>, column: usize) -> bool 
     return true;
 }
 
-fn check_subsection_validity(sudoku_to_solve: &Vec<Vec<u8>>, subsection_size: usize, line: usize, column: usize) -> bool{
+fn check_subsection_validity(sudoku_to_solve: &[[u8; 16]; 16], subsection_size: usize, line: usize, column: usize) -> bool{
     let mut visited_elements = HashSet::new();
     let initial_column = column - column % subsection_size;
     let initial_line = line - line % subsection_size;
@@ -116,10 +122,23 @@ fn check_subsection_validity(sudoku_to_solve: &Vec<Vec<u8>>, subsection_size: us
     return true;
 }
 
-fn check_line_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, checked_value: u8, line: usize) -> bool {
+fn check_line_validity_for_value(sudoku_to_solve: &[[SudokuCell; 16]; 16], checked_value: u8, line: usize) -> bool {
     let mut found_value = false;
-    for current_cell in &sudoku_to_solve[line] {
-        let current_value = match *current_cell {
+    // for current_cell in &sudoku_to_solve[line] {
+    //     let current_value = match *current_cell {
+    //         SudokuCell::AssignedValue(value) => value,
+    //         SudokuCell::FixedValue(value) => value,
+    //     };
+    //     if current_value == checked_value {
+    //         if found_value {
+    //             return false
+    //         } else {
+    //             found_value = true;
+    //         }
+    //     }
+    // }
+    for i in 0..sudoku_to_solve[line].len() {
+        let current_value = match sudoku_to_solve[line][i] {
             SudokuCell::AssignedValue(value) => value,
             SudokuCell::FixedValue(value) => value,
         };
@@ -134,7 +153,7 @@ fn check_line_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, checked
     return true;
 }
 
-fn check_column_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, checked_value: u8, column: usize) -> bool {
+fn check_column_validity_for_value(sudoku_to_solve: &[[SudokuCell; 16]; 16], checked_value: u8, column: usize) -> bool {
     let mut found_value = false;
     for i in 0..sudoku_to_solve.len() {
         let current_cell = &sudoku_to_solve[i][column];
@@ -153,7 +172,7 @@ fn check_column_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, check
     return true;
 }
 
-fn check_subsection_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, checked_value: u8, line: usize, column: usize) -> bool{
+fn check_subsection_validity_for_value(sudoku_to_solve: &[[SudokuCell; 16]; 16], subsection_size: usize, checked_value: u8, line: usize, column: usize) -> bool{
     let mut found_value = false;
     let initial_column = column - column % subsection_size;
     let initial_line = line - line % subsection_size;
@@ -176,7 +195,7 @@ fn check_subsection_validity_for_value(sudoku_to_solve: &Vec<Vec<SudokuCell>>, s
     return true;
 }
 
-fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsection_size: usize, line: usize, column: usize) -> bool {
+fn check_modified_cell_validity(sudoku_to_solve: &[[SudokuCell; 16]; 16], subsection_size: usize, line: usize, column: usize) -> bool {
     let value = match sudoku_to_solve[line][column] {
         SudokuCell::AssignedValue(aux_value) => aux_value,
         SudokuCell::FixedValue(aux_value) => aux_value,
@@ -186,7 +205,7 @@ fn check_modified_cell_validity(sudoku_to_solve: &Vec<Vec<SudokuCell>>, subsecti
         check_subsection_validity_for_value(sudoku_to_solve, subsection_size, value, line, column);
 }
 
-fn get_next_assignable_value(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, starting_line: usize, starting_column: usize) -> (usize, usize) {
+fn get_next_assignable_value(sudoku_to_solve: &mut [[SudokuCell; 16]; 16], starting_line: usize, starting_column: usize) -> (usize, usize) {
     let mut next_cell_column = starting_column + 1;
     let mut next_cell_line = starting_line;
     if next_cell_column == sudoku_to_solve.len() {
@@ -208,7 +227,7 @@ fn get_next_assignable_value(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, startin
     next_cell_to_assign
 }
 
-fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize, starting_line: usize, starting_column: usize) -> bool {
+fn wrapper_execute_solving(sudoku_to_solve: &mut [[SudokuCell; 16]; 16], subsection_size: usize, starting_line: usize, starting_column: usize) -> bool {
     if let SudokuCell::FixedValue(_) = sudoku_to_solve[starting_line][starting_column] {
         panic!("Tried to set a fixed cell");
     }
@@ -232,7 +251,7 @@ fn wrapper_execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsectio
     return false;
 }
 
-fn execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: usize) -> bool {
+fn execute_solving(sudoku_to_solve: &mut [[SudokuCell; 16]; 16], subsection_size: usize) -> bool {
     for i in 0..sudoku_to_solve.len() {
         for j in 0..sudoku_to_solve.len() {
             if let SudokuCell::AssignedValue(_) = sudoku_to_solve[i][j] {
@@ -243,35 +262,31 @@ fn execute_solving(sudoku_to_solve: &mut Vec<Vec<SudokuCell>>, subsection_size: 
     panic!("No value to set was found");
 }
 
-fn solve_sudoku(sudoku_to_solve: Vec<Vec<u8>>) -> Vec<Vec<SudokuCell>> {
+fn solve_sudoku(sudoku_to_solve: [[u8; 16]; 16]) -> [[SudokuCell; 16]; 16] {
     let subsection_size = validate_initial_sudoku(&sudoku_to_solve);
     let mut built_sudoku = build_sudoku_with_cells(sudoku_to_solve);
     assert!(execute_solving(&mut built_sudoku, subsection_size), "No solution was found");
     return built_sudoku;
 }
 
-fn process_result(solved_sudoku: &Vec<Vec<SudokuCell>>) -> Vec<Vec<u8>> {
-    let mut v: Vec<Vec<u8>> = Vec::new();
+fn process_result(solved_sudoku: &[[SudokuCell; 16]; 16]) {
     for i in 0..solved_sudoku.len() {
-        v.push(Vec::new());
         for j in 0..solved_sudoku.len() {
             let current_value = match solved_sudoku[i][j] {
                 SudokuCell::AssignedValue(assigned_value) => assigned_value,
                 SudokuCell::FixedValue(fixed_value) => fixed_value,
             };
-            // if current_value < 10 {
-            //     print!("  {current_value}");
-            // } else {
-            //     print!(" {current_value}");
-            // }
-            v[i].push(current_value);
+            if current_value < 10 {
+                print!("  {current_value}");
+            } else {
+                print!(" {current_value}");
+            }
         }
-        // println!("");
+        println!("");
     }
-    return v;
 }
 
-fn read_sudoku() -> Vec<Vec<u8>> {
+fn read_sudoku() -> [[u8; 16]; 16] {
     // let v: Vec<Vec<u8>> = vec![
     //     vec![5, 3, 0, 0, 7, 0, 0, 0, 0],
     //     vec![6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -352,46 +367,33 @@ fn read_sudoku() -> Vec<Vec<u8>> {
     //     vec![ 1, 13,  4, 14,  6, 11,  5,  7, 12, 10, 16,  8,  2, 15,  3,  9],
     // ];
 
-    let v: Vec<Vec<u8>> = vec![
-        vec![ 0, 15,  6,  0,  2,  3, 14,  4,  0,  8,  5,  9,  0,  0,  7, 11],
-        vec![ 3,  0,  1,  7,  0,  0, 10,  0,  6,  0,  0, 14,  8,  9, 15,  0],
-        vec![ 0,  5, 14,  4,  0,  1,  9, 13, 16, 15,  0,  0,  0, 10,  0,  6],
-        vec![ 9,  0,  0,  0,  8,  7,  0, 15,  0,  2,  0, 10,  0,  1,  0,  5],
+    let v: [[u8; 16]; 16] = [
+        [ 0, 15,  6,  0,  2,  3, 14,  4,  0,  8,  5,  9,  0,  0,  7, 11],
+        [ 3,  0,  1,  7,  0,  0, 10,  0,  6,  0,  0, 14,  8,  9, 15,  0],
+        [ 0,  5, 14,  4,  0,  1,  9, 13, 16, 15,  0,  0,  0, 10,  0,  6],
+        [ 9,  0,  0,  0,  8,  7,  0, 15,  0,  2,  0, 10,  0,  1,  0,  5],
         
-        vec![ 0,  9,  0, 13,  5,  0, 15,  3,  0,  0,  0,  2,  0,  7,  0, 10],
-        vec![ 0,  0,  5,  0,  0,  0,  0,  2, 10,  0,  8,  0,  0,  3, 12,  0],
-        vec![ 2,  0,  7,  6,  0,  4,  0,  0,  9,  0, 14,  3,  5,  0,  0, 15],
-        vec![ 0,  0,  0,  0,  1, 12,  0,  0,  0,  0,  0,  4,  6,  2,  0,  0],
+        [ 0,  9,  0, 13,  5,  0, 15,  3,  0,  0,  0,  2,  0,  7,  0, 10],
+        [ 0,  0,  5,  0,  0,  0,  0,  2, 10,  0,  8,  0,  0,  3, 12,  0],
+        [ 2,  0,  7,  6,  0,  4,  0,  0,  9,  0, 14,  3,  5,  0,  0, 15],
+        [ 0,  0,  0,  0,  1, 12,  0,  0,  0,  0,  0,  4,  6,  2,  0,  0],
 
-        vec![ 0, 14,  2,  0,  0,  0,  1,  6,  0,  0,  4,  0,  0,  5, 10,  0],
-        vec![ 0,  6,  3,  0,  4,  8,  0,  0,  0,  0, 10,  1,  0,  0,  9,  0],
-        vec![10,  0,  9,  0,  0, 14,  0, 11,  0,  0,  0,  5,  0, 13,  6,  0],
-        vec![ 0,  0,  0,  0, 16, 10,  0, 12,  2,  9,  0,  0,  0,  0,  4,  8],
+        [ 0, 14,  2,  0,  0,  0,  1,  6,  0,  0,  4,  0,  0,  5, 10,  0],
+        [ 0,  6,  3,  0,  4,  8,  0,  0,  0,  0, 10,  1,  0,  0,  9,  0],
+        [10,  0,  9,  0,  0, 14,  0, 11,  0,  0,  0,  5,  0, 13,  6,  0],
+        [ 0,  0,  0,  0, 16, 10,  0, 12,  2,  9,  0,  0,  0,  0,  4,  8],
         
-        vec![ 5,  7, 15,  9,  0,  0, 12,  8, 14,  6,  1,  0,  0,  4, 11,  0],
-        vec![ 0,  8,  0,  2, 10, 13,  0,  0,  0,  0,  0, 15,  7,  6,  0,  1],
-        vec![ 6,  0, 10,  0,  9,  0,  0,  1,  0, 11,  2,  7,  0,  8,  0,  0],
-        vec![ 0,  0,  4, 14,  0,  0,  0,  7, 12,  0, 16,  8,  2,  0,  3,  0],
+        [ 5,  7, 15,  9,  0,  0, 12,  8, 14,  6,  1,  0,  0,  4, 11,  0],
+        [ 0,  8,  0,  2, 10, 13,  0,  0,  0,  0,  0, 15,  7,  6,  0,  1],
+        [ 6,  0, 10,  0,  9,  0,  0,  1,  0, 11,  2,  7,  0,  8,  0,  0],
+        [ 0,  0,  4, 14,  0,  0,  0,  7, 12,  0, 16,  8,  2,  0,  3,  0],
     ];
 
     v
 }
 
-use risc0_zkvm::guest::env;
-
-risc0_zkvm::guest::entry!(main);
-
 fn main() {
-    let input: Vec<u8> = env::read();
-
     let sudoku_to_solve = read_sudoku();
     let solved_sudoku = solve_sudoku(sudoku_to_solve);
-    let processed_sudoku = process_result(&solved_sudoku);
-
-    let outputs: Outputs = Outputs {
-        // starting_sudoku: sudoku_to_solve,
-        solved_sudoku: processed_sudoku,
-    }; 
-    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
-    env::commit(&serialized_outputs);
+    process_result(&solved_sudoku);
 }
