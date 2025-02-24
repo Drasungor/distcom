@@ -1,4 +1,17 @@
-#[derive(Clone)]
+#![no_main]
+// If you want to try std support, also update the guest Cargo.toml file
+// #![no_std]  // std support is experimental
+
+use serde::{Deserialize, Serialize};
+use serde_json::to_string;
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct Outputs {
+    pub input_matrix: Matrix,
+    pub output_matrix: Matrix,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Matrix {
     data: Vec<f64>,
     rows: usize,
@@ -120,8 +133,37 @@ fn process_final_matrix(matrix: &Matrix) {
     }
 }
 
+// fn main() {
+//     let matrix = get_matrix_for_exponentiation();
+//     let final_matrix = get_final_matrix(&matrix, 40000);
+//     process_final_matrix(&final_matrix);
+// }
+
+
+use risc0_zkvm::guest::env;
+
+risc0_zkvm::guest::entry!(main);
+
 fn main() {
+    let input: Vec<u8> = env::read();
+
     let matrix = get_matrix_for_exponentiation();
-    let final_matrix = get_final_matrix(&matrix, 5000);
-    process_final_matrix(&final_matrix);
+    let final_matrix = get_final_matrix(&matrix, 40000);
+    // process_final_matrix(&final_matrix);
+
+    // let sudoku_to_solve = read_sudoku();
+    // let solved_sudoku = solve_sudoku(sudoku_to_solve);
+    // let processed_sudoku = process_result(&solved_sudoku);
+
+    let outputs: Outputs = Outputs {
+        input_matrix: matrix,
+        output_matrix: final_matrix,
+    };
+
+    // let outputs: Outputs = Outputs {
+    //     // starting_sudoku: sudoku_to_solve,
+    //     solved_sudoku: processed_sudoku,
+    // };
+    let serialized_outputs = to_string(&outputs).expect("Error in struct serialization");
+    env::commit(&serialized_outputs);
 }
