@@ -13,7 +13,8 @@ RUN apt-get install bash build-essential pkg-config libssl-dev -y
 
 # RUN cargo install cargo-binstall
 # RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install cargo-binstall"]
-RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install cargo-binstall --version 1.10.7"]
+# RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install cargo-binstall --version 1.10.7"]
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install cargo-binstall --version 1.10.7 --locked"]
 
 # RUN cargo binstall cargo-risczero -y
 # RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo binstall cargo-risczero -y"]
